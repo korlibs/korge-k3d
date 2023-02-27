@@ -1,0 +1,6 @@
+name: "korge-k3d"
+plugins:
+  #- serialization
+dependencies:
+  - "maven::common::com.soywiz.korlibs.korge2:korge"
+

@@ -1,4 +1,4 @@
 #name: deps
 dependencies:
-    - ../korge-mymodule
+    - ../korge-k3d
 
