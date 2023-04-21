@@ -1,4 +1,4 @@
-import korlibs.korev.*
+import korlibs.event.*
 import korlibs.korge.input.*
 import korlibs.korge.scene.*
 import korlibs.korge.view.*

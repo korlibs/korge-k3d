@@ -41,7 +41,7 @@ class Transform3D {
         }
 
     private val _translation = MVector4(0, 0, 0)
-    private val _rotation = MQuaternion()
+    private var _rotation = Quaternion()
     private val _scale = MVector4(1, 1, 1)
     @PublishedApi
     internal var _eulerRotationDirty: Boolean = true
@@ -90,7 +90,7 @@ class Transform3D {
     fun setTranslation(x: Double, y: Double, z: Double, w: Double = 1.0) = setTranslation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
     fun setTranslation(x: Int, y: Int, z: Int, w: Int = 1) = setTranslation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
-    fun setRotation(quat: MQuaternion) = updatingTRS {
+    fun setRotation(quat: Quaternion) = updatingTRS {
         updateTRSIfRequired()
         matrixDirty = true
         _eulerRotationDirty = true
@@ -105,7 +105,7 @@ class Transform3D {
     fun setRotation(x: Double, y: Double, z: Double, w: Double) = setRotation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
     fun setRotation(x: Int, y: Int, z: Int, w: Int) = setRotation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
-    fun setRotation(euler: MEulerRotation) = updatingTRS {
+    fun setRotation(euler: EulerRotation) = updatingTRS {
         _eulerRotationDirty = true
         rotation.setEuler(euler)
     }
@@ -170,7 +170,7 @@ class Transform3D {
         up: MVector4 = UP
     ) = setTranslationAndLookAt(px.toFloat(), py.toFloat(), pz.toFloat(), tx.toFloat(), ty.toFloat(), tz.toFloat(), up)
 
-    private val tempEuler = MEulerRotation()
+    private var tempEuler = EulerRotation()
     fun rotate(x: Angle, y: Angle, z: Angle): Transform3D {
         val re = this.rotationEuler
         tempEuler.setTo(re.x+x,re.y+y, re.z+z)

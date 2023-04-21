@@ -1,7 +1,7 @@
 package korlibs.korge3d
 
 import korlibs.datastructure.iterators.fastForEach
-import korlibs.korge.baseview.BaseView
+import korlibs.korge.view.*
 import korlibs.math.geom.Angle
 import korlibs.math.geom.MMatrix3D
 import korlibs.math.geom.degrees
@@ -99,29 +99,30 @@ abstract class View3D : BaseView() {
 	///////
 
 	internal var _parent: Container3D? = null
-    override val baseParent: Container3D? get() = parent
+    var parent: Container3D?
+        get() = _parent
+        internal set(value) {
+            if (_parent === value) return
+            //_parent?.removeChild(this)
+            _parent = value
+            //_parent?.addChild(this)
+            //_stage = _parent?._stage
+            //setInvalidateNotifier()
+            onParentChanged()
+            changeEventListenerParent(value)
+            invalidateRender()
+        }
+
+    protected open fun onParentChanged() {
+    }
 
     open val root: View3D get() = parent?.root ?: this
-
-    var parent: Container3D?
-		set(value) {
-			_parent = value
-			_parent?.addChild(this)
-            invalidateRender()
-		}
-		get() = _parent
 
 	val modelMat = MMatrix3D()
 	//val position = Vector3D()
 
 
 	abstract fun render(ctx: RenderContext3D)
-}
-
-@Korge3DExperimental
-fun View3D.removeFromParent() {
-	parent?.removeChild(this)
-	parent = null
 }
 
 @Korge3DExperimental

@@ -2,13 +2,17 @@
 
 package korlibs.korge3d.tween
 
-import korlibs.time.TimeSpan
-import korlibs.korge.tween.DEFAULT_EASING
-import korlibs.korge.tween.DEFAULT_TIME
 import korlibs.korge.tween.get
 import korlibs.korge.tween.tween
 import korlibs.korge3d.View3D
 import korlibs.math.interpolation.Easing
+import korlibs.time.*
+
+@PublishedApi
+internal val DEFAULT_EASING = Easing.EASE_IN_OUT_QUAD
+
+@PublishedApi
+internal val DEFAULT_TIME = 1.seconds
 
 //suspend fun View3D.show(time: TimeSpan = DEFAULT_TIME, easing: Easing = DEFAULT_EASING) =
 //	tween(this::alpha[1.0], time = time, easing = easing) { this.visible = true }

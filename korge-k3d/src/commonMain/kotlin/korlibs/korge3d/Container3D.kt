@@ -1,31 +1,33 @@
 package korlibs.korge3d
 
-import korlibs.datastructure.FastArrayList
-import korlibs.datastructure.iterators.fastForEach
-import korlibs.korev.EventResult
-import korlibs.korge.component.Component
-import korlibs.korge.component.ComponentType
+import korlibs.datastructure.*
+import korlibs.datastructure.iterators.*
 
 @Korge3DExperimental
 open class Container3D : View3D() {
-	val children = arrayListOf<View3D>()
+    private val __children: FastArrayList<View3D> = FastArrayList()
+    val children: List<View3D> get() = __children
+
+    fun getChildAtOrNull(index: Int): View3D? = __children.getOrNull(index)
 
     inline fun fastForEachChild(block: (View3D) -> Unit) {
         children.fastForEach(block)
     }
 
+    fun removeChildAt(index: Int) {
+        getChildAtOrNull(index)?.let { removeChild(it) }
+    }
+
     fun removeChild(child: View3D) {
-		children.remove(child)
-        __updateChildListenerCount(child, add = false)
-        invalidateRender()
+		if (!__children.remove(child)) return
+        child.parent = null
 	}
 
 	fun addChild(child: View3D) {
 		child.removeFromParent()
-		children += child
+		__children += child
 		child._parent = this
 		child.transform.parent = this.transform
-        __updateChildListenerCount(child, add = true)
         invalidateRender()
 	}
 
@@ -43,13 +45,9 @@ open class Container3D : View3D() {
     //        if (it.onEventCount(type) > 0) it.dispatch(type, event, result)
     //    }
     //}
+}
 
-    override fun <T : Component> getComponentOfTypeRecursiveChildren(type: ComponentType<T>, out: FastArrayList<T>, results: EventResult?) {
-        fastForEachChild {
-            val childEventListenerCount = it.getComponentCountInDescendants(type)
-            if (childEventListenerCount > 0) {
-                it.getComponentOfTypeRecursive(type, out, results)
-            }
-        }
-    }
+@Korge3DExperimental
+fun View3D.removeFromParent() {
+    parent?.removeChild(this)
 }

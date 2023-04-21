@@ -11,7 +11,7 @@ import korlibs.korge3d.View3D
 import korlibs.korge3d.get
 import korlibs.math.geom.MMatrix3D
 import korlibs.math.geom.degrees
-import korlibs.math.interpolation.interpolate
+import korlibs.math.interpolation.*
 
 /**
  * @param playbackPattern: A function that takes normalized time (from 0 to 1) as argument and returns normalized
@@ -36,7 +36,7 @@ class Animator3D(val animation: Animation3D, val rootView: View3D, var playbackP
 	var currentTime = 0.milliseconds
 
     val elapsedTimeInAnimation: TimeSpan
-    get() = animation.totalTime * playbackPattern(currentTime/animation.totalTime)
+    get() = animation.totalTime * playbackPattern((currentTime/animation.totalTime).toDouble())
 
 	fun update(dt: TimeSpan) {
 		//currentTime += ms.ms * 0.1
@@ -76,7 +76,7 @@ class Animator3D(val animation: Animation3D, val rootView: View3D, var playbackP
 				}
 				"location.X", "location.Y", "location.Z", "scale.X", "scale.Y", "scale.Z", "rotationX.ANGLE", "rotationY.ANGLE", "rotationZ.ANGLE" -> {
 					if (ffloats != null) {
-						val value = ratio.interpolate(ffloats[n], ffloats[n % ffloats.size]).toDouble()
+						val value = ratio.toRatio().interpolate(ffloats[n], ffloats[n % ffloats.size]).toDouble()
 						when (aproperty) {
 							"location.X" -> aview.x = value
 							"location.Y" -> aview.y = value

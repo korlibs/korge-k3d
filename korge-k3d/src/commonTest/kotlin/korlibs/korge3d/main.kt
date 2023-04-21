@@ -1,3 +1,5 @@
+package korlibs.korge3d
+
 import korlibs.datastructure.*
 import korlibs.time.*
 import korlibs.korge.*
@@ -23,7 +25,7 @@ object Demo1 {
 	@JvmStatic
 	fun main(args: Array<String>) = Korio { main() }
 
-	suspend fun main() = Korge(title = "KorGE 3D") {
+	suspend fun main() = Korge(title = "KorGE 3D").start {
 		image(resourcesVfs["korge.png"].readNativeImage()).alpha(0.5)
 
 		scene3D {
@@ -43,7 +45,7 @@ object Demo1 {
 				val angle = (tick / 4.0).degrees
 				camera.positionLookingAt(
 					cos(angle * 2) * 4, cos(angle * 3) * 4, -sin(angle) * 4, // Orbiting camera
-					0.0, 1.0, 0.0
+					0f, 1f, 0f
 				)
 				tick++
 			}
@@ -67,7 +69,7 @@ object Demo2 {
 	@JvmStatic
 	fun main(args: Array<String>) = Korio { main() }
 
-	suspend fun main() = Korge(title = "KorGE 3D", bgcolor = Colors.DARKGREY) {
+	suspend fun main() = Korge(title = "KorGE 3D", backgroundColor = Colors.DARKGREY).start {
 		//delay(10.seconds)
 		//println("delay")
 		scene3D {
@@ -101,8 +103,8 @@ object Demo2 {
             addUpdater {
 				val angle = (tick / 1.0).degrees
 				camera.positionLookingAt(
-					cos(angle * 1) * 4, 0.0, -sin(angle * 1) * 4, // Orbiting camera
-					0.0, 0.0, 0.0
+					cos(angle * 1) * 4, 0f, -sin(angle * 1) * 4, // Orbiting camera
+					0f, 0f, 0f
 				)
 				tick++
 			}
@@ -125,7 +127,7 @@ object Demo3 {
 	@JvmStatic
 	fun main(args: Array<String>) = Korio { main() }
 
-	suspend fun main() = Korge(title = "KorGE 3D", bgcolor = Colors.DARKGREY) {
+	suspend fun main() = Korge(title = "KorGE 3D", backgroundColor = Colors.DARKGREY).start {
 		//delay(10.seconds)
 		//println("delay")
 		scene3D {

@@ -5,7 +5,6 @@ import korlibs.datastructure.ShortArrayList
 import korlibs.datastructure.fastArrayListOf
 import korlibs.datastructure.floatArrayListOf
 import korlibs.graphics.*
-import korlibs.graphics.shader.VertexLayout
 import korlibs.korge3d.internal.toNBuffer
 import korlibs.korge3d.internal.vector3DTemps
 import korlibs.image.color.Colors

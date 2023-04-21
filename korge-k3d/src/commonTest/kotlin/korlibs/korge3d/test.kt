@@ -1,6 +1,6 @@
 package korlibs.korge3d
 
-import korlibs.klogger.*
+import korlibs.logger.*
 import korlibs.korge3d.format.readColladaLibrary
 import korlibs.io.async.suspendTest
 import korlibs.io.file.std.resourcesVfs

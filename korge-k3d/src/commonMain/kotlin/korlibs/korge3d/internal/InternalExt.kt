@@ -1,7 +1,7 @@
 package korlibs.korge3d.internal
 
 import korlibs.datastructure.*
-import korlibs.kmem.*
+import korlibs.memory.*
 import korlibs.math.geom.MVector4
 import korlibs.memory.*
 import kotlin.native.concurrent.ThreadLocal

@@ -1,7 +1,7 @@
 package korlibs.korge3d
 
 import korlibs.datastructure.FastArrayList
-import korlibs.kmem.*
+import korlibs.memory.*
 import korlibs.graphics.*
 import korlibs.graphics.shader.Program
 import korlibs.graphics.shader.VertexLayout

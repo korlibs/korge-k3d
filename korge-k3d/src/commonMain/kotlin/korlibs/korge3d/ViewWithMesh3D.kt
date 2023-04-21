@@ -3,7 +3,7 @@ package korlibs.korge3d
 import korlibs.datastructure.get
 import korlibs.datastructure.iterators.fastForEach
 import korlibs.datastructure.iterators.fastForEachWithIndex
-import korlibs.kmem.clamp
+import korlibs.memory.clamp
 import korlibs.graphics.*
 import korlibs.math.geom.MMatrix3D
 

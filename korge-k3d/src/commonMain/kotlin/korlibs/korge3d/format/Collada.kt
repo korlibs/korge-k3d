@@ -800,13 +800,11 @@ class ColladaParser {
 
             instance.transform.setTRS(
                 trns,
-                MQuaternion().setTo(
-                    combine(
-                        rotationVectorToEulerRotation(rotX),
-                        rotationVectorToEulerRotation(rotY),
-                        rotationVectorToEulerRotation(rotZ)
-                    )
-                ),
+                combine(
+                    rotationVectorToEulerRotation(rotX),
+                    rotationVectorToEulerRotation(rotY),
+                    rotationVectorToEulerRotation(rotZ)
+                ).toQuaternion(),
                 scl
             )
         }
@@ -814,17 +812,16 @@ class ColladaParser {
     }
 
     private fun combine(
-        a: MEulerRotation,
-        b: MEulerRotation,
-        c: MEulerRotation,
-        out: MEulerRotation = MEulerRotation()
-    ): MEulerRotation {
-        return out.setTo(a.x + b.x + c.x, a.y + b.y + c.y, a.z + b.z + c.z)
+        a: EulerRotation,
+        b: EulerRotation,
+        c: EulerRotation,
+    ): EulerRotation {
+        return EulerRotation(a.x + b.x + c.x, a.y + b.y + c.y, a.z + b.z + c.z)
     }
 
-    private fun rotationVectorToEulerRotation(vec: MVector4, out: MEulerRotation = MEulerRotation()): MEulerRotation {
+    private fun rotationVectorToEulerRotation(vec: MVector4): EulerRotation {
         val degrees = vec.w.degrees
-        return out.setTo(degrees * vec.x, degrees * vec.y, degrees * vec.z)
+        return EulerRotation(degrees * vec.x, degrees * vec.y, degrees * vec.z)
     }
 
     val sourceArrayParams = FastStringMap<SourceParam>()

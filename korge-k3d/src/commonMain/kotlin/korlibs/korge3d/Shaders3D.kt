@@ -1,17 +1,8 @@
 package korlibs.korge3d
 
-import korlibs.graphics.shader.Attribute
-import korlibs.graphics.shader.FragmentShader
-import korlibs.graphics.shader.Operand
-import korlibs.graphics.shader.Precision
-import korlibs.graphics.shader.Program
-import korlibs.graphics.shader.ShaderType
-import korlibs.graphics.shader.Uniform
-import korlibs.graphics.shader.VarType
-import korlibs.graphics.shader.Varying
-import korlibs.graphics.shader.VertexLayout
-import korlibs.graphics.shader.VertexShader
-import korlibs.graphics.shader.gl.GlslGenerator
+import korlibs.graphics.*
+import korlibs.graphics.shader.*
+import korlibs.graphics.shader.gl.*
 
 @Korge3DExperimental
 open class Shaders3D {
@@ -26,28 +17,39 @@ open class Shaders3D {
 		return programCache.getOrPut("program_L${nlights}_W${nweights}_M${meshMaterial?.kind}_T${hasTexture}") {
 			StandardShader3D(nlights, nweights, meshMaterial, hasTexture).program.apply {
 				if (printShaders) {
-					println(GlslGenerator(kind = ShaderType.VERTEX).generate(this.vertex))
-					println(GlslGenerator(kind = ShaderType.FRAGMENT).generate(this.fragment))
+					//println(GlslGenerator(kind = ShaderType.VERTEX).generate(this.vertex))
+					//println(GlslGenerator(kind = ShaderType.FRAGMENT).generate(this.fragment))
 				}
 			}
 		}
 	}
 
 
-	companion object {
-		val u_Shininess = Uniform("u_shininess", VarType.Float1)
-		val u_IndexOfRefraction = Uniform("u_indexOfRefraction", VarType.Float1)
-		val u_AmbientColor = Uniform("u_ambientColor", VarType.Float4)
-		val u_ProjMat = Uniform("u_ProjMat", VarType.Mat4)
-		val u_ViewMat = Uniform("u_ViewMat", VarType.Mat4)
-		val u_BindShapeMatrix = Uniform("u_BindShapeMat", VarType.Mat4)
-		val u_BindShapeMatrixInv = Uniform("u_BindShapeMatInv", VarType.Mat4)
-		val u_ModMat = Uniform("u_ModMat", VarType.Mat4)
-		val u_NormMat = Uniform("u_NormMat", VarType.Mat4)
-		//val MAX_BONE_MATS = 16
-		val MAX_BONE_MATS = 64
-		val u_BoneMats = Uniform("u_BoneMats", VarType.Mat4, arrayCount = MAX_BONE_MATS)
-		val u_TexUnit = Uniform("u_TexUnit", VarType.Sampler2D)
+    object K3DPropsUB : UniformBlock(fixedLocation = 1) {
+        val u_Shininess by float()
+        val u_IndexOfRefraction by float()
+        val u_AmbientColor by vec4()
+        val u_BindShapeMatrix by mat4()
+        val u_BindShapeMatrixInv by mat4()
+        val u_ModMat by mat4()
+        val u_NormMat by mat4()
+    }
+
+    object Bones4UB : UniformBlock(fixedLocation = 2) {
+        //val MAX_BONE_MATS = 16
+        val MAX_BONE_MATS = 64
+
+        val u_BoneMat0 by mat4()
+        val u_BoneMat1 by mat4()
+        val u_BoneMat2 by mat4()
+        val u_BoneMat3 by mat4()
+        val u_BoneMats = arrayOf(u_BoneMat0, u_BoneMat1, u_BoneMat2, u_BoneMat3)
+    }
+
+    companion object {
+        val u_ProjMat = DefaultShaders.u_ProjMat
+        val u_ViewMat = DefaultShaders.u_ViewMat
+
 		val a_pos = Attribute("a_Pos", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 0)
 		val a_norm = Attribute("a_Norm", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 1)
 		val a_tex = Attribute("a_TexCoords", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 2)
@@ -65,7 +67,7 @@ open class Shaders3D {
 		val programColor3D = Program(
 			vertex = VertexShader {
 				SET(v_col, a_col)
-				SET(out, u_ProjMat * u_ModMat * u_ViewMat * vec4(a_pos, 1f.lit))
+				SET(out, u_ProjMat * K3DPropsUB.u_ModMat * u_ViewMat * vec4(a_pos, 1f.lit))
 			},
 			fragment = FragmentShader {
 				SET(out, vec4(v_col, 1f.lit))
@@ -143,8 +145,8 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 			SET(localPos, u_BindShapeMatrixInv * localPos)
 		}
 
-		SET(modelViewMat, u_ModMat * u_ViewMat)
-		SET(normalMat, u_NormMat)
+		SET(modelViewMat, Shaders3D.K3DPropsUB.u_ModMat * u_ViewMat)
+		SET(normalMat, Shaders3D.K3DPropsUB.u_NormMat)
 		SET(v_Pos, vec3(modelViewMat * (vec4(localPos["xyz"], 1f.lit))))
 		SET(v_Norm, vec3(normalMat * normalize(vec4(localNorm["xyz"], 1f.lit))))
 		if (hasTexture) SET(v_TexCoords, a_tex["xy"])
@@ -215,7 +217,7 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		SET(NdotL, max(dot(normalize(N), normalize(lightDir)), 0f.lit))
 
 		IF(NdotL ge 0f.lit) {
-			SET(out["rgb"], out["rgb"] + (light.u_color["rgb"] * NdotL + Shaders3D.u_AmbientColor["rgb"]) * attenuation * Shaders3D.u_Shininess)
+			SET(out["rgb"], out["rgb"] + (light.u_color["rgb"] * NdotL + Shaders3D.K3DPropsUB.u_AmbientColor["rgb"]) * attenuation * Shaders3D.K3DPropsUB.u_Shininess)
 		}
 		//SET(out["rgb"], out["rgb"] * attenuation)
 		//SET(out["rgb"], out["rgb"] + clamp(light.diffuse * max(dot(N, L), 0f.lit), 0f.lit, 1f.lit)["rgb"])
@@ -224,7 +226,7 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 
 	fun Program.Builder.getBoneIndex(index: Int): Operand = int(Shaders3D.a_boneIndex[index / 4][index % 4])
 	fun Program.Builder.getWeight(index: Int): Operand = Shaders3D.a_weight[index / 4][index % 4]
-	fun Program.Builder.getBone(index: Int): Operand = Shaders3D.u_BoneMats[getBoneIndex(index)]
+	fun Program.Builder.getBone(index: Int): Operand = Shaders3D.Bones4UB.u_BoneMats[getBoneIndex(index)]
 }
 
 @Korge3DExperimental

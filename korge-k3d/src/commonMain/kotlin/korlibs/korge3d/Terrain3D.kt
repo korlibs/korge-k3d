@@ -1,7 +1,7 @@
 package korlibs.korge3d
 
 import korlibs.datastructure.iterators.fastForEachWithIndex
-import korlibs.kmem.clamp
+import korlibs.memory.clamp
 import korlibs.graphics.*
 import korlibs.image.bitmap.Bitmap
 import korlibs.math.geom.MMatrix3D

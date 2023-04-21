@@ -1,7 +1,7 @@
 package korlibs.korge3d
 
 import korlibs.datastructure.iterators.fastForEachWithIndex
-import korlibs.kmem.clamp
+import korlibs.memory.clamp
 import korlibs.graphics.*
 import korlibs.korge.render.Texture
 import korlibs.korge.ui.DefaultUIBitmapFont

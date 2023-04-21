@@ -2,7 +2,7 @@ package korlibs.korge3d.format
 
 import korlibs.datastructure.IndexedTable
 import korlibs.datastructure.fastForEach
-import korlibs.kmem.*
+import korlibs.memory.*
 import korlibs.korge3d.Korge3DExperimental
 import korlibs.korge3d.Library3D
 import korlibs.io.file.VfsFile

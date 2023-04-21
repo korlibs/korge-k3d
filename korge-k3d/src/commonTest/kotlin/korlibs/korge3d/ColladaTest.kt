@@ -4,7 +4,7 @@ import korlibs.datastructure.FastStringMap
 import korlibs.datastructure.get
 import korlibs.datastructure.keys
 import korlibs.datastructure.size
-import korlibs.klogger.*
+import korlibs.logger.*
 import korlibs.korge3d.format.ColladaParser
 import korlibs.korge3d.format.readColladaLibrary
 import korlibs.io.async.suspendTestNoJs
