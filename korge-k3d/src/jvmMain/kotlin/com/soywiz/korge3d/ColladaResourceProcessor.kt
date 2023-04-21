@@ -1,10 +1,10 @@
-package com.soywiz.korge3d
+package korlibs.korge3d
 
 /*
-import com.soywiz.korge.resources.*
-import com.soywiz.korge3d.format.*
-import com.soywiz.korio.file.*
-import com.soywiz.korio.serialization.xml.*
+import korlibs.korge.resources.*
+import korlibs.korge3d.format.*
+import korlibs.io.file.*
+import korlibs.io.serialization.xml.*
 
 open class ColladaResourceProcessor : ResourceProcessor("dae") {
 	companion object : ColladaResourceProcessor()

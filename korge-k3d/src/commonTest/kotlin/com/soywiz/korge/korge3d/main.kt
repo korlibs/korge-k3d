@@ -1,18 +1,18 @@
-import com.soywiz.kds.*
-import com.soywiz.klock.*
-import com.soywiz.korge.*
-import com.soywiz.korge.tween.*
-import com.soywiz.korge.view.*
-import com.soywiz.korge3d.*
-import com.soywiz.korge3d.animation.*
-import com.soywiz.korge3d.format.*
-import com.soywiz.korim.color.*
-import com.soywiz.korim.format.*
-import com.soywiz.korio.*
-import com.soywiz.korio.async.*
-import com.soywiz.korio.file.std.*
-import com.soywiz.korma.geom.*
-import com.soywiz.korma.interpolation.*
+import korlibs.datastructure.*
+import korlibs.time.*
+import korlibs.korge.*
+import korlibs.korge.tween.*
+import korlibs.korge.view.*
+import korlibs.korge3d.*
+import korlibs.korge3d.animation.*
+import korlibs.korge3d.format.*
+import korlibs.image.color.*
+import korlibs.image.format.*
+import korlibs.io.*
+import korlibs.io.async.*
+import korlibs.io.file.std.*
+import korlibs.math.geom.*
+import korlibs.math.interpolation.*
 import kotlin.jvm.*
 
 //suspend fun main(args: Array<String>) = Demo3.main(args)

@@ -1,21 +1,21 @@
-import com.soywiz.kds.*
-import com.soywiz.kds.iterators.*
-import com.soywiz.klock.*
-import com.soywiz.korge.input.*
-import com.soywiz.korge.scene.*
-import com.soywiz.korge.tween.*
-import com.soywiz.korge.ui.*
-import com.soywiz.korge.view.*
-import com.soywiz.korge3d.*
-import com.soywiz.korge3d.animation.*
-import com.soywiz.korge3d.format.*
-import com.soywiz.korim.bitmap.*
-import com.soywiz.korim.color.*
-import com.soywiz.korim.format.*
-import com.soywiz.korio.async.*
-import com.soywiz.korio.file.std.*
-import com.soywiz.korma.geom.*
-import com.soywiz.korma.interpolation.*
+import korlibs.datastructure.*
+import korlibs.datastructure.iterators.*
+import korlibs.time.*
+import korlibs.korge.input.*
+import korlibs.korge.scene.*
+import korlibs.korge.tween.*
+import korlibs.korge.ui.*
+import korlibs.korge.view.*
+import korlibs.korge3d.*
+import korlibs.korge3d.animation.*
+import korlibs.korge3d.format.*
+import korlibs.image.bitmap.*
+import korlibs.image.color.*
+import korlibs.image.format.*
+import korlibs.io.async.*
+import korlibs.io.file.std.*
+import korlibs.math.geom.*
+import korlibs.math.interpolation.*
 
 class MainStage3d : Scene() {
     lateinit var contentSceneContainer: SceneContainer

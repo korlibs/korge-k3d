@@ -1,10 +1,10 @@
-import com.soywiz.korev.*
-import com.soywiz.korge.input.*
-import com.soywiz.korge.scene.*
-import com.soywiz.korge.view.*
-import com.soywiz.korge3d.*
-import com.soywiz.korio.file.std.*
-import com.soywiz.korma.geom.*
+import korlibs.korev.*
+import korlibs.korge.input.*
+import korlibs.korge.scene.*
+import korlibs.korge.view.*
+import korlibs.korge3d.*
+import korlibs.io.file.std.*
+import korlibs.math.geom.*
 
 @OptIn(Korge3DExperimental::class)
 class MainSkybox : Scene() {
