@@ -4,7 +4,6 @@ import korlibs.datastructure.iterators.fastForEachWithIndex
 import korlibs.memory.clamp
 import korlibs.graphics.*
 import korlibs.korge.render.Texture
-import korlibs.korge.ui.DefaultUIBitmapFont
 import korlibs.image.font.BitmapFont
 import korlibs.math.geom.MMatrix3D
 import korlibs.math.geom.MVector4
