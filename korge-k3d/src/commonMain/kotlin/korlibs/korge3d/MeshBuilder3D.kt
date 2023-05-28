@@ -9,7 +9,7 @@ import korlibs.korge3d.internal.toNBuffer
 import korlibs.korge3d.internal.vector3DTemps
 import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
-import korlibs.math.geom.MVector4
+import korlibs.math.geom.*
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -55,7 +55,7 @@ class MeshBuilder3D(
         _material = Material3D(emission, ambient, diffuse, specular, shininess, indexOfRefraction)
     }
 
-    fun addVertex(pos: MVector4, normal: MVector4 = MVector4(), texcoords: MVector4 = MVector4()): Int {
+    fun addVertex(pos: Vector3, normal: Vector3 = Vector3.ZERO, texcoords: Vector2 = Vector2.ZERO): Int {
         return addVertex(pos.x, pos.y, pos.z, normal.x, normal.y, normal.z, texcoords.x, texcoords.y)
     }
 
