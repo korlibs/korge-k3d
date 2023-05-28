@@ -26,6 +26,9 @@ data class Mesh3D constructor(
     var skin: Skin3D? = null,
     var material: Material3D? = null
 ) {
+    companion object {
+        val EMPTY = MeshBuilder3D { }
+    }
     //val modelMat = Matrix3D()
     //val vertexCount = vertexBuffer.size / 4 / vertexSizeInFloats
 
