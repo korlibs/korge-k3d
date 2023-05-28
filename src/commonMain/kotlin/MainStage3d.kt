@@ -47,53 +47,6 @@ class MainStage3d : Scene() {
     }
 
     @Korge3DExperimental
-    class CratesScene : Scene() {
-        override suspend fun SContainer.sceneInit() {
-            val korgeTex = resourcesVfs["korge.png"].readNativeImage().mipmaps(false)
-            val crateTex = resourcesVfs["crate.jpg"].readNativeImage().mipmaps(true)
-            val crateMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
-
-            image(korgeTex).alpha(0.5)
-
-            scene3D {
-                //camera.set(fov = 60.degrees, near = 0.3, far = 1000.0)
-
-                light().position(0, 0, -3)
-
-                val cube1 = cube().material(crateMaterial)
-                val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees).material(crateMaterial)
-                val cube3 = cube().position(-5, 0, 0).material(crateMaterial)
-                val cube4 = cube().position(+5, 0, 0).material(crateMaterial)
-                val cube5 = cube().position(0, -5, 0).material(crateMaterial)
-                val cube6 = cube().position(0, +5, 0).material(crateMaterial)
-                val cube7 = cube().position(0, 0, -5).material(crateMaterial)
-                val cube8 = cube().position(0, 0, +5).material(crateMaterial)
-
-                var tick = 0
-                addUpdater {
-                    val angle = (tick / 4.0).degrees
-                    camera.positionLookingAt(
-                        cos(angle * 2) * 4, cos(angle * 3) * 4, -sin(angle) * 4, // Orbiting camera
-                        0f, 1f, 0f
-                    )
-                    tick++
-                }
-
-                launchImmediately {
-                    while (true) {
-                        tween(time = 16.seconds) {
-                            cube1.modelMat.identity().rotate((it * 360).degrees, 0.degrees, 0.degrees)
-                            cube2.modelMat.identity().rotate(0.degrees, (it * 360).degrees, 0.degrees)
-                        }
-                    }
-                }
-            }
-
-            image(korgeTex).position(views.virtualWidth, 0).anchor(1, 0).alpha(0.5)
-        }
-    }
-
-    @Korge3DExperimental
     class MonkeyScene : Scene() {
         override suspend fun SContainer.sceneInit() {
             //delay(10.seconds)
@@ -238,4 +191,54 @@ class MainStage3d : Scene() {
         }
     }
 
+}
+
+
+@Korge3DExperimental
+class CratesScene : Scene() {
+    override suspend fun SContainer.sceneInit() {
+        val korgeTex = resourcesVfs["korge.png"].readNativeImage().mipmaps(false)
+        val crateTex = resourcesVfs["crate.jpg"].readNativeImage().mipmaps(true)
+        val crateMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
+
+        image(korgeTex).alpha(0.5)
+
+        scene3D {
+            //camera.set(fov = 60.degrees, near = 0.3, far = 1000.0)
+
+            //light().position(0, 0, -3)
+
+            val cube1 = cube().material(crateMaterial)
+            sphere(2).position(1, 0, 0)
+            //cube(2.0, 2.0)
+            val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees).material(crateMaterial)
+            val cube3 = cube().position(-5, 0, 0).material(crateMaterial)
+            val cube4 = cube().position(+5, 0, 0).material(crateMaterial)
+            val cube5 = cube().position(0, -5, 0).material(crateMaterial)
+            val cube6 = cube().position(0, +5, 0).material(crateMaterial)
+            val cube7 = cube().position(0, 0, -5).material(crateMaterial)
+            val cube8 = cube().position(0, 0, +5).material(crateMaterial)
+
+            var tick = 0
+            addUpdater {
+                val angle = (tick / 4.0).degrees
+                camera.positionLookingAt(
+                    cos(angle * 2) * 4, cos(angle * 3) * 4, -sin(angle) * 4, // Orbiting camera
+                    0f, 1f, 0f
+                )
+                tick++
+            }
+
+            launchImmediately {
+                while (true) {
+                    tween(time = 16.seconds) {
+                        cube1.modelMat.identity().rotate((it * 360).degrees, 0.degrees, 0.degrees)
+                        cube2.modelMat.identity().rotate(0.degrees, (it * 360).degrees, 0.degrees)
+                    }
+                }
+            }
+        }
+
+        image(korgeTex).position(views.virtualWidth, 0).anchor(1, 0).alpha(0.5)
+    }
 }

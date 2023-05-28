@@ -88,7 +88,7 @@ open class Shaders3D {
             name = "programColor3D"
         )
 
-		//val lights = (0 until 4).map { LightAttributes(it) }
+		val lights = (0 until 4).map { LightUB(it, 5 + it) }
 
 		val emission = MaterialUB("emission", 1, 1)
 		val ambient = MaterialUB("ambient", 2, 2)
@@ -101,16 +101,16 @@ open class Shaders3D {
 		private val FLOATS_PER_VERTEX = layoutPosCol.totalSize / Int.SIZE_BYTES /*Float.SIZE_BYTES is not defined*/
 	}
 
-    object LightUB : UniformBlock(fixedLocation = 0) {
+    data class LightUB(val index: Int, val fixLocation: Int) : UniformBlock(fixedLocation = fixLocation) {
         //inner class Light()
-        val u_SourcePos = Array(4) { vec4("lightPos$it") }
-        val u_Color = Array(4) { vec4("lightColor$it") }
-        val u_Attenuation = Array(4) { vec4("lightAttenuation$it") }
+        val u_SourcePos by vec4("u_lightPos${index}")
+        val u_Color by vec4("u_lightColor${index}")
+        val u_Attenuation by vec4("u_lightAttenuation${index}")
     }
 
     data class MaterialUB(val kind: String, val fixLocation: Int, val textureIndex: Int) : UniformBlock(fixedLocation = fixLocation) {
         val u_color by vec4("u_${kind}_color")
-        val u_texUnit by Sampler("u_texUnit${textureIndex}", textureIndex, SamplerVarType.Sampler2D)
+        val u_texUnit by Sampler("u_${kind}_texUnit", textureIndex, SamplerVarType.Sampler2D)
         //val u_texUnit by int("u_${kind}_texUnit")
     }
 
@@ -177,12 +177,13 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		if (meshMaterial != null) {
 			computeMaterialLightColor(out, Shaders3D.diffuse, meshMaterial.diffuse)
 		} else {
-			SET(out, vec4(1f.lit, 0f.lit, 1f.lit, 1f.lit))
+			SET(out, vec4(.5f.lit, .5f.lit, .5f.lit, 1f.lit))
 		}
 
-		//for (n in 0 until nlights) {
-		//	addLight(Shaders3D.lights[n], out)
-		//}
+        //println("nlights=$nlights")
+		for (n in 0 until nlights) {
+			addLight(Shaders3D.lights[n], out)
+		}
 		//SET(out, vec4(v_Temp1.x, v_Temp1.y, v_Temp1.z, 1f.lit))
 	}
 
@@ -206,8 +207,7 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 	)
 
 
-    /*
-	open fun Program.Builder.addLight(light: Shaders3D.LightAttributes, out: Operand) {
+	open fun Program.Builder.addLight(light: Shaders3D.LightUB, out: Operand) {
 		val v = Shaders3D.v_Pos
 		val N = Shaders3D.v_Norm
 
@@ -220,14 +220,14 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		val NdotL = createTemp(VarType.Float1)
 		val lightDir = createTemp(VarType.Float3)
 
-		SET(L, normalize(light.u_sourcePos["xyz"] - v))
+		SET(L, normalize(light.u_SourcePos["xyz"] - v))
 		SET(E, normalize(-v)) // we are in Eye Coordinates, so EyePos is (0,0,0)
 		SET(R, normalize(-reflect(L, N)))
 
-		val constantAttenuation = light.u_attenuation.x
-		val linearAttenuation = light.u_attenuation.y
-		val quadraticAttenuation = light.u_attenuation.z
-		SET(lightDir, light.u_sourcePos["xyz"] - Shaders3D.v_Pos)
+		val constantAttenuation = light.u_Attenuation.x
+		val linearAttenuation = light.u_Attenuation.y
+		val quadraticAttenuation = light.u_Attenuation.z
+		SET(lightDir, light.u_SourcePos["xyz"] - Shaders3D.v_Pos)
 		SET(dist, length(lightDir))
 		//SET(dist, length(vec3(4f.lit, 1f.lit, 6f.lit) - vec3(0f.lit, 0f.lit, 0f.lit)))
 
@@ -237,14 +237,12 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		SET(NdotL, max(dot(normalize(N), normalize(lightDir)), 0f.lit))
 
 		IF(NdotL ge 0f.lit) {
-			SET(out["rgb"], out["rgb"] + (light.u_color["rgb"] * NdotL + Shaders3D.K3DPropsUB.u_AmbientColor["rgb"]) * attenuation * Shaders3D.K3DPropsUB.u_Shininess)
+			SET(out["rgb"], out["rgb"] + (light.u_Color["rgb"] * NdotL + Shaders3D.K3DPropsUB.u_AmbientColor["rgb"]) * attenuation * Shaders3D.K3DPropsUB.u_Shininess)
 		}
 		//SET(out["rgb"], out["rgb"] * attenuation)
 		//SET(out["rgb"], out["rgb"] + clamp(light.diffuse * max(dot(N, L), 0f.lit), 0f.lit, 1f.lit)["rgb"])
 		//SET(out["rgb"], out["rgb"] + clamp(light.specular * pow(max(dot(R, E), 0f.lit), 0.3f.lit * u_Shininess), 0f.lit, 1f.lit)["rgb"])
 	}
-
-     */
 
 	fun Program.Builder.getBoneIndex(index: Int): Operand = int(Shaders3D.a_boneIndex[index / 4][index % 4])
 	fun Program.Builder.getWeight(index: Int): Operand = Shaders3D.a_weight[index / 4][index % 4]

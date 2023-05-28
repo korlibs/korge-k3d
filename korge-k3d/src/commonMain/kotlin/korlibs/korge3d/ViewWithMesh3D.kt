@@ -1,5 +1,6 @@
 package korlibs.korge3d
 
+import korlibs.datastructure.iterators.*
 import korlibs.memory.clamp
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
@@ -82,7 +83,7 @@ open class ViewWithMesh3D(
                 }
                 ctx.rctx[Shaders3D.K3DPropsUB].push {
                     it[u_NormMat] = Matrix4.IDENTITY
-                    it[u_ModMat] = Matrix4.IDENTITY
+                    it[u_ModMat] = MMatrix3D().also { prepareExtraModelMatrix(it) }.immutable * modelMat.immutable
                 }
 
                 if (meshMaterial != null) {
@@ -90,6 +91,20 @@ open class ViewWithMesh3D(
                     setMaterialLight(ctx, Shaders3D.diffuse, meshMaterial.diffuse)
                     setMaterialLight(ctx, Shaders3D.emission, meshMaterial.emission)
                     setMaterialLight(ctx, Shaders3D.specular, meshMaterial.specular)
+                }
+
+                ctx.lights.fastForEachWithIndex { index, light: Light3D ->
+                    val lightColor = light.color
+                    ctx.rctx[Shaders3D.lights[index]].push {
+                        it[u_SourcePos] = light.transform.translation.immutable
+                        it[u_Color] =
+                            light.colorVec.setTo(lightColor.rf, lightColor.gf, lightColor.bf, 1f).immutable
+                        it[u_Attenuation] = light.attenuationVec.setTo(
+                            light.constantAttenuation,
+                            light.linearAttenuation,
+                            light.quadraticAttenuation
+                        ).immutable
+                    }
                 }
 
                 //println("mesh.vertexCount=${mesh.vertexCount}")
@@ -149,17 +164,7 @@ open class ViewWithMesh3D(
 
                             this[u_AmbientColor] = ctx.ambientColor
 
-                            ctx.lights.fastForEachWithIndex { index, light: Light3D ->
-                                val lightColor = light.color
-                                this[lights[index].u_sourcePos] = light.transform.translation
-                                this[lights[index].u_color] =
-                                    light.colorVec.setTo(lightColor.rf, lightColor.gf, lightColor.bf, 1f)
-                                this[lights[index].u_attenuation] = light.attenuationVec.setTo(
-                                    light.constantAttenuation,
-                                    light.linearAttenuation,
-                                    light.quadraticAttenuation
-                                )
-                            }
+
                         },
                         */
                     )

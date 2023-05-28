@@ -13,54 +13,65 @@ import korlibs.image.format.*
 import korlibs.io.*
 import korlibs.io.async.*
 import korlibs.io.file.std.*
+import korlibs.korge.scene.*
 import korlibs.math.geom.*
 import korlibs.math.interpolation.*
 import kotlin.jvm.*
 
 //suspend fun main(args: Array<String>) = Demo3.main(args)
-suspend fun main(args: Array<String>) = Demo3.main()
+suspend fun main() = Korge {
+    sceneContainer().changeTo({ CubesScene() })
+}
 //suspend fun main(args: Array<String>) = Demo1.main()
+
+class CubesScene : Scene() {
+    override suspend fun SContainer.sceneMain() {
+        //image(resourcesVfs["korge.png"].readNativeImage()).alpha(0.5)
+
+        scene3D {
+            //camera.set(fov = 60.degrees, near = 0.3, far = 1000.0)
+
+            //addChild(ViewWitxhMesh3D())
+
+            cube(2.0, 2.0)
+            val cube1 = cube()
+            val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees)
+            val cube3 = cube().position(-5, 0, 0)
+            val cube4 = cube().position(+5, 0, 0)
+            val cube5 = cube().position(0, -5, 0)
+            val cube6 = cube().position(0, +5, 0)
+            val cube7 = cube().position(0, 0, -5)
+            val cube8 = cube().position(0, 0, +5)
+
+            var tick = 0
+            addUpdater {
+                val angle = (tick / 4.0).degrees
+                camera.positionLookingAt(
+                    cos(angle * 2) * 4, cos(angle * 3) * 4, -sin(angle) * 4, // Orbiting camera
+                    0f, 1f, 0f
+                )
+                tick++
+            }
+
+            launchImmediately {
+                while (true) {
+                    tween(time = 16.seconds) {
+                        cube1.modelMat.identity().rotate((it * 360).degrees, 0.degrees, 0.degrees)
+                        cube2.modelMat.identity().rotate(0.degrees, (it * 360).degrees, 0.degrees)
+                    }
+                }
+            }
+        }
+
+        image(resourcesVfs["korge.png"].readNativeImage()).position(views.virtualWidth, 0).anchor(1, 0).alpha(0.5)
+    }
+}
 
 object Demo1 {
 	@JvmStatic
 	fun main(args: Array<String>) = Korio { main() }
 
 	suspend fun main() = Korge(title = "KorGE 3D").start {
-		image(resourcesVfs["korge.png"].readNativeImage()).alpha(0.5)
-
-		scene3D {
-			//camera.set(fov = 60.degrees, near = 0.3, far = 1000.0)
-
-			val cube1 = cube()
-			val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees)
-			val cube3 = cube().position(-5, 0, 0)
-			val cube4 = cube().position(+5, 0, 0)
-			val cube5 = cube().position(0, -5, 0)
-			val cube6 = cube().position(0, +5, 0)
-			val cube7 = cube().position(0, 0, -5)
-			val cube8 = cube().position(0, 0, +5)
-
-			var tick = 0
-			addUpdater {
-				val angle = (tick / 4.0).degrees
-				camera.positionLookingAt(
-					cos(angle * 2) * 4, cos(angle * 3) * 4, -sin(angle) * 4, // Orbiting camera
-					0f, 1f, 0f
-				)
-				tick++
-			}
-
-			launchImmediately {
-				while (true) {
-					tween(time = 16.seconds) {
-						cube1.modelMat.identity().rotate((it * 360).degrees, 0.degrees, 0.degrees)
-						cube2.modelMat.identity().rotate(0.degrees, (it * 360).degrees, 0.degrees)
-					}
-				}
-			}
-		}
-
-		image(resourcesVfs["korge.png"].readNativeImage()).position(views.virtualWidth, 0).anchor(1, 0).alpha(0.5)
 	}
 
 }
