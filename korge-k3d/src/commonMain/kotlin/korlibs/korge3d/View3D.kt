@@ -24,45 +24,45 @@ abstract class View3D : BaseView() {
         stage3D?.views?.views?.invalidatedView(this)
     }
 
-    var x: Double
+    var x: Float
 		set(localX) {
             transform.setTranslation(localX, y, z, localW)
             invalidateRender()
         }
-		get() = transform.translation.x.toDouble()
+		get() = transform.translation.x
 
-	var y: Double
+	var y: Float
 		set(localY) {
             transform.setTranslation(x, localY, z, localW)
             invalidateRender()
         }
-		get() = transform.translation.y.toDouble()
+		get() = transform.translation.y
 
-	var z: Double
+	var z: Float
 		set(localZ) { transform.setTranslation(x, y, localZ, localW); invalidateRender() }
-		get() = transform.translation.z.toDouble()
+		get() = transform.translation.z
 
-	var localW: Double
+	var localW: Float
 		set(localW) { transform.setTranslation(x, y, z, localW); invalidateRender() }
-		get() = transform.translation.w.toDouble()
+		get() = transform.translation.w
 
 	///////
 
-	var scaleX: Double
+	var scaleX: Float
 		set(scaleX) { transform.setScale(scaleX, scaleY, scaleZ, localScaleW); invalidateRender() }
-		get() = transform.scale.x.toDouble()
+		get() = transform.scale.x
 
-	var scaleY: Double
+	var scaleY: Float
 		set(scaleY) { transform.setScale(scaleX, scaleY, scaleZ, localScaleW); invalidateRender() }
-		get() = transform.scale.y.toDouble()
+		get() = transform.scale.y
 
-	var scaleZ: Double
+	var scaleZ: Float
 		set(scaleZ) { transform.setScale(scaleX, scaleY, scaleZ, localScaleW); invalidateRender() }
-		get() = transform.scale.z.toDouble()
+		get() = transform.scale.z
 
-	var localScaleW: Double
+	var localScaleW: Float
 		set(scaleW) { transform.setScale(scaleX, scaleY, scaleZ, scaleW); invalidateRender() }
-		get() = transform.scale.w.toDouble()
+		get() = transform.scale.w
 
 	///////
 
@@ -80,21 +80,21 @@ abstract class View3D : BaseView() {
 
 	///////
 
-	var rotationQuatX: Double
+	var rotationQuatX: Float
 		set(rotationQuatX) { transform.setRotation(rotationQuatX, rotationQuatY, rotationQuatZ, rotationQuatW); invalidateRender() }
-		get() = transform.rotation.x.toDouble()
+		get() = transform.rotation.x
 
-	var rotationQuatY: Double
+	var rotationQuatY: Float
 		set(rotationQuatY) { transform.setRotation(rotationQuatX, rotationQuatY, rotationQuatZ, rotationQuatW); invalidateRender() }
-		get() = transform.rotation.y.toDouble()
+		get() = transform.rotation.y
 
-	var rotationQuatZ: Double
+	var rotationQuatZ: Float
 		set(rotationQuatZ) { transform.setRotation(rotationQuatX, rotationQuatY, rotationQuatZ, rotationQuatW); invalidateRender() }
-		get() = transform.rotation.z.toDouble()
+		get() = transform.rotation.z
 
-	var rotationQuatW: Double
+	var rotationQuatW: Float
 		set(rotationQuatW) { transform.setRotation(rotationQuatX, rotationQuatY, rotationQuatZ, rotationQuatW); invalidateRender() }
-		get() = transform.rotation.w.toDouble()
+		get() = transform.rotation.w
 
 	///////
 
@@ -188,8 +188,6 @@ fun <T : View3D> T.position(x: Float, y: Float, z: Float, w: Float = 1f): T {
     return this
 }
 @Korge3DExperimental
-fun <T : View3D> T.position(x: Double, y: Double, z: Double, w: Double = 1.0): T = position(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
-@Korge3DExperimental
 fun <T : View3D> T.position(x: Int, y: Int, z: Int, w: Int = 1): T = position(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
 @Korge3DExperimental
@@ -206,8 +204,6 @@ fun <T : View3D> T.scale(x: Float = 1f, y: Float = 1f, z: Float = 1f, w: Float =
 }
 
 @Korge3DExperimental
-inline fun <T : View3D> T.scale(x: Double = 1.0, y: Double = 1.0, z: Double = 1.0, w: Double = 1.0): T = scale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
-@Korge3DExperimental
 inline fun <T : View3D> T.scale(x: Int = 1, y: Int = 1, z: Int = 1, w: Int = 1): T = scale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
 @Korge3DExperimental
@@ -216,8 +212,6 @@ fun <T : View3D> T.lookAt(x: Float, y: Float, z: Float): T {
     return this
 }
 
-@Korge3DExperimental
-inline fun <T : View3D> T.lookAt(x: Double, y: Double, z: Double): T = lookAt(x.toFloat(), y.toFloat(), z.toFloat())
 @Korge3DExperimental
 inline fun <T : View3D> T.lookAt(x: Int, y: Int, z: Int): T = lookAt(x.toFloat(), y.toFloat(), z.toFloat())
 
@@ -228,8 +222,6 @@ fun <T : View3D> T.positionLookingAt(px: Float, py: Float, pz: Float, tx: Float,
     invalidateRender()
     return this
 }
-@Korge3DExperimental
-fun <T : View3D> T.positionLookingAt(px: Double, py: Double, pz: Double, tx: Double, ty: Double, tz: Double): T = positionLookingAt(px.toFloat(), py.toFloat(), pz.toFloat(), tx.toFloat(), ty.toFloat(), tz.toFloat())
 @Korge3DExperimental
 fun <T : View3D> T.positionLookingAt(px: Int, py: Int, pz: Int, tx: Int, ty: Int, tz: Int): T = positionLookingAt(px.toFloat(), py.toFloat(), pz.toFloat(), tx.toFloat(), ty.toFloat(), tz.toFloat())
 

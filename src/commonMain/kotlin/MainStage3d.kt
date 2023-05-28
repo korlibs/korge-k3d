@@ -38,12 +38,12 @@ class MainStage3d : Scene() {
 
 
     @Korge3DExperimental
-    private suspend fun Stage3D.orbit(v: View3D, distance: Double, time: TimeSpan) {
+    private suspend fun Stage3D.orbit(v: View3D, distance: Float, time: TimeSpan) {
         view.tween(time = time) { ratio ->
             val angle = 360.degrees * ratio
             camera.positionLookingAt(
-                cos(angle) * distance, 0.0, sin(angle) * distance, // Orbiting camera
-                v.transform.translation.x.toDouble(), v.transform.translation.y.toDouble(), v.transform.translation.z.toDouble()
+                cos(angle) * distance, 0f, sin(angle) * distance, // Orbiting camera
+                v.transform.translation.x, v.transform.translation.y, v.transform.translation.z
             )
         }
     }

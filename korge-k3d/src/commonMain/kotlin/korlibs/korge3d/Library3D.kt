@@ -77,7 +77,7 @@ data class Library3D(
 	open class LightDef : ObjectDef()
 
 	open class CameraDef : ObjectDef()
-	data class PerspectiveCameraDef(val xfov: Angle, val zmin: Double, val zmax: Double) : CameraDef()
+	data class PerspectiveCameraDef(val xfov: Angle, val zmin: Float, val zmax: Float) : CameraDef()
 
 	interface LightKindDef {
 		val sid: String
@@ -128,9 +128,9 @@ data class Library3D(
 
 	class PointLightDef(
 		val color: RGBA,
-		val constantAttenuation: Double,
-		val linearAttenuation: Double,
-		val quadraticAttenuation: Double
+		val constantAttenuation: Float,
+		val linearAttenuation: Float,
+		val quadraticAttenuation: Float
 	) : LightDef()
 
 	class AmbientLightDef(
@@ -168,7 +168,7 @@ fun Library3D.Instance3D.instantiate(jointParent: Joint3D? = null, ctx: LibraryI
 			Light3D(def.color, def.constantAttenuation, def.linearAttenuation, def.quadraticAttenuation)
 		}
 		is Library3D.AmbientLightDef -> {
-			Light3D(def.color, 0.00001, 0.00001, 0.00001)
+			Light3D(def.color, 0.00001f, 0.00001f, 0.00001f)
 		}
 		else -> TODO("def=$def")
 	}

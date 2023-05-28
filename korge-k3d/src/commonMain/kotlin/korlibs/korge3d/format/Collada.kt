@@ -566,13 +566,13 @@ class ColladaParser {
                         val color = technique["color"].firstOrNull()?.text?.reader()?.readVector3D()
                             ?: MVector4(1, 1, 1)
                         val constant_attenuation =
-                            technique["constant_attenuation"].firstOrNull()?.text?.toDoubleOrNull()
-                                ?: 1.0
-                        val linear_attenuation = technique["linear_attenuation"].firstOrNull()?.text?.toDoubleOrNull()
-                            ?: 0.0
+                            technique["constant_attenuation"].firstOrNull()?.text?.toFloatOrNull()
+                                ?: 1f
+                        val linear_attenuation = technique["linear_attenuation"].firstOrNull()?.text?.toFloatOrNull()
+                            ?: 0f
                         val quadratic_attenuation =
-                            technique["quadratic_attenuation"].firstOrNull()?.text?.toDoubleOrNull()
-                                ?: 0.00111109
+                            technique["quadratic_attenuation"].firstOrNull()?.text?.toFloatOrNull()
+                                ?: 0.00111109f
                         lightDef = Library3D.PointLightDef(
                             RGBA.float(color.x, color.y, color.z, 1f),
                             constant_attenuation,
@@ -605,9 +605,9 @@ class ColladaParser {
                 when (v.nameLC) {
                     "_text_" -> Unit
                     "perspective" -> {
-                        val xfov = v["xfov"].firstOrNull()?.text?.toDoubleOrNull() ?: 45.0
-                        val znear = v["znear"].firstOrNull()?.text?.toDoubleOrNull() ?: 0.01
-                        val zfar = v["zfar"].firstOrNull()?.text?.toDoubleOrNull() ?: 100.0
+                        val xfov = v["xfov"].firstOrNull()?.text?.toFloatOrNull() ?: 45.0f
+                        val znear = v["znear"].firstOrNull()?.text?.toFloatOrNull() ?: 0.01f
+                        val zfar = v["zfar"].firstOrNull()?.text?.toFloatOrNull() ?: 100.0f
                         persp = Library3D.PerspectiveCameraDef(xfov.degrees, znear, zfar)
                     }
                     else -> {

@@ -88,7 +88,6 @@ class Transform3D {
         matrixDirty = true
         translation.setTo(x, y, z, w)
     }
-    fun setTranslation(x: Double, y: Double, z: Double, w: Double = 1.0) = setTranslation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
     fun setTranslation(x: Int, y: Int, z: Int, w: Int = 1) = setTranslation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
     fun setRotation(quat: Quaternion) = updatingTRS {
@@ -103,7 +102,6 @@ class Transform3D {
         rotation = Quaternion(x, y, z, w)
     }
 
-    fun setRotation(x: Double, y: Double, z: Double, w: Double) = setRotation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
     fun setRotation(x: Int, y: Int, z: Int, w: Int) = setRotation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
     fun setRotation(euler: EulerRotation) = updatingTRS {
@@ -119,7 +117,6 @@ class Transform3D {
     fun setScale(x: Float = 1f, y: Float = 1f, z: Float = 1f, w: Float = 1f) = updatingTRS {
         scale.setTo(x, y, z, w)
     }
-    fun setScale(x: Double, y: Double, z: Double, w: Double) = setScale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
     fun setScale(x: Int, y: Int, z: Int, w: Int) = setScale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
     @PublishedApi
@@ -150,7 +147,6 @@ class Transform3D {
         rotation = Quaternion.fromRotationMatrix(tempMat1.immutable)
         return this
     }
-    fun lookAt(tx: Double, ty: Double, tz: Double, up: MVector4 = UP) = lookAt(tx.toFloat(), ty.toFloat(), tz.toFloat(), up)
     fun lookAt(tx: Int, ty: Int, tz: Int, up: MVector4 = UP) = lookAt(tx.toFloat(), ty.toFloat(), tz.toFloat(), up)
 
     //setTranslation(px, py, pz)
@@ -165,11 +161,6 @@ class Transform3D {
             tempMat2.setToLookAt(tempVec1.setTo(px, py, pz), tempVec2.setTo(tx, ty, tz), up)
         )
     )
-    fun setTranslationAndLookAt(
-        px: Double, py: Double, pz: Double,
-        tx: Double, ty: Double, tz: Double,
-        up: MVector4 = UP
-    ) = setTranslationAndLookAt(px.toFloat(), py.toFloat(), pz.toFloat(), tx.toFloat(), ty.toFloat(), tz.toFloat(), up)
 
     private var tempEuler = EulerRotation()
     fun rotate(x: Angle, y: Angle, z: Angle): Transform3D {
@@ -188,10 +179,10 @@ class Transform3D {
         this.setMatrix(localTransform.matrix)
     }
 
-    fun setToInterpolated(a: Transform3D, b: Transform3D, t: Double): Transform3D {
-        _translation.setToInterpolated(a.translation, b.translation, t)
+    fun setToInterpolated(a: Transform3D, b: Transform3D, t: Float): Transform3D {
+        _translation.setToInterpolated(a.translation, b.translation, t.toDouble())
         _rotation = Quaternion.interpolated(a.rotation, b.rotation, t.toFloat())
-        _scale.setToInterpolated(a.scale, b.scale, t)
+        _scale.setToInterpolated(a.scale, b.scale, t.toDouble())
         matrixDirty = true
         return this
     }

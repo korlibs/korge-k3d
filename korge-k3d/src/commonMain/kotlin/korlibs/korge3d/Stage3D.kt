@@ -27,7 +27,7 @@ class Stage3D(val views: Views3D) : Container3D() {
 	lateinit var view: Stage3DView
 	//var ambientColor: RGBA = Colors.WHITE
 	var ambientColor: RGBA = Colors.BLACK // No ambient light
-	var ambientPower: Double = 0.3
+	var ambientPower: Float = 0.3f
 	var camera: Camera3D = Camera3D.Perspective().apply {
         this.root = this@Stage3D
 		//positionLookingAt(0, 1, 10, 0, 0, 0)
@@ -47,7 +47,7 @@ class Stage3DView(val stage3D: Stage3D) : View() {
 		//ctx.ag.clear(color = Colors.RED)
 		ctx3D.ag = ctx.ag
 		ctx3D.rctx = ctx
-		ctx3D.projMat.copyFrom(stage3D.camera.getProjMatrix(ctx.backWidth.toDouble(), ctx.backHeight.toDouble()))
+		ctx3D.projMat.copyFrom(stage3D.camera.getProjMatrix(ctx.backWidth.toFloat(), ctx.backHeight.toFloat()))
 		ctx3D.cameraMat.copyFrom(stage3D.camera.transform.matrix)
 		ctx3D.ambientColor.setToColorPremultiplied(stage3D.ambientColor).scale(stage3D.ambientPower)
 		ctx3D.cameraMatInv.invert(stage3D.camera.transform.matrix)

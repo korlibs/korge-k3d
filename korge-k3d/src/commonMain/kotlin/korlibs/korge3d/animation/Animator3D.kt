@@ -69,14 +69,14 @@ class Animator3D(val animation: Animation3D, val rootView: View3D, var playbackP
 						aview.transform.setToInterpolated(
 							ftransforms[n],
 							ftransforms.getCyclic(n + 1),
-							ratio.toDouble()
+                            ratio
 						)
                         aview.invalidateRender()
 					}
 				}
 				"location.X", "location.Y", "location.Z", "scale.X", "scale.Y", "scale.Z", "rotationX.ANGLE", "rotationY.ANGLE", "rotationZ.ANGLE" -> {
 					if (ffloats != null) {
-						val value = ratio.toRatio().interpolate(ffloats[n], ffloats[n % ffloats.size]).toDouble()
+						val value = ratio.toRatio().interpolate(ffloats[n], ffloats[n % ffloats.size])
 						when (aproperty) {
 							"location.X" -> aview.x = value
 							"location.Y" -> aview.y = value

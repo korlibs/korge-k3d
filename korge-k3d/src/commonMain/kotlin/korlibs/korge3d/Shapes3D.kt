@@ -8,7 +8,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Korge3DExperimental
-fun Container3D.shape3D(width: Double=1.0, height: Double=1.0, depth: Double=1.0, drawCommands: MeshBuilder3D.() -> Unit): Shape3D {
+fun Container3D.shape3D(width: Float = 1f, height: Float = 1f, depth: Float = 1f, drawCommands: MeshBuilder3D.() -> Unit): Shape3D {
    return  Shape3D(width, height, depth, drawCommands).addTo(this)
 }
 
@@ -17,13 +17,13 @@ fun Container3D.shape3D(width: Double=1.0, height: Double=1.0, depth: Double=1.0
  */
 @Korge3DExperimental
 class Shape3D(
-    initWidth: Double, initHeight: Double, initDepth: Double,
+    initWidth: Float, initHeight: Float, initDepth: Float,
     drawCommands: MeshBuilder3D.() -> Unit
 ) : ViewWithMesh3D(createMesh(drawCommands).copy()) {
 
-    var width: Double = initWidth
-    var height: Double = initHeight
-    var depth: Double = initDepth
+    var width: Float = initWidth
+    var height: Float = initHeight
+    var depth: Float = initDepth
 
     override fun prepareExtraModelMatrix(mat: MMatrix3D) {
         mat.identity().scale(width, height, depth)
@@ -39,13 +39,13 @@ class Shape3D(
 
 
 @Korge3DExperimental
-inline fun Container3D.cube(width: Int, height: Int, depth: Int, callback: Cube3D.() -> Unit = {}): Cube3D = cube(width.toDouble(), height.toDouble(), depth.toDouble(), callback)
+inline fun Container3D.cube(width: Int, height: Int, depth: Int, callback: Cube3D.() -> Unit = {}): Cube3D = cube(width.toFloat(), height.toFloat(), depth.toFloat(), callback)
 
 @Korge3DExperimental
 inline fun Container3D.cube(
-    width: Double = 1.0,
-    height: Double = width,
-    depth: Double = height,
+    width: Float = 1f,
+    height: Float = width,
+    depth: Float = height,
     callback: Cube3D.() -> Unit = {}
 ): Cube3D = Cube3D(width, height, depth).addTo(this, callback)
 
@@ -65,7 +65,7 @@ fun <T : BaseViewWithMesh3D> T.material(material: Material3D?): T {
 }
 
 @Korge3DExperimental
-class Cube3D(var width: Double, var height: Double, var depth: Double) : BaseViewWithMesh3D(mesh) {
+class Cube3D(var width: Float, var height: Float, var depth: Float) : BaseViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix(mat: MMatrix3D) {
         mat.identity().scale(width, height, depth)
     }
@@ -105,19 +105,16 @@ class Cube3D(var width: Double, var height: Double, var depth: Double) : BaseVie
 }
 
 @Korge3DExperimental
-inline fun Container3D.sphere(radius: Int, callback: Sphere3D.() -> Unit = {}): Sphere3D = sphere(radius.toDouble(), callback)
-
-@Korge3DExperimental
-inline fun Container3D.sphere(radius: Float, callback: Sphere3D.() -> Unit = {}): Sphere3D = sphere(radius.toDouble(), callback)
+inline fun Container3D.sphere(radius: Int, callback: Sphere3D.() -> Unit = {}): Sphere3D = sphere(radius.toFloat(), callback)
 
 @Korge3DExperimental
 inline fun Container3D.sphere(
-    radius: Double = 1.0,
+    radius: Float = 1f,
     callback: Sphere3D.() -> Unit = {}
 ): Sphere3D = Sphere3D(radius).addTo(this, callback)
 
 @Korge3DExperimental
-class Sphere3D(var radius: Double) : BaseViewWithMesh3D(mesh) {
+class Sphere3D(var radius: Float) : BaseViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix(mat: MMatrix3D) {
         mat.identity().scale(radius, radius, radius)
     }

@@ -7,27 +7,27 @@ import korlibs.math.geom.MVector4
 @Korge3DExperimental
 fun Container3D.light(
 	color: RGBA = Colors.WHITE,
-	constantAttenuation: Double = 1.0,
-	linearAttenuation: Double = 0.0,
-	quadraticAttenuation: Double = 0.00111109,
+	constantAttenuation: Float = 1.0f,
+	linearAttenuation: Float = 0.0f,
+	quadraticAttenuation: Float = 0.00111109f,
 	callback: Light3D.() -> Unit = {}
 ) = Light3D(color, constantAttenuation, linearAttenuation, quadraticAttenuation).addTo(this, callback)
 
 @Korge3DExperimental
 open class Light3D(
 	var color: RGBA = Colors.WHITE,
-	var constantAttenuation: Double = 1.0,
-	var linearAttenuation: Double = 0.0,
-	var quadraticAttenuation: Double = 0.00111109
+	var constantAttenuation: Float = 1.0f,
+	var linearAttenuation: Float = 0.0f,
+	var quadraticAttenuation: Float = 0.00111109f
 ) : View3D() {
 	internal val colorVec = MVector4()
 	internal val attenuationVec = MVector4()
 
 	fun setTo(
 		color: RGBA = Colors.WHITE,
-		constantAttenuation: Double = 1.0,
-		linearAttenuation: Double = 0.0,
-		quadraticAttenuation: Double = 0.00111109
+		constantAttenuation: Float = 1.0f,
+		linearAttenuation: Float = 0.0f,
+		quadraticAttenuation: Float = 0.00111109f
 	): Light3D {
 		this.color = color
 		this.constantAttenuation = constantAttenuation

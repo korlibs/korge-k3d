@@ -7,8 +7,8 @@ abstract class Camera3D : View3D() {
     //TODO: I don't think that a Camera should subtype View
 
     private var projMat = MMatrix3D()
-    private var width: Double = 0.0
-    private var height: Double = 0.0
+    private var width: Float = 0f
+    private var height: Float = 0f
     protected var dirty = true
 
     override var root: View3D = this
@@ -20,7 +20,7 @@ abstract class Camera3D : View3D() {
         }
     }
 
-    fun getProjMatrix(width: Double, height: Double): MMatrix3D {
+    fun getProjMatrix(width: Float, height: Float): MMatrix3D {
         if (this.width != width || this.height != height) {
             this.dirty = true
             this.width = width
@@ -33,7 +33,7 @@ abstract class Camera3D : View3D() {
         return projMat
     }
 
-    protected abstract fun updateMatrix(mat: MMatrix3D, width: Double, height: Double)
+    protected abstract fun updateMatrix(mat: MMatrix3D, width: Float, height: Float)
 
     override fun render(ctx: RenderContext3D) {
         // Do nothing except when debugging
@@ -43,22 +43,22 @@ abstract class Camera3D : View3D() {
 
     class Perspective(
         fov: Angle = 60.degrees,
-        near: Double = 0.1,
-        far: Double = 1000.0
+        near: Float = 0.1f,
+        far: Float = 1000.0f
     ) : Camera3D() {
         var fov: Angle = fov; set(value) = dirty({ field != value }) { field = value }
-        var near: Double = near; set(value) = dirty({ field != value }) { field = value }
-        var far: Double = far; set(value) = dirty({ field != value }) { field = value }
+        var near: Float = near; set(value) = dirty({ field != value }) { field = value }
+        var far: Float = far; set(value) = dirty({ field != value }) { field = value }
 
-        fun set(fov: Angle = this.fov, near: Double = this.near, far: Double = this.far): Perspective {
+        fun set(fov: Angle = this.fov, near: Float = this.near, far: Float = this.far): Perspective {
             this.fov = fov
             this.near = near
             this.far = far
             return this
         }
 
-        override fun updateMatrix(mat: MMatrix3D, width: Double, height: Double) {
-            mat.setToPerspective(fov, if (height != 0.0) width / height else 1.0, near, far)
+        override fun updateMatrix(mat: MMatrix3D, width: Float, height: Float) {
+            mat.setToPerspective(fov, if (height != 0.0f) width / height else 1.0f, near, far)
         }
 
         override fun clone(): Perspective = Perspective(fov, near, far).apply {

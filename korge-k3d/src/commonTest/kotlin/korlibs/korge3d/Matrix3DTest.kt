@@ -83,7 +83,7 @@ class Matrix3DTest {
         )
     }
 
-    fun assertEquals(a: MEulerRotation, b: MEulerRotation, delta: Double = 0.01) {
+    fun assertEquals(a: MEulerRotation, b: MEulerRotation, delta: Float = 0.01) {
         assertTrue("$a\n$b\na!=b // delta=$delta") {
             abs(a.x.degrees - b.x.degrees) <= delta &&
                     abs(a.y.degrees - b.y.degrees) <= delta &&
@@ -91,7 +91,7 @@ class Matrix3DTest {
         }
     }
 
-    fun assertEquals(a: MQuaternion, b: MQuaternion, delta: Double = 0.01) {
+    fun assertEquals(a: MQuaternion, b: MQuaternion, delta: Float = 0.01) {
         assertTrue("$a\n$b\na!=b // delta=$delta") {
             abs(a.x - b.x) <= delta &&
                     abs(a.y - b.y) <= delta &&
@@ -100,7 +100,7 @@ class Matrix3DTest {
         }
     }
 
-    fun assertEquals(a: Double, b: Double, delta: Double) {
+    fun assertEquals(a: Float, b: Float, delta: Float) {
         assertTrue("$a != $b // delta=$delta") { abs(a - b) <= delta }
     }
 
@@ -113,7 +113,7 @@ class Matrix3DTest {
     fun MMatrix3D.round(digits: Int = 0) = setToMap { round(it, digits) }
 
     fun round(x: Float, digits: Int) = (round(x * 10.0.pow(digits)) / 10.0.pow(digits)).toFloat()
-    fun round(x: Double, digits: Int) = round(x * 10.0.pow(digits)) / 10.0.pow(digits)
+    fun round(x: Float, digits: Int) = round(x * 10.0.pow(digits)) / 10.0.pow(digits)
 
     @Test
     fun testConvert() {

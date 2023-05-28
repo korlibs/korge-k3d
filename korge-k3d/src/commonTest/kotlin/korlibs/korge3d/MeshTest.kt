@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 class MeshTest {
     @Test
     fun testCube() {
-        val cube = Cube3D(1.0, 1.0, 1.0)
+        val cube = Cube3D(1f, 1f, 1f)
         val vertexCount = cube.mesh.vertexCount
         assertTrue(vertexCount > 0, "cube.mesh.vertexCount(=$vertexCount) is not positive")
     }

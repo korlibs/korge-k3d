@@ -30,6 +30,6 @@ class MainSkybox : Scene() {
         }
     }
 
-    private val KeyEvent.speed: Double get() = if (shift) 5.0 else 1.0
+    private val KeyEvent.speed: Float get() = if (shift) 5.0 else 1.0
 }
 */
