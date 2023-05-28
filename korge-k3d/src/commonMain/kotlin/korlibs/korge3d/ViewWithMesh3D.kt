@@ -1,10 +1,9 @@
 package korlibs.korge3d
 
-import korlibs.datastructure.get
-import korlibs.datastructure.iterators.fastForEach
-import korlibs.datastructure.iterators.fastForEachWithIndex
 import korlibs.memory.clamp
 import korlibs.graphics.*
+import korlibs.graphics.shader.*
+import korlibs.korge.render.*
 import korlibs.math.geom.*
 
 @Korge3DExperimental
@@ -30,20 +29,27 @@ open class ViewWithMesh3D(
         mat.identity()
     }
 
-    //fun AGUniformValues.setMaterialLight(
-    //    ctx: RenderContext3D,
-    //    uniform: Shaders3D.MaterialLightUniform,
-    //    actual: Material3D.Light
-    //) {
-    //    when (actual) {
-    //        is Material3D.LightColor -> {
-    //            this[uniform.u_color] = actual.colorVec
-    //        }
-    //        is Material3D.LightTexture -> {
-    //            this.set(uniform.u_texUnit, actual.bitmap?.let { ctx.rctx.agBitmapTextureManager.getTextureBase(it).base }, AGTextureUnitInfo.DEFAULT.withLinear(true))
-    //        }
-    //    }
-    //}
+    fun setMaterialLight(
+        ctx: RenderContext3D,
+        uniform: Shaders3D.MaterialUB,
+        actual: Material3D.Light
+    ) {
+        ctx.rctx[uniform].push {
+            //println("uniform=$uniform, actual=$actual")
+            when (actual) {
+                is Material3D.LightColor -> {
+                    it[u_color] = actual.colorVec.immutable
+                }
+                is Material3D.LightTexture -> {
+                    ctx.rctx.textureUnits.set(
+                        u_texUnit.index,
+                        actual.bitmap?.let { ctx.rctx.agBitmapTextureManager.getTextureBase(it).base },
+                        AGTextureUnitInfo.DEFAULT.withLinear(true)
+                    )
+                }
+            }
+        }
+    }
 
     private val identity = MMatrix3D()
     private val identityInv = identity.clone().invert()
@@ -61,7 +67,8 @@ open class ViewWithMesh3D(
                 //tempMat3.multiply(ctx.cameraMatInv, Matrix3D().invert(this.localTransform.matrix))
                 //tempMat3.multiply(this.localTransform.matrix, ctx.cameraMat)
                 val meshMaterial = mesh.material
-                val program = Shaders3D.debugColor3D ?: mesh.program ?: ctx.shaders.getProgram3D(
+                //val program = Shaders3D.PROGRAM_COLOR_3D ?: mesh.program ?: ctx.shaders.getProgram3D(
+                val program = mesh.program ?: ctx.shaders.getProgram3D(
                     ctx.lights.size.clamp(0, 4),
                     mesh.maxWeights,
                     meshMaterial,
@@ -75,6 +82,14 @@ open class ViewWithMesh3D(
                 }
                 ctx.rctx[Shaders3D.K3DPropsUB].push {
                     it[u_NormMat] = Matrix4.IDENTITY
+                    it[u_ModMat] = Matrix4.IDENTITY
+                }
+
+                if (meshMaterial != null) {
+                    setMaterialLight(ctx, Shaders3D.ambient, meshMaterial.ambient)
+                    setMaterialLight(ctx, Shaders3D.diffuse, meshMaterial.diffuse)
+                    setMaterialLight(ctx, Shaders3D.emission, meshMaterial.emission)
+                    setMaterialLight(ctx, Shaders3D.specular, meshMaterial.specular)
                 }
 
                 //println("mesh.vertexCount=${mesh.vertexCount}")
@@ -90,6 +105,7 @@ open class ViewWithMesh3D(
                         vertexCount = mesh.vertexCount,
                         blending = AGBlending.NONE,
                         uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
+                        textureUnits = ctx.rctx.textureUnits.clone(),
                         depthAndFrontFace = rs,
                         /*
                         uniforms = uniformValues.apply {

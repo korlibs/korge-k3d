@@ -65,7 +65,7 @@ open class Shaders3D {
 
 		val v_Temp1 = Varying("v_Temp1", VarType.Float4)
 
-		val programColor3D = Program(
+		val PROGRAM_COLOR_3D = Program(
 			vertex = VertexShader {
 				SET(v_col, a_col)
 				SET(out, u_ProjMat * K3DPropsUB.u_ModMat * u_ViewMat * vec4(a_pos, 1f.lit))
@@ -77,9 +77,9 @@ open class Shaders3D {
 			name = "programColor3D"
 		)
 
-        val debugColor3D = Program(
+        val PROGRAM_DEBUG_COLOR_3D = Program(
             vertex = VertexShader {
-                SET(out, u_ProjMat * u_ViewMat * vec4(a_pos, 1f.lit))
+                SET(out, u_ProjMat * K3DPropsUB.u_ModMat * u_ViewMat * vec4(a_pos, 1f.lit))
             },
             fragment = FragmentShader {
                 SET(out, vec4(1f.lit, 0f.lit, 1f.lit, 1f.lit))
@@ -90,10 +90,10 @@ open class Shaders3D {
 
 		//val lights = (0 until 4).map { LightAttributes(it) }
 
-		val emission = MaterialUB("emission", 1)
-		val ambient = MaterialUB("ambient", 2)
-		val diffuse = MaterialUB("diffuse", 3)
-		val specular = MaterialUB("specular", 4)
+		val emission = MaterialUB("emission", 1, 1)
+		val ambient = MaterialUB("ambient", 2, 2)
+		val diffuse = MaterialUB("diffuse", 3, 3)
+		val specular = MaterialUB("specular", 4, 4)
 
 
 		val layoutPosCol = VertexLayout(a_pos, a_col)
@@ -108,8 +108,9 @@ open class Shaders3D {
         val u_Attenuation = Array(4) { vec4("lightAttenuation$it") }
     }
 
-    class MaterialUB(val kind: String, fixedLocation: Int) : UniformBlock(fixedLocation = fixedLocation) {
+    data class MaterialUB(val kind: String, val fixLocation: Int, val textureIndex: Int) : UniformBlock(fixedLocation = fixLocation) {
         val u_color by vec4("u_${kind}_color")
+        val u_texUnit by Sampler("u_texUnit${textureIndex}", textureIndex, SamplerVarType.Sampler2D)
         //val u_texUnit by int("u_${kind}_texUnit")
     }
 
@@ -173,11 +174,11 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 
 	override fun Program.Builder.fragment() {
 		val meshMaterial = meshMaterial
-		//if (meshMaterial != null) {
-		//	computeMaterialLightColor(out, Shaders3D.diffuse, meshMaterial.diffuse)
-		//} else {
+		if (meshMaterial != null) {
+			computeMaterialLightColor(out, Shaders3D.diffuse, meshMaterial.diffuse)
+		} else {
 			SET(out, vec4(1f.lit, 0f.lit, 1f.lit, 1f.lit))
-		//}
+		}
 
 		//for (n in 0 until nlights) {
 		//	addLight(Shaders3D.lights[n], out)
@@ -185,17 +186,17 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		//SET(out, vec4(v_Temp1.x, v_Temp1.y, v_Temp1.z, 1f.lit))
 	}
 
-	//open fun Program.Builder.computeMaterialLightColor(out: Operand, uniform: Shaders3D.MaterialLightUniform, light: Material3D.Light) {
-	//	when (light) {
-	//		is Material3D.LightColor -> {
-	//			SET(out, uniform.u_color)
-	//		}
-	//		is Material3D.LightTexture -> {
-	//			SET(out, vec4(texture2D(uniform.u_texUnit, Shaders3D.v_TexCoords["xy"])["rgb"], 1f.lit))
-	//		}
-	//		else -> error("Unsupported MateriaList: $light")
-	//	}
-	//}
+	open fun Program.Builder.computeMaterialLightColor(out: Operand, uniform: Shaders3D.MaterialUB, light: Material3D.Light) {
+		when (light) {
+			is Material3D.LightColor -> {
+				SET(out, uniform.u_color)
+			}
+			is Material3D.LightTexture -> {
+				SET(out, vec4(texture2D(uniform.u_texUnit, Shaders3D.v_TexCoords["xy"])["rgb"], 1f.lit))
+			}
+			else -> error("Unsupported MateriaList: $light")
+		}
+	}
 
 	fun Program.Builder.mat4Identity() = Program.Func("mat4",
 		1f.lit, 0f.lit, 0f.lit, 0f.lit,

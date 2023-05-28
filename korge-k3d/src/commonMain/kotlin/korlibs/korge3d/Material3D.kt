@@ -4,7 +4,7 @@ import korlibs.image.bitmap.Bitmap
 import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
 import korlibs.image.color.setToColor
-import korlibs.math.geom.MVector4
+import korlibs.math.geom.*
 
 @Korge3DExperimental
 data class Material3D(
@@ -30,3 +30,5 @@ data class Material3D(
 
 	val kind: String = "${emission.kind}_${ambient.kind}_${diffuse.kind}_${specular.kind}"
 }
+
+val MVector4.immutable: Vector4 get() = Vector4(x, y, z, w)
