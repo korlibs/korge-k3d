@@ -6,7 +6,7 @@ import korlibs.math.geom.Angle
 import korlibs.math.geom.MMatrix3D
 import korlibs.math.geom.degrees
 
-@Korge3DExperimental
+
 abstract class View3D : BaseView() {
     //TODO: I don't think that a Camera, Container, Light, ViewWithMesh, Text3D should all have this as supertype
     // they are not all 'types' of View ?
@@ -125,7 +125,7 @@ abstract class View3D : BaseView() {
 	abstract fun render(ctx: RenderContext3D)
 }
 
-@Korge3DExperimental
+
 fun View3D?.foreachDescendant(handler: (View3D) -> Unit) {
 	if (this != null) {
 		handler(this)
@@ -137,21 +137,21 @@ fun View3D?.foreachDescendant(handler: (View3D) -> Unit) {
 	}
 }
 
-@Korge3DExperimental
+
 inline fun <reified T : View3D> View3D?.findByType() = sequence<T> {
 	for (it in descendants()) {
 		if (it is T) yield(it)
 	}
 }
 
-@Korge3DExperimental
+
 inline fun <reified T : View3D> View3D?.findByTypeWithName(name: String) = sequence<T> {
 	for (it in descendants()) {
 		if (it is T && it.name == name) yield(it)
 	}
 }
 
-@Korge3DExperimental
+
 fun View3D?.descendants(): Sequence<View3D> = sequence<View3D> {
 	val view = this@descendants ?: return@sequence
 	yield(view)
@@ -162,7 +162,7 @@ fun View3D?.descendants(): Sequence<View3D> = sequence<View3D> {
 	}
 }
 
-@Korge3DExperimental
+
 operator fun View3D?.get(name: String): View3D? {
 	if (this?.id == name) return this
 	if (this?.name == name) return this
@@ -175,57 +175,57 @@ operator fun View3D?.get(name: String): View3D? {
 	return null
 }
 
-@Korge3DExperimental
+
 fun <T : View3D> T.name(name: String): T {
     this.name = name
     return this
 }
 
-@Korge3DExperimental
+
 fun <T : View3D> T.position(x: Float, y: Float, z: Float, w: Float = 1f): T {
     transform.setTranslation(x, y, z, w)
     invalidateRender()
     return this
 }
-@Korge3DExperimental
+
 fun <T : View3D> T.position(x: Int, y: Int, z: Int, w: Int = 1): T = position(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
-@Korge3DExperimental
+
 fun <T : View3D> T.rotation(x: Angle = 0.degrees, y: Angle = 0.degrees, z: Angle = 0.degrees): T {
 	transform.setRotation(x, y, z)
     invalidateRender()
     return this
 }
 
-@Korge3DExperimental
+
 fun <T : View3D> T.scale(x: Float = 1f, y: Float = 1f, z: Float = 1f, w: Float = 1f): T {
     transform.setScale(x, y, z, w)
     return this
 }
 
-@Korge3DExperimental
+
 inline fun <T : View3D> T.scale(x: Int = 1, y: Int = 1, z: Int = 1, w: Int = 1): T = scale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
-@Korge3DExperimental
+
 fun <T : View3D> T.lookAt(x: Float, y: Float, z: Float): T {
     transform.lookAt(x, y, z)
     return this
 }
 
-@Korge3DExperimental
+
 inline fun <T : View3D> T.lookAt(x: Int, y: Int, z: Int): T = lookAt(x.toFloat(), y.toFloat(), z.toFloat())
 
 
-@Korge3DExperimental
+
 fun <T : View3D> T.positionLookingAt(px: Float, py: Float, pz: Float, tx: Float, ty: Float, tz: Float): T {
     transform.setTranslationAndLookAt(px, py, pz, tx, ty, tz)
     invalidateRender()
     return this
 }
-@Korge3DExperimental
+
 fun <T : View3D> T.positionLookingAt(px: Int, py: Int, pz: Int, tx: Int, ty: Int, tz: Int): T = positionLookingAt(px.toFloat(), py.toFloat(), pz.toFloat(), tx.toFloat(), ty.toFloat(), tz.toFloat())
 
-@Korge3DExperimental
+
 fun <T : View3D> T.addTo(container: Container3D): T {
 	container.addChild(this)
     return this

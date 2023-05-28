@@ -2,7 +2,7 @@ package korlibs.korge3d
 
 //import it.krzeminski.visassert.assertFunctionConformsTo
 
-@Korge3DExperimental
+
 class Animator3DTest {
     /*
     @Test

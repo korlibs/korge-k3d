@@ -3,7 +3,7 @@ package korlibs.korge3d
 import korlibs.korge3d.internal.toFast
 import korlibs.math.geom.MMatrix3D
 
-@Korge3DExperimental
+
 open class Joint3D constructor(
 	val jid: String,
 	val jname: String,
@@ -36,20 +36,20 @@ open class Joint3D constructor(
 	override fun toString(): String = "Joint3D(id=$jid, name=$name, sid=$jsid)"
 }
 
-@Korge3DExperimental
+
 data class Bone3D constructor(
 	val index: Int,
 	val name: String,
 	val invBindMatrix: MMatrix3D
 )
 
-@Korge3DExperimental
+
 data class Skin3D(val bindShapeMatrix: MMatrix3D, val bones: List<Bone3D>) {
 	val bindShapeMatrixInv = bindShapeMatrix.clone().invert()
 	val matrices = Array(bones.size) { MMatrix3D() }
 }
 
-@Korge3DExperimental
+
 class Skeleton3D(val skin: Skin3D, val headJoint: Joint3D) : View3D() {
 	val allJoints = headJoint.descendantsAndThis
 	val jointsByName = allJoints.associateBy { it.jname }.toFast()

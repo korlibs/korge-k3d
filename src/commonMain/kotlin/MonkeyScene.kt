@@ -14,7 +14,7 @@ import korlibs.math.geom.sin
 import korlibs.math.interpolation.Easing
 import korlibs.time.seconds
 
-@Korge3DExperimental
+
 class MonkeyScene : Scene() {
     override suspend fun SContainer.sceneInit() {
         //delay(10.seconds)

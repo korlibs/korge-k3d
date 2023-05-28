@@ -9,7 +9,7 @@ import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
 import korlibs.image.color.setToColorPremultiplied
 
-@Korge3DExperimental
+
 inline fun Container.scene3D(views: Views3D = Views3D(stage!!.views), callback: Stage3D.() -> Unit = {}): Stage3DView {
     val stage3D = Stage3D(views)
     val view = Stage3DView(stage3D)
@@ -18,11 +18,11 @@ inline fun Container.scene3D(views: Views3D = Views3D(stage!!.views), callback: 
     return view
 }
 
-@Korge3DExperimental
+
 class Views3D(val views: Views) {
 }
 
-@Korge3DExperimental
+
 class Stage3D(val views: Views3D) : Container3D() {
 	lateinit var view: Stage3DView
 	//var ambientColor: RGBA = Colors.WHITE
@@ -34,7 +34,7 @@ class Stage3D(val views: Views3D) : Container3D() {
 	}
 }
 
-@Korge3DExperimental
+
 class Stage3DView(val stage3D: Stage3D) : View() {
 	init {
 		stage3D.view = this

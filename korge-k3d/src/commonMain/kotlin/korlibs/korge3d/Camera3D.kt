@@ -2,7 +2,7 @@ package korlibs.korge3d
 
 import korlibs.math.geom.*
 
-@Korge3DExperimental
+
 abstract class Camera3D : View3D() {
     //TODO: I don't think that a Camera should subtype View
 

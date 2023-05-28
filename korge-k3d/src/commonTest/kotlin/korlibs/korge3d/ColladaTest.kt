@@ -15,7 +15,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-@Korge3DExperimental
+
 class ColladaTest {
     val logger = Logger("ColladaTest")
 

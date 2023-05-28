@@ -8,7 +8,7 @@ import korlibs.korge.render.AgBufferManager
 import korlibs.korge.render.RenderContext
 import korlibs.math.geom.*
 
-@Korge3DExperimental
+
 class RenderContext3D() {
     lateinit var ag: AG
     lateinit var rctx: RenderContext

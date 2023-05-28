@@ -3,7 +3,6 @@ package korlibs.korge3d.format
 import korlibs.datastructure.IndexedTable
 import korlibs.datastructure.fastForEach
 import korlibs.memory.*
-import korlibs.korge3d.Korge3DExperimental
 import korlibs.korge3d.Library3D
 import korlibs.io.file.VfsFile
 import korlibs.io.stream.MemorySyncStreamToByteArray
@@ -14,11 +13,11 @@ import korlibs.io.stream.writeStringVL
 import korlibs.io.stream.writeU_VL
 
 // KorGE Scene 3D file format
-@Korge3DExperimental
+
 object KS3D {
 }
 
-@Korge3DExperimental
+
 suspend fun VfsFile.writeKs3d(library: Library3D) {
     val names = IndexedTable<String>()
 
@@ -48,7 +47,7 @@ suspend fun VfsFile.writeKs3d(library: Library3D) {
     })
 }
 
-@Korge3DExperimental
+
 suspend fun VfsFile.readKs3d(): Library3D {
     TODO()
 }

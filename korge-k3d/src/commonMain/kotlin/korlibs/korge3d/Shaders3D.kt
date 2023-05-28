@@ -4,7 +4,7 @@ import korlibs.graphics.*
 import korlibs.graphics.shader.*
 import korlibs.graphics.shader.gl.*
 
-@Korge3DExperimental
+
 open class Shaders3D {
 
 	//@ThreadLocal
@@ -121,7 +121,7 @@ open class Shaders3D {
 	//}
 }
 
-@Korge3DExperimental
+
 data class StandardShader3D(
 	override val nlights: Int,
 	override val nweights: Int,
@@ -129,7 +129,7 @@ data class StandardShader3D(
 	override val hasTexture: Boolean
 ) : AbstractStandardShader3D()
 
-@Korge3DExperimental
+
 abstract class AbstractStandardShader3D() : BaseShader3D() {
 	abstract val nlights: Int
 	abstract val nweights: Int
@@ -249,7 +249,7 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 	fun Program.Builder.getBone(index: Int): Operand = Shaders3D.Bones4UB.u_BoneMats[index]
 }
 
-@Korge3DExperimental
+
 abstract class BaseShader3D {
 	abstract fun Program.Builder.vertex()
 	abstract fun Program.Builder.fragment()

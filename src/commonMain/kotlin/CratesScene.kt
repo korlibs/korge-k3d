@@ -12,7 +12,7 @@ import korlibs.math.geom.degrees
 import korlibs.math.geom.sin
 import korlibs.time.seconds
 
-@Korge3DExperimental
+
 class CratesScene : Scene() {
     @KeepOnReload
     var trans = Transform3D()

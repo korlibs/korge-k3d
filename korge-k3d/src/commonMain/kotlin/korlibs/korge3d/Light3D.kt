@@ -4,7 +4,7 @@ import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
 import korlibs.math.geom.MVector4
 
-@Korge3DExperimental
+
 fun Container3D.light(
 	color: RGBA = Colors.WHITE,
 	constantAttenuation: Float = 1.0f,
@@ -13,7 +13,7 @@ fun Container3D.light(
 	callback: Light3D.() -> Unit = {}
 ) = Light3D(color, constantAttenuation, linearAttenuation, quadraticAttenuation).addTo(this, callback)
 
-@Korge3DExperimental
+
 open class Light3D(
 	var color: RGBA = Colors.WHITE,
 	var constantAttenuation: Float = 1.0f,

@@ -32,7 +32,7 @@ class HeightMapBitmap(val bitmap:Bitmap) : HeightMap{
     }
 }
 
-@Korge3DExperimental
+
 fun Container3D.terrain(
     centerX: Float = 0f,
     centerZ: Float = 0f,
@@ -44,7 +44,7 @@ fun Container3D.terrain(
     return Terrain3D(centerX, centerZ, width, depth, heightMap,heightScale).addTo(this)
 }
 
-@Korge3DExperimental
+
 class Terrain3D(
     val centerX: Float,
     val centerZ: Float,

@@ -53,12 +53,12 @@ suspend fun VfsFile.readCubeMap(ext: String): CubeMap {
     }
 }
 
-@Korge3DExperimental
+
 fun Stage3D.skyBox(cubemap: CubeMap, centerX: Float = 0f, centerY: Float = 0f, centerZ: Float = 0f): SkyBox {
     return SkyBox(cubemap, MVector4(centerX, centerY, centerZ)).addTo(this)
 }
 
-@Korge3DExperimental
+
 class SkyBox(
     val cubemap: CubeMap,
     val center: MVector4

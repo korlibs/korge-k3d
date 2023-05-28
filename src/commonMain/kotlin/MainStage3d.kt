@@ -37,7 +37,7 @@ class MainStage3d : Scene() {
     }
 
 
-    @Korge3DExperimental
+    
     private suspend fun Stage3D.orbit(v: View3D, distance: Float, time: TimeSpan) {
         view.tween(time = time) { ratio ->
             val angle = 360.degrees * ratio

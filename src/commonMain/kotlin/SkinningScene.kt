@@ -8,7 +8,7 @@ import korlibs.korge3d.*
 import korlibs.korge3d.animation.Animator3D
 import korlibs.korge3d.format.readColladaLibrary
 
-@Korge3DExperimental
+
 class SkinningScene : Scene() {
     override suspend fun SContainer.sceneInit() {
         scene3D {

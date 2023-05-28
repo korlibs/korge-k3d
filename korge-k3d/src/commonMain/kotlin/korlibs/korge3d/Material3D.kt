@@ -6,7 +6,7 @@ import korlibs.image.color.RGBA
 import korlibs.image.color.setToColor
 import korlibs.math.geom.*
 
-@Korge3DExperimental
+
 data class Material3D(
 	val emission: Light = LightColor(Colors.BLACK),
 	val ambient: Light = LightColor(Colors.BLACK),
@@ -16,15 +16,15 @@ data class Material3D(
 	val shininess: Float = .5f,
 	val indexOfRefraction: Float = 1f
 ) {
-	@Korge3DExperimental
+	
 	open class Light(val kind: String)
 
-	@Korge3DExperimental
+	
 	data class LightColor(val color: RGBA) : Light("color") {
 		val colorVec = MVector4().setToColor(color)
 	}
 
-	@Korge3DExperimental
+	
 	data class LightTexture(val bitmap: Bitmap?) : Light("texture") {
 	}
 

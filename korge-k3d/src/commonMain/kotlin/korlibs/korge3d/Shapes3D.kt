@@ -7,7 +7,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-@Korge3DExperimental
+
 fun Container3D.shape3D(width: Float = 1f, height: Float = 1f, depth: Float = 1f, drawCommands: MeshBuilder3D.() -> Unit): Shape3D {
    return  Shape3D(width, height, depth, drawCommands).addTo(this)
 }
@@ -15,7 +15,7 @@ fun Container3D.shape3D(width: Float = 1f, height: Float = 1f, depth: Float = 1f
 /*
  * Note: To draw solid quads, you can use [Bitmaps.white] + [AgBitmapTextureManager] as texture and the [colorMul] as quad color.
  */
-@Korge3DExperimental
+
 class Shape3D(
     initWidth: Float, initHeight: Float, initDepth: Float,
     drawCommands: MeshBuilder3D.() -> Unit
@@ -38,10 +38,10 @@ class Shape3D(
 }
 
 
-@Korge3DExperimental
+
 inline fun Container3D.cube(width: Int, height: Int, depth: Int, callback: Cube3D.() -> Unit = {}): Cube3D = cube(width.toFloat(), height.toFloat(), depth.toFloat(), callback)
 
-@Korge3DExperimental
+
 inline fun Container3D.cube(
     width: Float = 1f,
     height: Float = width,
@@ -49,7 +49,7 @@ inline fun Container3D.cube(
     callback: Cube3D.() -> Unit = {}
 ): Cube3D = Cube3D(width, height, depth).addTo(this, callback)
 
-@Korge3DExperimental
+
 abstract class BaseViewWithMesh3D(mesh: Mesh3D) : ViewWithMesh3D(mesh.copy()) {
     var material: Material3D?
         get() = mesh.material
@@ -64,7 +64,7 @@ fun <T : BaseViewWithMesh3D> T.material(material: Material3D?): T {
     return this
 }
 
-@Korge3DExperimental
+
 class Cube3D(var width: Float, var height: Float, var depth: Float) : BaseViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix(mat: MMatrix3D) {
         mat.identity().scale(width, height, depth)
@@ -104,16 +104,16 @@ class Cube3D(var width: Float, var height: Float, var depth: Float) : BaseViewWi
     }
 }
 
-@Korge3DExperimental
+
 inline fun Container3D.sphere(radius: Int, callback: Sphere3D.() -> Unit = {}): Sphere3D = sphere(radius.toFloat(), callback)
 
-@Korge3DExperimental
+
 inline fun Container3D.sphere(
     radius: Float = 1f,
     callback: Sphere3D.() -> Unit = {}
 ): Sphere3D = Sphere3D(radius).addTo(this, callback)
 
-@Korge3DExperimental
+
 class Sphere3D(var radius: Float) : BaseViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix(mat: MMatrix3D) {
         mat.identity().scale(radius, radius, radius)

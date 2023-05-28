@@ -15,13 +15,13 @@ import korlibs.math.geom.*
 import korlibs.math.*
 import kotlin.math.*
 
-@Korge3DExperimental
+
 suspend fun VfsFile.readColladaLibrary(loadTextures: Boolean = true): Library3D {
     return ColladaParser.parse(readXml()).also { if (loadTextures) it.loadTextures() }
         .also { it.instantiateMaterials() }
 }
 
-@Korge3DExperimental
+
 class ColladaParser {
     interface SourceParam {
         val name: String

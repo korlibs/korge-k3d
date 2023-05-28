@@ -10,7 +10,7 @@ import korlibs.io.file.std.resourcesVfs
 import korlibs.math.geom.Angle
 import korlibs.math.geom.MMatrix3D
 
-@Korge3DExperimental
+
 data class Library3D(
 	val cameraDefs: FastStringMap<CameraDef> = FastStringMap(),
 	val lightDefs: FastStringMap<LightDef> = FastStringMap(),
@@ -138,12 +138,12 @@ data class Library3D(
 	) : LightDef()
 }
 
-@Korge3DExperimental
+
 class LibraryInstantiateContext {
 	val viewsById = FastStringMap<View3D>()
 }
 
-@Korge3DExperimental
+
 fun Library3D.Instance3D.instantiate(jointParent: Joint3D? = null, ctx: LibraryInstantiateContext = LibraryInstantiateContext()): View3D {
 	val def = this.def
 	val view: View3D = when (def) {
@@ -189,7 +189,7 @@ fun Library3D.Instance3D.instantiate(jointParent: Joint3D? = null, ctx: LibraryI
 	return view
 }
 
-@Korge3DExperimental
+
 fun Library3D.LightKindDef.instantiate(): Material3D.Light {
 	return when (this) {
 		is Library3D.LightTexDef -> Material3D.LightTexture(this.texture?.surface?.initFrom?.texure)
@@ -198,7 +198,7 @@ fun Library3D.LightKindDef.instantiate(): Material3D.Light {
 	}
 }
 
-@Korge3DExperimental
+
 fun Library3D.MaterialDef.instantiate(): Material3D {
 	val effect = this.effects.firstOrNull() as? Library3D.StandardEffectDef?
 	return Material3D(

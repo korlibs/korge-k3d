@@ -7,7 +7,6 @@ import korlibs.io.file.std.*
 import korlibs.math.geom.*
 
 /*
-@OptIn(Korge3DExperimental::class)
 class MainSkybox : Scene() {
     override suspend fun SContainer.sceneMain() {
         scene3D {

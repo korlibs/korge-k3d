@@ -4,7 +4,6 @@ import korlibs.datastructure.getCyclic
 import korlibs.time.TimeSpan
 import korlibs.time.milliseconds
 import korlibs.time.seconds
-import korlibs.korge3d.Korge3DExperimental
 import korlibs.korge3d.Library3D
 import korlibs.korge3d.Transform3D
 import korlibs.korge3d.View3D
@@ -27,7 +26,7 @@ import korlibs.math.interpolation.*
  *                         Thanks to this, it's possible to define normalized, reusable playback patterns, not tied to
  *                         any specific animation's length.
  */
-@Korge3DExperimental
+
 class Animator3D(val animation: Animation3D, val rootView: View3D, var playbackPattern: (Double) -> Double = repeatInfinitely) {
     companion object {
         val repeatInfinitely: (Double) -> Double = { it % 1.0 }
@@ -101,7 +100,7 @@ class Animator3D(val animation: Animation3D, val rootView: View3D, var playbackP
 	}
 }
 
-@Korge3DExperimental
+
 data class Animation3D(val id: String, val target: String, val property: String, val keyFrames: Frames) :
 	Library3D.Def() {
 	val totalTime = keyFrames.totalTime

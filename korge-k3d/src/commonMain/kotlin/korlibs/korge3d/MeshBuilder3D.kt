@@ -14,7 +14,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-@Korge3DExperimental
+
 class MeshBuilder3D(
     val drawType: AGDrawType = AGDrawType.TRIANGLES
 ) {

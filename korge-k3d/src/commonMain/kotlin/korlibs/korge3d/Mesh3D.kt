@@ -14,7 +14,7 @@ data class BufferWithVertexLayout(
     val vertexSizeInFloats = vertexSizeInBytes / 4
 }
 
-@Korge3DExperimental
+
 data class Mesh3D constructor(
     val vertexBuffers: FastArrayList<BufferWithVertexLayout>,
     val indexBuffer: Buffer,

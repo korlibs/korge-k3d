@@ -3,7 +3,7 @@ package korlibs.korge3d
 import korlibs.datastructure.*
 import korlibs.datastructure.iterators.*
 
-@Korge3DExperimental
+
 open class Container3D : View3D() {
     private val __children: FastArrayList<View3D> = FastArrayList()
     val children: List<View3D> get() = __children
@@ -47,7 +47,7 @@ open class Container3D : View3D() {
     //}
 }
 
-@Korge3DExperimental
+
 fun View3D.removeFromParent() {
     parent?.removeChild(this)
 }

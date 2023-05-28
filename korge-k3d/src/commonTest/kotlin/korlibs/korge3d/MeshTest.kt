@@ -1,12 +1,7 @@
 package korlibs.korge3d
 
-import korlibs.korge.view.Mesh
-import korlibs.math.geom.*
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
-@OptIn(Korge3DExperimental::class)
 class MeshTest {
     @Test
     fun testCube() {

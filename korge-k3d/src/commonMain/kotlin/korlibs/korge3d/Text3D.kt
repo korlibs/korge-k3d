@@ -9,11 +9,11 @@ import korlibs.image.font.BitmapFont
 import korlibs.math.geom.MMatrix3D
 import korlibs.math.geom.MVector4
 
-@Korge3DExperimental
+
 fun Container3D.text3D(str: String, v1: MVector4, v2: MVector4, v3: MVector4, v4: MVector4): Text3D =
     Text3D(str, v1, v2, v3, v4).addTo(this)
 
-@Korge3DExperimental
+
 class Text3D(
     var text: String,
     var v1: MVector4, var v2: MVector4, var v3: MVector4, var v4: MVector4

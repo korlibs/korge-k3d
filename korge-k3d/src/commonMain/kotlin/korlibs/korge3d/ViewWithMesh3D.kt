@@ -7,12 +7,12 @@ import korlibs.graphics.shader.*
 import korlibs.korge.render.*
 import korlibs.math.geom.*
 
-@Korge3DExperimental
+
 inline fun Container3D.mesh(mesh: Mesh3D, callback: ViewWithMesh3D.() -> Unit = {}): ViewWithMesh3D {
     return ViewWithMesh3D(mesh).addTo(this, callback)
 }
 
-@Korge3DExperimental
+
 open class ViewWithMesh3D(
     var mesh: Mesh3D,
     var skeleton: Skeleton3D? = null
