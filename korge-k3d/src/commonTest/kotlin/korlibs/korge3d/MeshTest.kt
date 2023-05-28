@@ -1,5 +1,6 @@
 package korlibs.korge3d
 
+import korlibs.korge3d.shape.*
 import kotlin.test.*
 
 class MeshTest {

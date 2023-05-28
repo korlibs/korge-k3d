@@ -8,6 +8,7 @@ import korlibs.korge.scene.Scene
 import korlibs.korge.tween.tween
 import korlibs.korge.view.*
 import korlibs.korge3d.*
+import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
 import korlibs.time.seconds
 
