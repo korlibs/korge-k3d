@@ -17,7 +17,7 @@ class CratesScene : Scene() {
     @KeepOnReload
     var trans = Transform3D()
     @KeepOnReload
-    var tick = 0
+    var tick = 0.0
 
     override suspend fun SContainer.sceneInit() {
 
@@ -52,7 +52,7 @@ class CratesScene : Scene() {
                 )
                 camera.transform.copyFrom(trans)
                 camera.invalidateRender()
-                tick++
+                tick += it.milliseconds / 16.0
             }
 
             launchImmediately {
