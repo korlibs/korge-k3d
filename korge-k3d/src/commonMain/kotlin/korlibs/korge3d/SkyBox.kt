@@ -1,5 +1,6 @@
 package korlibs.korge3d
 
+/*
 import korlibs.graphics.*
 import korlibs.graphics.shader.FragmentShader
 import korlibs.graphics.shader.Precision
@@ -15,8 +16,7 @@ import korlibs.image.format.readBitmap
 import korlibs.io.async.async
 import korlibs.io.file.VfsFile
 import korlibs.io.file.std.resourcesVfs
-import korlibs.math.geom.MMatrix3D
-import korlibs.math.geom.MVector4
+import korlibs.math.geom.*
 import kotlinx.coroutines.coroutineScope
 
 class CubeMap(
@@ -119,8 +119,8 @@ class SkyBox(
        */
     companion object {
         val a_pos = Shaders3D.a_pos
-        val u_ProjMat = Shaders3D.u_ProjMat
-        val u_ViewMat = Shaders3D.u_ViewMat
+        //val u_ProjMat = Shaders3D.u_ProjMat
+        //val u_ViewMat = Shaders3D.u_ViewMat
         val v_TexCoords = Varying(Shaders3D.v_TexCoords.name, VarType.Float3, precision = Precision.MEDIUM)
         val u_SkyBox = Uniform("u_SkyBox", VarType.SamplerCube)
         val layout = VertexLayout(a_pos)
@@ -152,26 +152,35 @@ class SkyBox(
         })
     }
 
-    private val uniformValues = AGUniformValues()
+    //private val uniformValues = AGUniformValues()
     private val rs = AGDepthAndFrontFace.DEFAULT.withDepthMask(depthMask = false).withDepthFunc(depthFunc = AGCompareMode.LESS_EQUAL)
 
-    private val viewNoTrans = MMatrix3D()
+    private val viewNoTrans = Matrix4.IDENTITY
 
     override fun render(ctx: RenderContext3D) {
+        ctx.rctx.updateStandardUniforms()
         //println("----------- SkyBox render ---------------")
+
         ctx.dynamicIndexBufferPool.alloc { indexBuffer ->
             ctx.dynamicVertexBufferPool.alloc { vertexBuffer ->
                 vertexBuffer.upload(skyboxVertices)
                 indexBuffer.upload(skyboxIndices)
                 val projection = ctx.projCameraMat
                 // remove translation from the view matrix
+
+                ctx.rctx[DefaultShaders.ProjViewUB].push {
+                    it[u_ProjMat] = projection
+                    it[u_ViewMat] = viewNoTrans
+                    this.set(u_SkyBox, ctx.textureManager.getTextureBase(cubemap).base)
+                }
+
                 viewNoTrans
                     .copyFrom(transform.globalMatrix)
                     .setColumn(3, 0f, 0f, 0f, 0f)
                     .setRow(3, 0f, 0f, 0f, 0f)
                     .translate(center)
                 ctx.ag.draw(
-                    ctx.rctx.currentFrameBuffer,
+                    frameBuffer = ctx.rctx.currentFrameBuffer,
                     vertexData = AGVertexArrayObject(AGVertexData(layout, vertexBuffer)),
                     drawType = AGDrawType.TRIANGLES,
                     program = skyBoxProgram,
@@ -179,7 +188,9 @@ class SkyBox(
                     indices = indexBuffer,
                     indexType = AGIndexType.USHORT,
                     blending = AGBlending.NONE,
+                    uniformBlocks = ctx.rctx.createCurrentUniformsRef(skyBoxProgram),
                     uniforms = uniformValues.apply {
+                        this[DefaultShaders.ProjViewUB].set
                         this[u_ProjMat] = projection
                         this[u_ViewMat] = viewNoTrans
                         this.set(u_SkyBox, ctx.textureManager.getTextureBase(cubemap).base)
@@ -192,3 +203,4 @@ class SkyBox(
     }
 
 }
+*/

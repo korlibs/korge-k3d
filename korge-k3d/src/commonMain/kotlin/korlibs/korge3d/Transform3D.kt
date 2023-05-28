@@ -1,5 +1,6 @@
 package korlibs.korge3d
 
+import korlibs.datastructure.*
 import korlibs.math.geom.*
 
 class Transform3D {
@@ -48,7 +49,7 @@ class Transform3D {
 
     private fun updateTRS() {
         transformDirty = false
-        matrix.getTRS(_translation, rotation, _scale)
+        matrix.getTRS(_translation, Ref(rotation), _scale)
         _eulerRotationDirty = true
         transformDirty = false
     }
@@ -59,18 +60,18 @@ class Transform3D {
         return this
     }
 
-    val translation: Position3D get() = updateTRSIfRequired()._translation
-    val rotation: MQuaternion get() = updateTRSIfRequired()._rotation
-    val scale: Scale3D get() = updateTRSIfRequired()._scale
+    val translation: MPosition3D get() = updateTRSIfRequired()._translation
+    var rotation: Quaternion
+        get() = updateTRSIfRequired()._rotation
+        set(value) {
+            updateTRSIfRequired()._rotation = value
+        }
+    val scale: MScale3D get() = updateTRSIfRequired()._scale
 
-    var rotationEuler: MEulerRotation = MEulerRotation()
-        private set
-        get() {
-            if (_eulerRotationDirty) {
-                _eulerRotationDirty = false
-                field.setQuaternion(rotation)
-            }
-            return field
+    var rotationEuler: EulerRotation
+        get() = rotation.toEuler()
+        set(value) {
+            updateTRSIfRequired()._rotation = value.toQuaternion()
         }
 
     /////////////////
@@ -94,12 +95,12 @@ class Transform3D {
         updateTRSIfRequired()
         matrixDirty = true
         _eulerRotationDirty = true
-        rotation.setTo(quat)
+        rotation = (quat)
     }
 
     fun setRotation(x: Float, y: Float, z: Float, w: Float) = updatingTRS {
         _eulerRotationDirty = true
-        rotation.setTo(x, y, z, w)
+        rotation = Quaternion(x, y, z, w)
     }
 
     fun setRotation(x: Double, y: Double, z: Double, w: Double) = setRotation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
@@ -107,12 +108,12 @@ class Transform3D {
 
     fun setRotation(euler: EulerRotation) = updatingTRS {
         _eulerRotationDirty = true
-        rotation.setEuler(euler)
+        rotationEuler = (euler)
     }
 
     fun setRotation(x: Angle, y: Angle, z: Angle) = updatingTRS {
         _eulerRotationDirty = true
-        rotation.setEuler(x, y, z)
+        rotationEuler = EulerRotation(x, y, z)
     }
 
     fun setScale(x: Float = 1f, y: Float = 1f, z: Float = 1f, w: Float = 1f) = updatingTRS {
@@ -146,7 +147,7 @@ class Transform3D {
 
     fun lookAt(tx: Float, ty: Float, tz: Float, up: MVector4 = UP): Transform3D {
         tempMat1.setToLookAt(translation, tempVec1.setTo(tx, ty, tz, 1f), up)
-        rotation.setFromRotationMatrix(tempMat1)
+        rotation = Quaternion.fromRotationMatrix(tempMat1.immutable)
         return this
     }
     fun lookAt(tx: Double, ty: Double, tz: Double, up: MVector4 = UP) = lookAt(tx.toFloat(), ty.toFloat(), tz.toFloat(), up)
@@ -173,7 +174,7 @@ class Transform3D {
     private var tempEuler = EulerRotation()
     fun rotate(x: Angle, y: Angle, z: Angle): Transform3D {
         val re = this.rotationEuler
-        tempEuler.setTo(re.x+x,re.y+y, re.z+z)
+        tempEuler = EulerRotation(re.x+x,re.y+y, re.z+z)
         setRotation(tempEuler)
         return this
     }
@@ -189,7 +190,7 @@ class Transform3D {
 
     fun setToInterpolated(a: Transform3D, b: Transform3D, t: Double): Transform3D {
         _translation.setToInterpolated(a.translation, b.translation, t)
-        _rotation.setToInterpolated(a.rotation, b.rotation, t)
+        _rotation = Quaternion.interpolated(a.rotation, b.rotation, t.toFloat())
         _scale.setToInterpolated(a.scale, b.scale, t)
         matrixDirty = true
         return this

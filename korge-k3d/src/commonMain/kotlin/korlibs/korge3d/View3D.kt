@@ -82,19 +82,19 @@ abstract class View3D : BaseView() {
 
 	var rotationQuatX: Double
 		set(rotationQuatX) { transform.setRotation(rotationQuatX, rotationQuatY, rotationQuatZ, rotationQuatW); invalidateRender() }
-		get() = transform.rotation.x
+		get() = transform.rotation.x.toDouble()
 
 	var rotationQuatY: Double
 		set(rotationQuatY) { transform.setRotation(rotationQuatX, rotationQuatY, rotationQuatZ, rotationQuatW); invalidateRender() }
-		get() = transform.rotation.y
+		get() = transform.rotation.y.toDouble()
 
 	var rotationQuatZ: Double
 		set(rotationQuatZ) { transform.setRotation(rotationQuatX, rotationQuatY, rotationQuatZ, rotationQuatW); invalidateRender() }
-		get() = transform.rotation.z
+		get() = transform.rotation.z.toDouble()
 
 	var rotationQuatW: Double
 		set(rotationQuatW) { transform.setRotation(rotationQuatX, rotationQuatY, rotationQuatZ, rotationQuatW); invalidateRender() }
-		get() = transform.rotation.w
+		get() = transform.rotation.w.toDouble()
 
 	///////
 

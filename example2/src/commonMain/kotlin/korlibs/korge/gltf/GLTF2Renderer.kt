@@ -13,6 +13,7 @@ object GLTF2Renderer {
     val PROGRAM = Program(
         VertexShaderDefault {
             SET(out, u_ProjMat * u_ViewMat * vec4(a_Pos, 1f.lit))
+            //SET(out, vec4(a_Pos["xy"], 0f.lit, 1f.lit))
         },
         FragmentShader {
             SET(out, vec4(1f.lit, 0f.lit, 0f.lit, 1f.lit))

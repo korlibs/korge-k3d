@@ -1,5 +1,6 @@
 package korlibs.korge3d
 
+/*
 import korlibs.datastructure.iterators.fastForEachWithIndex
 import korlibs.memory.clamp
 import korlibs.graphics.*
@@ -167,3 +168,4 @@ class Text3D(
         return meshBuilder3D.build()
     }
 }
+*/

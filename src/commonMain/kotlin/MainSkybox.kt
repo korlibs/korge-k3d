@@ -6,6 +6,7 @@ import korlibs.korge3d.*
 import korlibs.io.file.std.*
 import korlibs.math.geom.*
 
+/*
 @OptIn(Korge3DExperimental::class)
 class MainSkybox : Scene() {
     override suspend fun SContainer.sceneMain() {
@@ -31,3 +32,4 @@ class MainSkybox : Scene() {
 
     private val KeyEvent.speed: Double get() = if (shift) 5.0 else 1.0
 }
+*/

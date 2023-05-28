@@ -6,8 +6,7 @@ import korlibs.graphics.*
 import korlibs.korge.render.AgBitmapTextureManager
 import korlibs.korge.render.AgBufferManager
 import korlibs.korge.render.RenderContext
-import korlibs.math.geom.MMatrix3D
-import korlibs.math.geom.MVector4
+import korlibs.math.geom.*
 
 @Korge3DExperimental
 class RenderContext3D() {

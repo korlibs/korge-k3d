@@ -74,7 +74,7 @@ class MainStage3d : Scene() {
                     val angle = (tick / 4.0).degrees
                     camera.positionLookingAt(
                         cos(angle * 2) * 4, cos(angle * 3) * 4, -sin(angle) * 4, // Orbiting camera
-                        0.0, 1.0, 0.0
+                        0f, 1f, 0f
                     )
                     tick++
                 }
@@ -117,8 +117,8 @@ class MainStage3d : Scene() {
                 addUpdater {
                     val angle = (tick / 1.0).degrees
                     camera.positionLookingAt(
-                        cos(angle * 1) * 4, 0.0, -sin(angle * 1) * 4, // Orbiting camera
-                        0.0, 0.0, 0.0
+                        cos(angle * 1) * 4, 0f, -sin(angle * 1) * 4, // Orbiting camera
+                        0f, 0f, 0f
                     )
                     tick++
                 }

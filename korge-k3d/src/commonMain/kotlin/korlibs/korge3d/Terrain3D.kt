@@ -1,5 +1,6 @@
 package korlibs.korge3d
 
+/*
 import korlibs.datastructure.iterators.fastForEachWithIndex
 import korlibs.memory.clamp
 import korlibs.graphics.*
@@ -187,3 +188,4 @@ class Terrain3D(
         indexBuffer.close()
     }
 }
+*/

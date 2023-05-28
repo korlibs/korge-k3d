@@ -76,12 +76,12 @@ open class Shaders3D {
 			name = "programColor3D"
 		)
 
-		val lights = (0 until 4).map { LightAttributes(it) }
+		//val lights = (0 until 4).map { LightAttributes(it) }
 
-		val emission = MaterialLightUniform("emission")
-		val ambient = MaterialLightUniform("ambient")
-		val diffuse = MaterialLightUniform("diffuse")
-		val specular = MaterialLightUniform("specular")
+		val emission = MaterialUB("emission", 1)
+		val ambient = MaterialUB("ambient", 2)
+		val diffuse = MaterialUB("diffuse", 3)
+		val specular = MaterialUB("specular", 4)
 
 
 		val layoutPosCol = VertexLayout(a_pos, a_col)
@@ -89,17 +89,23 @@ open class Shaders3D {
 		private val FLOATS_PER_VERTEX = layoutPosCol.totalSize / Int.SIZE_BYTES /*Float.SIZE_BYTES is not defined*/
 	}
 
-	class LightAttributes(val id: Int) {
-		val u_sourcePos = Uniform("light${id}_pos", VarType.Float3)
-		val u_color = Uniform("light${id}_color", VarType.Float4)
-		val u_attenuation = Uniform("light${id}_attenuation", VarType.Float3)
-	}
+    object LightUB : UniformBlock(fixedLocation = 0) {
+        //inner class Light()
+        val u_SourcePos = Array(4) { vec4("lightPos$it") }
+        val u_Color = Array(4) { vec4("lightColor$it") }
+        val u_Attenuation = Array(4) { vec4("lightAttenuation$it") }
+    }
 
-	class MaterialLightUniform(val kind: String) {
-		//val mat = Material3D
-		val u_color = Uniform("u_${kind}_color", VarType.Float4)
-		val u_texUnit = Uniform("u_${kind}_texUnit", VarType.Sampler2D)
-	}
+    class MaterialUB(val kind: String, fixedLocation: Int) : UniformBlock(fixedLocation = fixedLocation) {
+        val u_color by vec4("u_${kind}_color")
+        //val u_texUnit by int("u_${kind}_texUnit")
+    }
+
+	//class MaterialLightUniform(val kind: String) {
+	//	//val mat = Material3D
+	//	val u_color = Uniform("u_${kind}_color", VarType.Float4)
+	//	val u_texUnit = Uniform("u_${kind}_texUnit", VarType.Sampler2D)
+	//}
 }
 
 @Korge3DExperimental
@@ -127,23 +133,23 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		val localNorm = createTemp(VarType.Float4)
 		val skinPos = createTemp(VarType.Float4)
 
-		if (nweights == 0) {
+		//if (nweights == 0) {
 			//SET(boneMatrix, mat4Identity())
 			SET(localPos, vec4(a_pos, 1f.lit))
 			SET(localNorm, vec4(a_norm, 0f.lit))
-		} else {
-			SET(localPos, vec4(0f.lit))
-			SET(localNorm, vec4(0f.lit))
-			SET(skinPos, u_BindShapeMatrix * vec4(a_pos["xyz"], 1f.lit))
-			for (wIndex in 0 until nweights) {
-				IF(getBoneIndex(wIndex) ge 0.lit) {
-					SET(boneMatrix, getBone(wIndex))
-					SET(localPos, localPos + boneMatrix * vec4(skinPos["xyz"], 1f.lit) * getWeight(wIndex))
-					SET(localNorm, localNorm + boneMatrix * vec4(a_norm, 0f.lit) * getWeight(wIndex))
-				}
-			}
-			SET(localPos, u_BindShapeMatrixInv * localPos)
-		}
+		//} else {
+		//	SET(localPos, vec4(0f.lit))
+		//	SET(localNorm, vec4(0f.lit))
+		//	SET(skinPos, u_BindShapeMatrix * vec4(a_pos["xyz"], 1f.lit))
+		//	for (wIndex in 0 until nweights) {
+		//		IF(getBoneIndex(wIndex) ge 0.lit) {
+		//			SET(boneMatrix, getBone(wIndex))
+		//			SET(localPos, localPos + boneMatrix * vec4(skinPos["xyz"], 1f.lit) * getWeight(wIndex))
+		//			SET(localNorm, localNorm + boneMatrix * vec4(a_norm, 0f.lit) * getWeight(wIndex))
+		//		}
+		//	}
+		//	SET(localPos, u_BindShapeMatrixInv * localPos)
+		//}
 
 		SET(modelViewMat, Shaders3D.K3DPropsUB.u_ModMat * u_ViewMat)
 		SET(normalMat, Shaders3D.K3DPropsUB.u_NormMat)
@@ -155,29 +161,29 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 
 	override fun Program.Builder.fragment() {
 		val meshMaterial = meshMaterial
-		if (meshMaterial != null) {
-			computeMaterialLightColor(out, Shaders3D.diffuse, meshMaterial.diffuse)
-		} else {
+		//if (meshMaterial != null) {
+		//	computeMaterialLightColor(out, Shaders3D.diffuse, meshMaterial.diffuse)
+		//} else {
 			SET(out, vec4(.5f.lit, .5f.lit, .5f.lit, 1f.lit))
-		}
+		//}
 
-		for (n in 0 until nlights) {
-			addLight(Shaders3D.lights[n], out)
-		}
+		//for (n in 0 until nlights) {
+		//	addLight(Shaders3D.lights[n], out)
+		//}
 		//SET(out, vec4(v_Temp1.x, v_Temp1.y, v_Temp1.z, 1f.lit))
 	}
 
-	open fun Program.Builder.computeMaterialLightColor(out: Operand, uniform: Shaders3D.MaterialLightUniform, light: Material3D.Light) {
-		when (light) {
-			is Material3D.LightColor -> {
-				SET(out, uniform.u_color)
-			}
-			is Material3D.LightTexture -> {
-				SET(out, vec4(texture2D(uniform.u_texUnit, Shaders3D.v_TexCoords["xy"])["rgb"], 1f.lit))
-			}
-			else -> error("Unsupported MateriaList: $light")
-		}
-	}
+	//open fun Program.Builder.computeMaterialLightColor(out: Operand, uniform: Shaders3D.MaterialLightUniform, light: Material3D.Light) {
+	//	when (light) {
+	//		is Material3D.LightColor -> {
+	//			SET(out, uniform.u_color)
+	//		}
+	//		is Material3D.LightTexture -> {
+	//			SET(out, vec4(texture2D(uniform.u_texUnit, Shaders3D.v_TexCoords["xy"])["rgb"], 1f.lit))
+	//		}
+	//		else -> error("Unsupported MateriaList: $light")
+	//	}
+	//}
 
 	fun Program.Builder.mat4Identity() = Program.Func("mat4",
 		1f.lit, 0f.lit, 0f.lit, 0f.lit,
@@ -187,6 +193,7 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 	)
 
 
+    /*
 	open fun Program.Builder.addLight(light: Shaders3D.LightAttributes, out: Operand) {
 		val v = Shaders3D.v_Pos
 		val N = Shaders3D.v_Norm
@@ -224,9 +231,11 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		//SET(out["rgb"], out["rgb"] + clamp(light.specular * pow(max(dot(R, E), 0f.lit), 0.3f.lit * u_Shininess), 0f.lit, 1f.lit)["rgb"])
 	}
 
+     */
+
 	fun Program.Builder.getBoneIndex(index: Int): Operand = int(Shaders3D.a_boneIndex[index / 4][index % 4])
 	fun Program.Builder.getWeight(index: Int): Operand = Shaders3D.a_weight[index / 4][index % 4]
-	fun Program.Builder.getBone(index: Int): Operand = Shaders3D.Bones4UB.u_BoneMats[getBoneIndex(index)]
+	fun Program.Builder.getBone(index: Int): Operand = Shaders3D.Bones4UB.u_BoneMats[index]
 }
 
 @Korge3DExperimental

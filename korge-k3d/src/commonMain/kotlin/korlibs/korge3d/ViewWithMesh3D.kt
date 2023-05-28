@@ -18,7 +18,7 @@ open class ViewWithMesh3D(
     var skeleton: Skeleton3D? = null
 ) : View3D() {
 
-    private val uniformValues = AGUniformValues()
+    //private val uniformValues = AGUniformValues()
     private val rs = AGDepthAndFrontFace.DEFAULT.withDepthFunc(depthFunc = AGCompareMode.LESS_EQUAL)
     //private val rs = AGRenderState(depthFunc = AGCompareMode.ALWAYS)
 
@@ -30,24 +30,29 @@ open class ViewWithMesh3D(
         mat.identity()
     }
 
-    fun AGUniformValues.setMaterialLight(
-        ctx: RenderContext3D,
-        uniform: Shaders3D.MaterialLightUniform,
-        actual: Material3D.Light
-    ) {
-        when (actual) {
-            is Material3D.LightColor -> {
-                this[uniform.u_color] = actual.colorVec
-            }
-            is Material3D.LightTexture -> {
-                this.set(uniform.u_texUnit, actual.bitmap?.let { ctx.rctx.agBitmapTextureManager.getTextureBase(it).base }, AGTextureUnitInfo.DEFAULT.withLinear(true))
-            }
-        }
-    }
+    //fun AGUniformValues.setMaterialLight(
+    //    ctx: RenderContext3D,
+    //    uniform: Shaders3D.MaterialLightUniform,
+    //    actual: Material3D.Light
+    //) {
+    //    when (actual) {
+    //        is Material3D.LightColor -> {
+    //            this[uniform.u_color] = actual.colorVec
+    //        }
+    //        is Material3D.LightTexture -> {
+    //            this.set(uniform.u_texUnit, actual.bitmap?.let { ctx.rctx.agBitmapTextureManager.getTextureBase(it).base }, AGTextureUnitInfo.DEFAULT.withLinear(true))
+    //        }
+    //    }
+    //}
 
     private val identity = MMatrix3D()
     private val identityInv = identity.clone().invert()
 
+    override fun render(ctx: RenderContext3D) {
+        println("TODO: ViewWithMEsh3D.render")
+    }
+
+    /*
     override fun render(ctx: RenderContext3D) {
         val ag = ctx.ag
 
@@ -140,4 +145,6 @@ open class ViewWithMesh3D(
             }
         }
     }
+
+     */
 }
