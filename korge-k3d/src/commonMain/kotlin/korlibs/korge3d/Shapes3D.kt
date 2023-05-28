@@ -26,9 +26,7 @@ class Shape3D(
     var height: Float = initHeight
     var depth: Float = initDepth
 
-    override fun prepareExtraModelMatrix(mat: MMatrix3D) {
-        mat.identity().scale(width, height, depth)
-    }
+    override fun prepareExtraModelMatrix() = Matrix4.scale(width, height, depth)
 
     companion object {
 
@@ -67,9 +65,7 @@ fun <T : BaseViewWithMesh3D> T.material(material: Material3D?): T {
 
 
 class Cube3D(var width: Float, var height: Float, var depth: Float) : BaseViewWithMesh3D(mesh) {
-    override fun prepareExtraModelMatrix(mat: MMatrix3D) {
-        mat.identity().scale(width, height, depth)
-    }
+    override fun prepareExtraModelMatrix(): Matrix4 = Matrix4.scale(width, height, depth)
 
     companion object {
         val mesh = MeshBuilder3D {
@@ -116,9 +112,7 @@ inline fun Container3D.sphere(
 
 
 class Sphere3D(var radius: Float) : BaseViewWithMesh3D(mesh) {
-    override fun prepareExtraModelMatrix(mat: MMatrix3D) {
-        mat.identity().scale(radius, radius, radius)
-    }
+    override fun prepareExtraModelMatrix() = Matrix4.scale(radius, radius, radius)
 
     companion object {
         private const val PIf = PI.toFloat()

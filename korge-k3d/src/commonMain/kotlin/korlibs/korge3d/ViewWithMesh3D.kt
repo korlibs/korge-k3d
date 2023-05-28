@@ -26,8 +26,8 @@ open class ViewWithMesh3D(
     private val tempMat2 = MMatrix3D()
     private val tempMat3 = MMatrix3D()
 
-    protected open fun prepareExtraModelMatrix(mat: MMatrix3D) {
-        mat.identity()
+    protected open fun prepareExtraModelMatrix(): Matrix4 {
+        return Matrix4.IDENTITY
     }
 
     fun setMaterialLight(
@@ -83,7 +83,7 @@ open class ViewWithMesh3D(
                 }
                 ctx.rctx[Shaders3D.K3DPropsUB].push {
                     it[u_NormMat] = Matrix4.IDENTITY
-                    it[u_ModMat] = MMatrix3D().also { prepareExtraModelMatrix(it) }.immutable * modelMat.immutable
+                    it[u_ModMat] = prepareExtraModelMatrix() * modelMat.immutable
                 }
 
                 if (meshMaterial != null) {
