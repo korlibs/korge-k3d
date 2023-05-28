@@ -1,5 +1,6 @@
 package korlibs.korge3d
 
+import korlibs.graphics.*
 import korlibs.korge3d.internal.vector3DTemps
 import korlibs.korge3d.util.*
 import korlibs.math.geom.*
@@ -122,31 +123,35 @@ class Sphere3D(var radius: Float) : BaseViewWithMesh3D(mesh) {
     companion object {
         private const val PIf = PI.toFloat()
 
-        val mesh = MeshBuilder3D {
-            val N = 16
-            val M = 16
+        val mesh = MeshBuilder3D(drawType = AGDrawType.TRIANGLES) {
+            val STACKS = 16
+            val SLICES = 16
+            val radius = .5f
 
-            for (m in 0..M) {
-                for (n in 0..N) {
-                    val p = Vector3(
-                        (sin(PIf * m/M) * cos(2 * PIf * n/N)) / 2f,
-                        (sin(PIf * m/M) * sin(2 * PIf * n/N)) / 2f,
-                        (cos(PIf * m/M)) / 2f
-                    )
-                    val nv = p.normalized()
+            for (i in 0..STACKS) {
+                val v = i.toFloat() / STACKS
+                val phi = v * PIf
 
-                    addVertex(p, nv, Vector2(0f, 0f))
-                }
-            }
+                for (j in 0..SLICES) {
+                    val u = j.toFloat() / SLICES
+                    val theta = u * PIf * 2f
 
-            for (m in 1 .. M) {
-                val row0 = (m - 1) * N
-                val row1 = (m + 0) * N
-                for (n in 0..N) {
-                    val r0 = row0 + n
-                    val r1 = row1 + n
-                    addIndices(r0 + 0, r0 + 1, r1 + 0)
-                    addIndices(r0 + 1, r1 + 1, r1 + 0)
+                    // Convert spherical coordinates to cartesian coordinates
+                    val x = (radius * sin(phi) * cos(theta))
+                    val y = (radius * cos(phi))
+                    val z = (radius * sin(phi) * sin(theta))
+
+                    val p = Vector3(x, y, z)
+
+                    addVertex(p, p.normalized(), Vector2(u, v))
+
+                    // Generate indices
+                    // Triangles should be CCW to be viewed from the outside
+                    val first = i * (SLICES + 1) + j
+                    val second = first + SLICES + 1
+                    addIndices(first, second, first + 1)
+                    addIndices(second, second + 1, first + 1)
+
                 }
             }
         }

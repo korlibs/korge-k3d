@@ -1,4 +1,5 @@
-import korlibs.image.bitmap.mipmaps
+import korlibs.image.bitmap.*
+import korlibs.image.color.*
 import korlibs.image.format.readNativeImage
 import korlibs.io.async.launchImmediately
 import korlibs.io.file.std.resourcesVfs
@@ -7,11 +8,8 @@ import korlibs.korge.scene.Scene
 import korlibs.korge.tween.tween
 import korlibs.korge.view.*
 import korlibs.korge3d.*
-import korlibs.math.geom.cos
-import korlibs.math.geom.degrees
-import korlibs.math.geom.sin
+import korlibs.math.geom.*
 import korlibs.time.seconds
-
 
 class CratesScene : Scene() {
     @KeepOnReload
@@ -21,11 +19,23 @@ class CratesScene : Scene() {
 
     override suspend fun SContainer.sceneInit() {
 
-        val korgeTex = resourcesVfs["korge.png"].readNativeImage().mipmaps(false)
+        val korgeTex = KR.korge.read()
+
+        //val crateTex = NativeImage(64, 64).context2d {
+        //    fill(Colors.ROSYBROWN) {
+        //        rect(0, 0, 64, 64)
+        //    }
+        //    stroke(Colors.SADDLEBROWN, 8f) {
+        //        rect(0, 0, 63, 63)
+        //        line(Point(0, 0), Point(63, 63))
+        //    }
+        //}
+
         val crateTex = KR.crate.read().mipmaps(true)
         //val crateTex = KR.dice.__file.readBitmap(QOI).mipmaps(true)
         val crateMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
 
+        //solidRect(512, 512, MaterialColors.AMBER_200).alpha(0.5)
         image(korgeTex).alpha(0.5)
 
         scene3D {
@@ -34,7 +44,7 @@ class CratesScene : Scene() {
             //light().position(0, 0, -3)
 
             val cube1 = cube().material(crateMaterial)
-            sphere(2).position(1, 0, 0).material(crateMaterial)
+            sphere(1f).position(1, 0, 0).material(crateMaterial)
             //cube(2.0, 2.0)
             val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees).material(crateMaterial)
             val cube3 = cube().position(-5, 0, 0).material(crateMaterial)
@@ -65,6 +75,7 @@ class CratesScene : Scene() {
             }
         }
 
+        //solidRect(512, 512, Colors.BLUEVIOLET).position(views.virtualWidth, 0).anchor(1, 0).alpha(0.5)
         image(korgeTex).position(views.virtualWidth, 0).anchor(1, 0).alpha(0.5)
     }
 }

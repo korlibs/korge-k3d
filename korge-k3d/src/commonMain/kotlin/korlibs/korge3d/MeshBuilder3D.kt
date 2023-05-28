@@ -55,7 +55,7 @@ class MeshBuilder3D(
         _material = Material3D(emission, ambient, diffuse, specular, shininess, indexOfRefraction)
     }
 
-    fun addVertex(pos: Vector3, normal: Vector3 = Vector3.ZERO, texcoords: Vector2 = Vector2.ZERO): Int {
+    fun addVertex(pos: Vector3, normal: Vector3 = Vector3.ZERO, texcoords: Vector2 = Vector2(pos.x, pos.y)): Int {
         return addVertex(pos.x, pos.y, pos.z, normal.x, normal.y, normal.z, texcoords.x, texcoords.y)
     }
 
@@ -85,6 +85,8 @@ class MeshBuilder3D(
     }
 
     fun addIndices(vararg indices: Int) = indices.forEach { addIndex(it) }
+    fun addIndices(i0: Int, i1: Int) { addIndex(i0); addIndex(i1) }
+    fun addIndices(i0: Int, i1: Int, i2: Int) { addIndex(i0); addIndex(i1); addIndex(i2) }
 
     fun faceTriangle(v1: MVector4, v2: MVector4, v3: MVector4) {
         vector3DTemps {
