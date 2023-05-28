@@ -84,6 +84,9 @@ class MeshBuilder3D(
         indexData.add(index.toShort())
     }
 
+    val totalVertices: Int get() = nextVertexIndex
+    val totalIndices: Int get() = indexData.size
+
     fun addIndices(vararg indices: Int) = indices.forEach { addIndex(it) }
     fun addIndices(i0: Int, i1: Int) { addIndex(i0); addIndex(i1) }
     fun addIndices(i0: Int, i1: Int, i2: Int) { addIndex(i0); addIndex(i1); addIndex(i2) }
