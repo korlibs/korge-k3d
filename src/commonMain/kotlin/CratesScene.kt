@@ -46,6 +46,7 @@ class CratesScene : Scene() {
 
             val cube1 = cube().material(crateMaterial)
             sphere(1f).position(1, 0, 0).material(crateMaterial)
+            torus(1f).position(-1, 0, 0).material(crateMaterial)
             //cube(2.0, 2.0)
             val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees).material(crateMaterial)
             val cube3 = cube().position(-5, 0, 0).material(crateMaterial)
