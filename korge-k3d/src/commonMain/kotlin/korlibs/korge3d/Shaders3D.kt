@@ -10,15 +10,16 @@ open class Shaders3D {
 	//@ThreadLocal
 	private val programCache = LinkedHashMap<String, Program>()
 
-	var printShaders = false
+	//var printShaders = false
+    var printShaders = true
 
 	@Suppress("RemoveCurlyBracesFromTemplate")
 	fun getProgram3D(nlights: Int, nweights: Int, meshMaterial: Material3D?, hasTexture: Boolean): Program {
 		return programCache.getOrPut("program_L${nlights}_W${nweights}_M${meshMaterial?.kind}_T${hasTexture}") {
 			StandardShader3D(nlights, nweights, meshMaterial, hasTexture).program.apply {
 				if (printShaders) {
-					//println(GlslGenerator(kind = ShaderType.VERTEX).generate(this.vertex))
-					//println(GlslGenerator(kind = ShaderType.FRAGMENT).generate(this.fragment))
+					println(GlslGenerator(ShaderType.VERTEX, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable())).generate(this.vertex))
+					println(GlslGenerator(ShaderType.FRAGMENT, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable())).generate(this.fragment))
 				}
 			}
 		}
@@ -75,6 +76,17 @@ open class Shaders3D {
 			},
 			name = "programColor3D"
 		)
+
+        val debugColor3D = Program(
+            vertex = VertexShader {
+                SET(out, u_ProjMat * u_ViewMat * vec4(a_pos, 1f.lit))
+            },
+            fragment = FragmentShader {
+                SET(out, vec4(1f.lit, 0f.lit, 1f.lit, 1f.lit))
+                //SET(out, vec4(1f.lit, 1f.lit, 1f.lit, 1f.lit))
+            },
+            name = "programColor3D"
+        )
 
 		//val lights = (0 until 4).map { LightAttributes(it) }
 
@@ -164,7 +176,7 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		//if (meshMaterial != null) {
 		//	computeMaterialLightColor(out, Shaders3D.diffuse, meshMaterial.diffuse)
 		//} else {
-			SET(out, vec4(.5f.lit, .5f.lit, .5f.lit, 1f.lit))
+			SET(out, vec4(1f.lit, 0f.lit, 1f.lit, 1f.lit))
 		//}
 
 		//for (n in 0 until nlights) {

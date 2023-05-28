@@ -5,7 +5,7 @@ import korlibs.datastructure.iterators.fastForEach
 import korlibs.datastructure.iterators.fastForEachWithIndex
 import korlibs.memory.clamp
 import korlibs.graphics.*
-import korlibs.math.geom.MMatrix3D
+import korlibs.math.geom.*
 
 @Korge3DExperimental
 inline fun Container3D.mesh(mesh: Mesh3D, callback: ViewWithMesh3D.() -> Unit = {}): ViewWithMesh3D {
@@ -49,11 +49,6 @@ open class ViewWithMesh3D(
     private val identityInv = identity.clone().invert()
 
     override fun render(ctx: RenderContext3D) {
-        println("TODO: ViewWithMEsh3D.render")
-    }
-
-    /*
-    override fun render(ctx: RenderContext3D) {
         val ag = ctx.ag
 
         // @TODO: We should have a managed object for index and vertex buffers like Bitmap -> Texture
@@ -65,28 +60,39 @@ open class ViewWithMesh3D(
                 //tempMat3.multiply(ctx.cameraMatInv, this.localTransform.matrix)
                 //tempMat3.multiply(ctx.cameraMatInv, Matrix3D().invert(this.localTransform.matrix))
                 //tempMat3.multiply(this.localTransform.matrix, ctx.cameraMat)
+                val meshMaterial = mesh.material
+                val program = Shaders3D.debugColor3D ?: mesh.program ?: ctx.shaders.getProgram3D(
+                    ctx.lights.size.clamp(0, 4),
+                    mesh.maxWeights,
+                    meshMaterial,
+                    mesh.hasTexture
+                )
+
+                ctx.rctx[DefaultShaders.ProjViewUB].push {
+                    it[u_ProjMat] = ctx.projCameraMat.immutable
+                    it[u_ViewMat] = transform.globalMatrix.immutable
+                    //this[u_ModMat] = tempMat2.multiply(tempMat1.apply { prepareExtraModelMatrix(this) }, modelMat)
+                }
+                ctx.rctx[Shaders3D.K3DPropsUB].push {
+                    it[u_NormMat] = Matrix4.IDENTITY
+                }
+
+                //println("mesh.vertexCount=${mesh.vertexCount}")
 
                 Shaders3D.apply {
-                    val meshMaterial = mesh.material
                     ag.draw(
-                        ctx.rctx.currentFrameBuffer,
+                        frameBuffer = ctx.rctx.currentFrameBuffer,
                         vertexData = vertexData,
                         indices = indexBuffer,
                         indexType = mesh.indexType,
                         drawType = mesh.drawType,
-                        program = mesh.program ?: ctx.shaders.getProgram3D(
-                            ctx.lights.size.clamp(0, 4),
-                            mesh.maxWeights,
-                            meshMaterial,
-                            mesh.hasTexture
-                        ),
+                        program = program,
                         vertexCount = mesh.vertexCount,
                         blending = AGBlending.NONE,
-                        //vertexCount = 6 * 6,
+                        uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
+                        depthAndFrontFace = rs,
+                        /*
                         uniforms = uniformValues.apply {
-                            this[u_ProjMat] = ctx.projCameraMat
-                            this[u_ViewMat] = transform.globalMatrix
-                            this[u_ModMat] = tempMat2.multiply(tempMat1.apply { prepareExtraModelMatrix(this) }, modelMat)
                             //this[u_NormMat] = tempMat3.multiply(tempMat2, localTransform.matrix).invert().transpose()
                             this[u_NormMat] = tempMat3.multiply(tempMat2, transform.globalMatrix)//.invert()
 
@@ -139,12 +145,10 @@ open class ViewWithMesh3D(
                                 )
                             }
                         },
-                        depthAndFrontFace = rs
+                        */
                     )
                 }
             }
         }
     }
-
-     */
 }
