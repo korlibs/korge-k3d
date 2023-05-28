@@ -52,9 +52,6 @@ open class ViewWithMesh3D(
         }
     }
 
-    private val identity = MMatrix3D()
-    private val identityInv = identity.clone().invert()
-
     override fun render(ctx: RenderContext3D) {
         val ag = ctx.ag
 

@@ -14,7 +14,6 @@ data class BufferWithVertexLayout(
     val vertexSizeInFloats = vertexSizeInBytes / 4
 }
 
-
 data class Mesh3D constructor(
     val vertexBuffers: FastArrayList<BufferWithVertexLayout>,
     val indexBuffer: Buffer,
