@@ -1,5 +1,3 @@
-import korlibs.datastructure.*
-import korlibs.datastructure.iterators.*
 import korlibs.time.*
 import korlibs.korge.input.*
 import korlibs.korge.scene.*
@@ -7,15 +5,7 @@ import korlibs.korge.tween.*
 import korlibs.korge.ui.*
 import korlibs.korge.view.*
 import korlibs.korge3d.*
-import korlibs.korge3d.animation.*
-import korlibs.korge3d.format.*
-import korlibs.image.bitmap.*
-import korlibs.image.color.*
-import korlibs.image.format.*
-import korlibs.io.async.*
-import korlibs.io.file.std.*
 import korlibs.math.geom.*
-import korlibs.math.interpolation.*
 
 class MainStage3d : Scene() {
     lateinit var contentSceneContainer: SceneContainer
@@ -44,77 +34,6 @@ class MainStage3d : Scene() {
 
         //this += Button(title) { contentSceneContainer.changeToDisablingButtons<T>(this) }
         //    .position(8 + x * 200, views.virtualHeight - 120)
-    }
-
-    @Korge3DExperimental
-    class MonkeyScene : Scene() {
-        override suspend fun SContainer.sceneInit() {
-            //delay(10.seconds)
-            //println("delay")
-            scene3D {
-                val light1 = light().position(0, 10, +10).setTo(Colors.RED)
-                val light2 = light().position(10, 0, +10).setTo(Colors.BLUE)
-
-                launchImmediately {
-                    while (true) {
-                        tween(light1::y[-20], light2::x[-20], time = 1.seconds, easing = Easing.SMOOTH)
-                        tween(light1::y[+20], light2::x[+20], time = 1.seconds, easing = Easing.SMOOTH)
-                    }
-                }
-
-                val library = resourcesVfs["monkey-smooth.dae"].readColladaLibrary()
-                val model = library.geometryDefs.values.first()
-                val view = mesh(model.mesh).rotation(-90.degrees, 0.degrees, 0.degrees)
-
-                var tick = 0
-                addUpdater {
-                    val angle = (tick / 1.0).degrees
-                    camera.positionLookingAt(
-                        cos(angle * 1) * 4, 0f, -sin(angle * 1) * 4, // Orbiting camera
-                        0f, 0f, 0f
-                    )
-                    tick++
-                }
-            }
-        }
-
-    }
-
-    @Korge3DExperimental
-    class SkinningScene : Scene() {
-        override suspend fun SContainer.sceneInit() {
-            scene3D {
-                //val library = resourcesVfs["model.dae"].readColladaLibrary()
-                //val library = resourcesVfs["ball.dae"].readColladaLibrary()
-                val library = resourcesVfs["skinning.dae"].readColladaLibrary()
-                //val library = resourcesVfs["model_skinned_animated.dae"].readColladaLibrary()
-                //val library = resourcesVfs["Fallera.dae"].readColladaLibrary()
-
-                val mainSceneView = library.mainScene.instantiate()
-                val cameras = mainSceneView.findByType<Camera3D>()
-
-                val animators = library.animationDefs.values.map { Animator3D(it, mainSceneView) }
-                addUpdater { animators.fastForEach { animator -> animator.update(it) } }
-                val model = mainSceneView.findByType<ViewWithMesh3D>().first()
-                //.rotation(-90.degrees, 90.degrees, 0.degrees)
-
-                val camera1 = cameras.firstOrNull() ?: camera
-                val camera2 = cameras.lastOrNull() ?: camera
-
-                camera = camera1.clone()
-
-                this += mainSceneView
-                addUpdater {
-                    //val mainSceneView = mainSceneView
-                    //println(mainSceneView)
-
-                    //println("Camera: ${camera.transform}")
-                    //println("Model: ${model.transform}")
-                    //println("Skeleton: ${model.skeleton}")
-                }
-            }
-        }
-
     }
 
 
@@ -189,56 +108,5 @@ class MainStage3d : Scene() {
                 child.enabled = true
             }
         }
-    }
-
-}
-
-
-@Korge3DExperimental
-class CratesScene : Scene() {
-    override suspend fun SContainer.sceneInit() {
-        val korgeTex = resourcesVfs["korge.png"].readNativeImage().mipmaps(false)
-        val crateTex = resourcesVfs["crate.jpg"].readNativeImage().mipmaps(true)
-        val crateMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
-
-        image(korgeTex).alpha(0.5)
-
-        scene3D {
-            //camera.set(fov = 60.degrees, near = 0.3, far = 1000.0)
-
-            //light().position(0, 0, -3)
-
-            val cube1 = cube().material(crateMaterial)
-            sphere(2).position(1, 0, 0)
-            //cube(2.0, 2.0)
-            val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees).material(crateMaterial)
-            val cube3 = cube().position(-5, 0, 0).material(crateMaterial)
-            val cube4 = cube().position(+5, 0, 0).material(crateMaterial)
-            val cube5 = cube().position(0, -5, 0).material(crateMaterial)
-            val cube6 = cube().position(0, +5, 0).material(crateMaterial)
-            val cube7 = cube().position(0, 0, -5).material(crateMaterial)
-            val cube8 = cube().position(0, 0, +5).material(crateMaterial)
-
-            var tick = 0
-            addUpdater {
-                val angle = (tick / 4.0).degrees
-                camera.positionLookingAt(
-                    cos(angle * 2) * 4, cos(angle * 3) * 4, -sin(angle) * 4, // Orbiting camera
-                    0f, 1f, 0f
-                )
-                tick++
-            }
-
-            launchImmediately {
-                while (true) {
-                    tween(time = 16.seconds) {
-                        cube1.modelMat.identity().rotate((it * 360).degrees, 0.degrees, 0.degrees)
-                        cube2.modelMat.identity().rotate(0.degrees, (it * 360).degrees, 0.degrees)
-                    }
-                }
-            }
-        }
-
-        image(korgeTex).position(views.virtualWidth, 0).anchor(1, 0).alpha(0.5)
     }
 }
