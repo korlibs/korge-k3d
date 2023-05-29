@@ -21,7 +21,6 @@ data class Material3D(
 
 	
 	data class LightColor(val color: RGBA) : Light("color") {
-		val colorVec = MVector4().setToColor(color)
 	}
 
 	
