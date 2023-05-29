@@ -41,10 +41,12 @@ class RenderContext3D {
     val polylines = arrayListOf<VectorArrayList>().also { it.add(VectorArrayList(3)) }
     private var currentPos = Vector3.ZERO
 
+    fun moveTo(x: Float, y: Float, z: Float) = moveTo(Vector3(x, y, z))
     fun moveTo(p: Vector3) {
         polylines += VectorArrayList(3).also { it.add(p.x, p.y, p.z) }
         currentPos = p
     }
+    fun lineTo(x: Float, y: Float, z: Float) = lineTo(Vector3(x, y, z))
     fun lineTo(p: Vector3) {
         polylines.last().add(p.x, p.y, p.z)
         currentPos = p

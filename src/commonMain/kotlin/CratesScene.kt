@@ -48,24 +48,24 @@ class CratesScene : Scene() {
 
             //polyline3d { }
             polyline3D(Colors.BLUEVIOLET) {
-                moveTo(Vector3(-10f, 0f, 0f))
-                lineTo(Vector3(10f, 0f, 0f))
+                moveTo(-10f, 0f, 0f)
+                lineTo(10f, 0f, 0f)
             }
             polyline3D(Colors.MEDIUMVIOLETRED) {
-                moveTo(Vector3(0f, -10f, 0f))
-                lineTo(Vector3(0f, 10f, 0f))
+                moveTo(0f, -10f, 0f)
+                lineTo(0f, 10f, 0f)
             }
             polyline3D(Colors["#8cb04d"]) {
-                moveTo(Vector3(0f, 0f, -10f))
-                lineTo(Vector3(0f, 0f, 10f))
+                moveTo(0f, 0f, -10f)
+                lineTo(0f, 0f, 10f)
             }
             polyline3D(Colors.WHITE) {
-                moveTo(Vector3(0f, 0f, 0f))
-                lineTo(Vector3(2f, 0f, 0f))
-                moveTo(Vector3(0f, 0f, 0f))
-                lineTo(Vector3(0f, 2f, 0f))
-                moveTo(Vector3(0f, 0f, 0f))
-                lineTo(Vector3(0f, 0f, 2f))
+                moveTo(0f, 0f, 0f)
+                lineTo(2f, 0f, 0f)
+                moveTo(0f, 0f, 0f)
+                lineTo(0f, 2f, 0f)
+                moveTo(0f, 0f, 0f)
+                lineTo(0f, 0f, 2f)
             }
             val cube1 = cube().material(crateMaterial)
             sphere(1f).position(1, 0, 0).material(crateMaterial)
