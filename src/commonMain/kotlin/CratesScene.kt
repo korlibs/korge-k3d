@@ -36,6 +36,8 @@ class CratesScene : Scene() {
         //val crateTex = KR.dice.__file.readBitmap(QOI).mipmaps(true)
         val crateMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
 
+        val transparentMaterial = Material3D(diffuse = Material3D.LightColor(Colors.RED.withAd(0.25)))
+
         //solidRect(512, 512, MaterialColors.AMBER_200).alpha(0.5)
         image(korgeTex).alpha(0.5)
 
@@ -78,6 +80,9 @@ class CratesScene : Scene() {
             val cube6 = cube().position(0, +5, 0).material(crateMaterial)
             val cube7 = cube().position(0, 0, -5).material(crateMaterial)
             val cube8 = cube().position(0, 0, +5).material(crateMaterial)
+            plane(Vector3.UP).material(transparentMaterial).also {
+                it.blendMode = BlendMode.NORMAL
+            }
 
             addUpdater {
                 val angle = (tick / 4.0).degrees
