@@ -80,7 +80,7 @@ class CratesScene : Scene() {
             val cube6 = cube().position(0, +5, 0).material(crateMaterial)
             val cube7 = cube().position(0, 0, -5).material(crateMaterial)
             val cube8 = cube().position(0, 0, +5).material(crateMaterial)
-            plane(Vector3.UP).material(transparentMaterial).also {
+            plane(Vector3.UP, 10f, 3f).material(transparentMaterial).also {
                 it.blendMode = BlendMode.NORMAL
             }
 
