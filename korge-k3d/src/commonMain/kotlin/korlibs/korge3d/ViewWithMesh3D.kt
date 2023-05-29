@@ -39,7 +39,7 @@ open class ViewWithMesh3D(
             //println("uniform=$uniform, actual=$actual")
             when (actual) {
                 is Material3D.LightColor -> {
-                    it[u_color] = actual.colorVec.immutable
+                    it[u_color] = actual.color.premultiplied
                 }
                 is Material3D.LightTexture -> {
                     ctx.rctx.textureUnits.set(
@@ -91,11 +91,9 @@ open class ViewWithMesh3D(
                 }
 
                 ctx.lights.fastForEachWithIndex { index, light: Light3D ->
-                    val lightColor = light.color
                     ctx.rctx[Shaders3D.lights[index]].push {
                         it[u_SourcePos] = light.transform.translation.immutable
-                        it[u_Color] =
-                            light.colorVec.setTo(lightColor.rf, lightColor.gf, lightColor.bf, 1f).immutable
+                        it[u_Color] = light.color
                         it[u_Attenuation] = light.attenuationVec.setTo(
                             light.constantAttenuation,
                             light.linearAttenuation,
@@ -115,7 +113,7 @@ open class ViewWithMesh3D(
                         drawType = mesh.drawType,
                         program = program,
                         vertexCount = mesh.vertexCount,
-                        blending = AGBlending.NONE,
+                        blending = blendMode.factors,
                         uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
                         textureUnits = ctx.rctx.textureUnits.clone(),
                         depthAndFrontFace = rs,

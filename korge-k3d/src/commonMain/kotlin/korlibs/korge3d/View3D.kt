@@ -16,6 +16,8 @@ abstract class View3D : BaseView() {
 	var name: String? = null
 	val transform = Transform3D()
 
+    var blendMode: BlendMode = BlendMode.NONE
+
 	///////
 
     override fun invalidateRender() {
