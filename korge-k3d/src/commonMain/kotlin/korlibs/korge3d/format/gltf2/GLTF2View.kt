@@ -2,7 +2,6 @@ package korlibs.korge3d.format.gltf2
 
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
-import korlibs.image.color.*
 import korlibs.korge3d.*
 import korlibs.memory.*
 
@@ -19,7 +18,7 @@ class GLTF2View(var gltf: GLTF2) : Container3D() {
     }
 }
 
-class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : BaseViewWithMesh3D() {
+class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : ViewWithMaterial3D() {
     val drawType: AGDrawType get() = primitive.drawType
     val vertexData: AGVertexArrayObject = AGVertexArrayObject(*primitive.attributes.map { attr ->
         val att = when (attr.key) {
@@ -79,7 +78,7 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Bas
             //mesh.maxWeights,
             0,
             material,
-            false
+            material.hasTexture
             //mesh.hasTexture
         )
         putUniforms(ctx)
@@ -108,10 +107,7 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Bas
     }
 
     companion object {
-        //val a_Pos: Attribute = Attribute("a_Pos", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 0)
-        //val a_Normal: Attribute = Attribute("a_Normal", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 1)
         val a_Tangent: Attribute = Attribute("a_Tangent", VarType.Float4, normalized = false, precision = Precision.LOW, fixedLocation = 2)
-        val a_TexCoord0: Attribute = Attribute("a_TexCoord0", VarType.Float2, normalized = false, precision = Precision.LOW, fixedLocation = 3)
     }
 }
 

@@ -16,18 +16,14 @@ data class Material3D(
 	val shininess: Float = .5f,
 	val indexOfRefraction: Float = 1f
 ) {
-	
-	open class Light(val kind: String)
+    val hasTexture: Boolean = emission.hasTexture || ambient.hasTexture || diffuse.hasTexture || specular.hasTexture
 
+    open class Light(val kind: String, val hasTexture: Boolean)
 	
-	data class LightColor(val color: RGBA) : Light("color") {
-	}
+	data class LightColor(val color: RGBA) : Light("color", hasTexture = false)
+    data class LightTexture(val bitmap: Bitmap?) : Light("texture", hasTexture = true)
 
-	
-	data class LightTexture(val bitmap: Bitmap?) : Light("texture") {
-	}
-
-	val kind: String = "${emission.kind}_${ambient.kind}_${diffuse.kind}_${specular.kind}"
+    val kind: String = "${emission.kind}_${ambient.kind}_${diffuse.kind}_${specular.kind}"
 }
 
 val MVector4.immutable: Vector4 get() = Vector4(x, y, z, w)

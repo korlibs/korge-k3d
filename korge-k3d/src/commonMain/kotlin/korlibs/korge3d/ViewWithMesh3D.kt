@@ -1,68 +1,16 @@
 package korlibs.korge3d
 
-import korlibs.datastructure.iterators.*
-import korlibs.memory.clamp
 import korlibs.graphics.*
-import korlibs.graphics.shader.*
-import korlibs.korge.render.*
-import korlibs.math.geom.*
-
+import korlibs.memory.*
 
 inline fun Container3D.mesh(mesh: Mesh3D, callback: ViewWithMesh3D.() -> Unit = {}): ViewWithMesh3D {
     return ViewWithMesh3D(mesh).addTo(this, callback)
 }
 
-abstract class BaseViewWithMesh3D(
-) : View3D() {
-
-    abstract val material: Material3D?
-
-    private val tempMat1 = MMatrix3D()
-    private val tempMat2 = MMatrix3D()
-    private val tempMat3 = MMatrix3D()
-
-    fun setMaterialLight(
-        ctx: RenderContext3D,
-        uniform: Shaders3D.MaterialUB,
-        actual: Material3D.Light
-    ) {
-        ctx.rctx[uniform].push {
-            //println("uniform=$uniform, actual=$actual")
-            when (actual) {
-                is Material3D.LightColor -> {
-                    it[u_color] = actual.color.premultiplied
-                }
-                is Material3D.LightTexture -> {
-                    //println("TEXTURE LIGHT: ${actual.bitmap}")
-                    ctx.rctx.textureUnits.set(
-                        u_texUnit.index,
-                        actual.bitmap?.let { ctx.rctx.agBitmapTextureManager.getTextureBase(it).base },
-                        AGTextureUnitInfo.DEFAULT.withLinear(true)
-                    )
-                }
-            }
-        }
-    }
-
-    override fun putUniforms(ctx: RenderContext3D) {
-        super.putUniforms(ctx)
-
-        val meshMaterial = material
-
-        if (meshMaterial != null) {
-            setMaterialLight(ctx, Shaders3D.ambient, meshMaterial.ambient)
-            setMaterialLight(ctx, Shaders3D.diffuse, meshMaterial.diffuse)
-            setMaterialLight(ctx, Shaders3D.emission, meshMaterial.emission)
-            setMaterialLight(ctx, Shaders3D.specular, meshMaterial.specular)
-        }
-    }
-
-}
-
 open class ViewWithMesh3D(
     var mesh: Mesh3D,
     var skeleton: Skeleton3D? = null
-) : BaseViewWithMesh3D() {
+) : ViewWithMaterial3D() {
 
     override val material: Material3D? get() = mesh.material
 

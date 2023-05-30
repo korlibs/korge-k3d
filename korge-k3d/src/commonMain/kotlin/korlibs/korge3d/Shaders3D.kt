@@ -52,9 +52,9 @@ open class Shaders3D {
         val u_ViewMat = DefaultShaders.u_ViewMat
 
 		val a_pos = Attribute("a_Pos", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 0)
-		val a_norm = Attribute("a_Norm", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 1)
+		val a_norm = Attribute("a_Norm", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 1)
 		val a_tex = Attribute("a_TexCoords", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 2)
-        val a_col = Attribute("a_Col", VarType.Float3, normalized = true, fixedLocation = 3)
+        val a_col = Attribute("a_Col", VarType.Float3, normalized = true, Precision.LOW, fixedLocation = 3)
 		val a_boneIndex = Array(4) { Attribute("a_BoneIndex$it", VarType.Float4, normalized = false, fixedLocation = 4 + it) }
 		val a_weight = Array(4) { Attribute("a_Weight$it", VarType.Float4, normalized = false, fixedLocation = 8 + it) }
 		val v_col = Varying("v_Col", VarType.Float3)

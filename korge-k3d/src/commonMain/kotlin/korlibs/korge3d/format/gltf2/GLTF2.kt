@@ -359,9 +359,9 @@ data class GLTF2(
 
             val materials3D: List<Material3D> = materials.map { gmat ->
                 Material3D(
-                    diffuse = gmat.gMetallicRoughness.metallicRoughnessTexture
-                        //?.let { Material3D.LightTexture(readTexture(it)) }
-                        ?.let { null }
+                    diffuse = gmat.gMetallicRoughness.baseColorTexture
+                        ?.let { Material3D.LightTexture(readTexture(it)) }
+                        //?.let { null }
                         ?: Material3D.LightColor(Colors.FUCHSIA)
                 )
             }
