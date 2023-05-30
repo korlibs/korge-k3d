@@ -3,6 +3,7 @@ package korlibs.korge3d
 import korlibs.datastructure.*
 import korlibs.datastructure.iterators.*
 
+fun Container3D.container3D(block: Container3D.() -> Unit): Container3D = Container3D().addTo(this, block)
 
 open class Container3D : View3D() {
     private val __children: FastArrayList<View3D> = FastArrayList()

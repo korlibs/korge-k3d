@@ -1,4 +1,4 @@
-package korlibs.korge.gltf
+package korlibs.korge3d.format.gltf2
 
 import korlibs.graphics.*
 import korlibs.graphics.shader.*

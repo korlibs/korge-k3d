@@ -1,13 +1,15 @@
 package korlibs.korge3d
 
-import korlibs.datastructure.iterators.fastForEach
+import korlibs.datastructure.iterators.*
+import korlibs.graphics.*
 import korlibs.korge.view.*
-import korlibs.math.geom.Angle
-import korlibs.math.geom.MMatrix3D
-import korlibs.math.geom.degrees
+import korlibs.math.geom.*
 
 
 abstract class View3D : BaseView() {
+    companion object {
+        val DEFAULT_DEPTH_FUNC = AGDepthAndFrontFace.DEFAULT.withDepthFunc(depthFunc = AGCompareMode.LESS_EQUAL)
+    }
     //TODO: I don't think that a Camera, Container, Light, ViewWithMesh, Text3D should all have this as supertype
     // they are not all 'types' of View ?
 
@@ -118,6 +120,36 @@ abstract class View3D : BaseView() {
     protected open fun onParentChanged() {
     }
 
+    protected open fun prepareExtraModelMatrix(): Matrix4 {
+        return Matrix4.IDENTITY
+    }
+
+
+    protected open fun putUniforms(ctx: RenderContext3D) {
+        ctx.rctx[DefaultShaders.ProjViewUB].push {
+            it[u_ProjMat] = ctx.projCameraMat.immutable
+            it[u_ViewMat] = transform.globalMatrix.immutable
+            //this[u_ModMat] = tempMat2.multiply(tempMat1.apply { prepareExtraModelMatrix(this) }, modelMat)
+        }
+        ctx.rctx[Shaders3D.K3DPropsUB].push {
+            it[u_NormMat] = Matrix4.IDENTITY
+            it[u_ModMat] = prepareExtraModelMatrix() * modelMat.immutable
+        }
+
+        ctx.lights.fastForEachWithIndex { index, light: Light3D ->
+            ctx.rctx[Shaders3D.lights[index]].push {
+                it[u_SourcePos] = light.transform.translation.immutable
+                it[u_Color] = light.color
+                it[u_Attenuation] = light.attenuationVec.setTo(
+                    light.constantAttenuation,
+                    light.linearAttenuation,
+                    light.quadraticAttenuation
+                ).immutable
+            }
+        }
+    }
+
+
     open val root: View3D get() = parent?.root ?: this
 
 	val modelMat = MMatrix3D()
@@ -192,6 +224,7 @@ fun <T : View3D> T.position(x: Float, y: Float, z: Float, w: Float = 1f): T {
 
 fun <T : View3D> T.position(x: Int, y: Int, z: Int, w: Int = 1): T = position(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
+fun <T : View3D> T.position(pos: Vector3): T = position(pos.x, pos.y, pos.z)
 
 fun <T : View3D> T.rotation(x: Angle = 0.degrees, y: Angle = 0.degrees, z: Angle = 0.degrees): T {
 	transform.setRotation(x, y, z)

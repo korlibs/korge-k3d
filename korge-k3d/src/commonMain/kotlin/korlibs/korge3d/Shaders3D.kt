@@ -10,8 +10,8 @@ open class Shaders3D {
 	//@ThreadLocal
 	private val programCache = LinkedHashMap<String, Program>()
 
-	//var printShaders = false
-    var printShaders = true
+	var printShaders = false
+    //var printShaders = true
 
 	@Suppress("RemoveCurlyBracesFromTemplate")
 	fun getProgram3D(nlights: Int, nweights: Int, meshMaterial: Material3D?, hasTexture: Boolean): Program {

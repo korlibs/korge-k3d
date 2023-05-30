@@ -1,6 +1,6 @@
 import korlibs.image.bitmap.*
 import korlibs.image.color.*
-import korlibs.image.format.readNativeImage
+import korlibs.image.format.*
 import korlibs.io.async.launchImmediately
 import korlibs.io.file.std.resourcesVfs
 import korlibs.korge.KeepOnReload
@@ -8,6 +8,7 @@ import korlibs.korge.scene.Scene
 import korlibs.korge.tween.tween
 import korlibs.korge.view.*
 import korlibs.korge3d.*
+import korlibs.korge3d.format.gltf2.*
 import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
 import korlibs.time.seconds
@@ -19,6 +20,17 @@ class CratesScene : Scene() {
     var tick = 0.0
 
     override suspend fun SContainer.sceneInit() {
+        sceneInit2()
+    }
+
+    suspend fun SContainer.sceneInit3() {
+        scene3D {
+            axisLines(length = 1f)
+            gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
+        }
+    }
+
+    suspend fun SContainer.sceneInit2() {
 
         val korgeTex = KR.korge.read()
 
@@ -47,32 +59,15 @@ class CratesScene : Scene() {
             //light().position(0, 0, -3)
 
             //polyline3d { }
-            polyline3D(Colors.BLUEVIOLET) {
-                moveTo(-10f, 0f, 0f)
-                lineTo(10f, 0f, 0f)
-            }
-            polyline3D(Colors.MEDIUMVIOLETRED) {
-                moveTo(0f, -10f, 0f)
-                lineTo(0f, 10f, 0f)
-            }
-            polyline3D(Colors["#8cb04d"]) {
-                moveTo(0f, 0f, -10f)
-                lineTo(0f, 0f, 10f)
-            }
-            polyline3D(Colors.WHITE) {
-                moveTo(0f, 0f, 0f)
-                lineTo(2f, 0f, 0f)
-                moveTo(0f, 0f, 0f)
-                lineTo(0f, 2f, 0f)
-                moveTo(0f, 0f, 0f)
-                lineTo(0f, 0f, 2f)
-            }
+            axisLines()
             val cube1 = cube().material(crateMaterial)
             sphere(1f).position(1, 0, 0).material(crateMaterial)
             torus(1f).position(-1, 0, 0).material(crateMaterial)
             cone(1f).position(0, -1, 0).material(crateMaterial)
             cylinder(1f).position(0, -2, 0).material(crateMaterial)
             //cube(2.0, 2.0)
+            gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2()).position(Vector3(3, 0, 0))
+
             val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees).material(crateMaterial)
             val cube3 = cube().position(-5, 0, 0).material(crateMaterial)
             val cube4 = cube().position(+5, 0, 0).material(crateMaterial)

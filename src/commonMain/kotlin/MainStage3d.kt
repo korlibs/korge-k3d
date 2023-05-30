@@ -11,12 +11,6 @@ class MainStage3d : Scene() {
     lateinit var contentSceneContainer: SceneContainer
 
     override suspend fun SContainer.sceneInit() {
-        views.injector
-            .mapPrototype { MainStage3d() }
-            .mapPrototype { CratesScene() }
-            .mapPrototype { MonkeyScene() }
-            .mapPrototype { SkinningScene() }
-
         contentSceneContainer = sceneContainer(views)
 
         sceneButton<CratesScene>("Crates", 0)
@@ -29,6 +23,7 @@ class MainStage3d : Scene() {
 
     inline fun <reified T : Scene> Container.sceneButton(title: String, x: Int) {
         uiButton(title)
+            .scale(1.5)
             .xy(8 + x * 200, views.virtualHeight - 120)
             .onClick { contentSceneContainer.changeToDisablingButtons<T>(this) }
 

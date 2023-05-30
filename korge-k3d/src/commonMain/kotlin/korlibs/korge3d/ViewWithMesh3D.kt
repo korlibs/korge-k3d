@@ -18,17 +18,9 @@ open class ViewWithMesh3D(
     var skeleton: Skeleton3D? = null
 ) : View3D() {
 
-    //private val uniformValues = AGUniformValues()
-    private val rs = AGDepthAndFrontFace.DEFAULT.withDepthFunc(depthFunc = AGCompareMode.LESS_EQUAL)
-    //private val rs = AGRenderState(depthFunc = AGCompareMode.ALWAYS)
-
     private val tempMat1 = MMatrix3D()
     private val tempMat2 = MMatrix3D()
     private val tempMat3 = MMatrix3D()
-
-    protected open fun prepareExtraModelMatrix(): Matrix4 {
-        return Matrix4.IDENTITY
-    }
 
     fun setMaterialLight(
         ctx: RenderContext3D,
@@ -52,6 +44,19 @@ open class ViewWithMesh3D(
         }
     }
 
+    override fun putUniforms(ctx: RenderContext3D) {
+        super.putUniforms(ctx)
+
+        val meshMaterial = mesh.material
+
+        if (meshMaterial != null) {
+            setMaterialLight(ctx, Shaders3D.ambient, meshMaterial.ambient)
+            setMaterialLight(ctx, Shaders3D.diffuse, meshMaterial.diffuse)
+            setMaterialLight(ctx, Shaders3D.emission, meshMaterial.emission)
+            setMaterialLight(ctx, Shaders3D.specular, meshMaterial.specular)
+        }
+    }
+
     override fun render(ctx: RenderContext3D) {
         val ag = ctx.ag
 
@@ -60,48 +65,16 @@ open class ViewWithMesh3D(
         ctx.dynamicIndexBufferPool.alloc { indexBuffer ->
             ctx.useDynamicVertexData(mesh.vertexBuffers) { vertexData ->
                 indexBuffer.upload(mesh.indexBuffer)
-                //tempMat2.invert()
-                //tempMat3.multiply(ctx.cameraMatInv, this.localTransform.matrix)
-                //tempMat3.multiply(ctx.cameraMatInv, Matrix3D().invert(this.localTransform.matrix))
-                //tempMat3.multiply(this.localTransform.matrix, ctx.cameraMat)
+
                 val meshMaterial = mesh.material
-                //val program = Shaders3D.PROGRAM_COLOR_3D ?: mesh.program ?: ctx.shaders.getProgram3D(
+
                 val program = mesh.program ?: ctx.shaders.getProgram3D(
                     ctx.lights.size.clamp(0, 4),
                     mesh.maxWeights,
                     meshMaterial,
                     mesh.hasTexture
                 )
-
-                ctx.rctx[DefaultShaders.ProjViewUB].push {
-                    it[u_ProjMat] = ctx.projCameraMat.immutable
-                    it[u_ViewMat] = transform.globalMatrix.immutable
-                    //this[u_ModMat] = tempMat2.multiply(tempMat1.apply { prepareExtraModelMatrix(this) }, modelMat)
-                }
-                ctx.rctx[Shaders3D.K3DPropsUB].push {
-                    it[u_NormMat] = Matrix4.IDENTITY
-                    it[u_ModMat] = prepareExtraModelMatrix() * modelMat.immutable
-                }
-
-                if (meshMaterial != null) {
-                    setMaterialLight(ctx, Shaders3D.ambient, meshMaterial.ambient)
-                    setMaterialLight(ctx, Shaders3D.diffuse, meshMaterial.diffuse)
-                    setMaterialLight(ctx, Shaders3D.emission, meshMaterial.emission)
-                    setMaterialLight(ctx, Shaders3D.specular, meshMaterial.specular)
-                }
-
-                ctx.lights.fastForEachWithIndex { index, light: Light3D ->
-                    ctx.rctx[Shaders3D.lights[index]].push {
-                        it[u_SourcePos] = light.transform.translation.immutable
-                        it[u_Color] = light.color
-                        it[u_Attenuation] = light.attenuationVec.setTo(
-                            light.constantAttenuation,
-                            light.linearAttenuation,
-                            light.quadraticAttenuation
-                        ).immutable
-                    }
-                }
-
+                putUniforms(ctx)
                 //println("mesh.vertexCount=${mesh.vertexCount}")
 
                 Shaders3D.apply {
@@ -116,7 +89,7 @@ open class ViewWithMesh3D(
                         blending = blendMode.factors,
                         uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
                         textureUnits = ctx.rctx.textureUnits.clone(),
-                        depthAndFrontFace = rs,
+                        depthAndFrontFace = DEFAULT_DEPTH_FUNC,
                         /*
                         uniforms = uniformValues.apply {
                             //this[u_NormMat] = tempMat3.multiply(tempMat2, localTransform.matrix).invert().transpose()
