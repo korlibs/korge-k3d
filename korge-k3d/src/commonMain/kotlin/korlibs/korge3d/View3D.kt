@@ -233,13 +233,13 @@ fun <T : View3D> T.rotation(x: Angle = 0.degrees, y: Angle = 0.degrees, z: Angle
 }
 
 
-fun <T : View3D> T.scale(x: Float = 1f, y: Float = 1f, z: Float = 1f, w: Float = 1f): T {
+fun <T : View3D> T.scale(x: Float = 1f, y: Float = x, z: Float = x, w: Float = 1f): T {
     transform.setScale(x, y, z, w)
     return this
 }
 
 
-inline fun <T : View3D> T.scale(x: Int = 1, y: Int = 1, z: Int = 1, w: Int = 1): T = scale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
+inline fun <T : View3D> T.scale(x: Int = 1, y: Int = x, z: Int = x, w: Int = 1): T = scale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
 
 fun <T : View3D> T.lookAt(x: Float, y: Float, z: Float): T {

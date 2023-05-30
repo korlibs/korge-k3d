@@ -23,6 +23,8 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
         val att = when (attr.key) {
             GLTF2.GAttribute.POSITION -> a_Pos
             GLTF2.GAttribute.NORMAL -> a_Normal
+            GLTF2.GAttribute.TANGENT -> a_Tangent
+            GLTF2.GAttribute.TEXCOORD_0 -> a_TexCoord0
             else -> TODO("${attr.key}")
         }
         val accessor = gltf.accessors[attr.value]
@@ -33,6 +35,14 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
             a_Pos, a_Normal -> {
                 check(accessor.componentTType == VarKind.TFLOAT)
                 check(accessor.ncomponent == 3)
+            }
+            a_Tangent -> {
+                check(accessor.componentTType == VarKind.TFLOAT)
+                check(accessor.ncomponent == 4)
+            }
+            a_TexCoord0 -> {
+                check(accessor.componentTType == VarKind.TFLOAT)
+                check(accessor.ncomponent == 2)
             }
             else -> TODO("Unsupported $att")
         }
@@ -50,7 +60,9 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
 
     companion object {
         val a_Pos: Attribute = Attribute("a_Pos", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 0)
-        val a_Normal: Attribute = Attribute("a_Normal", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 1)
+        val a_Normal: Attribute = Attribute("a_Normal", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 1)
+        val a_Tangent: Attribute = Attribute("a_Tangent", VarType.Float4, normalized = false, precision = Precision.LOW, fixedLocation = 1)
+        val a_TexCoord0: Attribute = Attribute("a_TexCoord0", VarType.Float2, normalized = false, precision = Precision.LOW, fixedLocation = 2)
 
         val PROGRAM = Program(
             VertexShaderDefault {

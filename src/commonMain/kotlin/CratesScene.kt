@@ -20,13 +20,16 @@ class CratesScene : Scene() {
     var tick = 0.0
 
     override suspend fun SContainer.sceneInit() {
-        sceneInit2()
+        //sceneInit2()
+        sceneInit3()
     }
 
     suspend fun SContainer.sceneInit3() {
         scene3D {
             axisLines(length = 1f)
-            gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
+            //gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
+            gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
+            //gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(50f)
         }
     }
 
@@ -66,7 +69,7 @@ class CratesScene : Scene() {
             cone(1f).position(0, -1, 0).material(crateMaterial)
             cylinder(1f).position(0, -2, 0).material(crateMaterial)
             //cube(2.0, 2.0)
-            gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2()).position(Vector3(3, 0, 0))
+            gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).position(Vector3(3, 0, 0))
 
             val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees).material(crateMaterial)
             val cube3 = cube().position(-5, 0, 0).material(crateMaterial)

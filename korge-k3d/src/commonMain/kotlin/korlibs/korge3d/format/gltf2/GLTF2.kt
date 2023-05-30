@@ -14,6 +14,7 @@ import korlibs.memory.*
 suspend fun VfsFile.readGLTF2(): GLTF2 = GLTF2.readGLB(this)
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc
+// https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0
 data class GLTF2(
     val buffers: List<GBuffer>,
     // @TODO: We could map bufferViews to Buffer + offset
@@ -56,6 +57,7 @@ data class GLTF2(
         companion object {
             val POSITION = GAttribute(GAttributeKind.POSITION, 0)
             val NORMAL = GAttribute(GAttributeKind.NORMAL, 0)
+            val TANGENT = GAttribute(GAttributeKind.TANGENT, 0)
             val TEXCOORD_0 = GAttribute(GAttributeKind.TEXCOORD, 0)
             val TEXCOORD_1 = GAttribute(GAttributeKind.TEXCOORD, 1)
 
