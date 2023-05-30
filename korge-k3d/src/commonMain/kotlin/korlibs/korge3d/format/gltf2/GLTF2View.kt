@@ -3,6 +3,7 @@ package korlibs.korge3d.format.gltf2
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
 import korlibs.korge3d.*
+import korlibs.math.geom.*
 import korlibs.memory.*
 
 fun Container3D.gltf2View(gltf: GLTF2) = GLTF2View(gltf).addTo(this)
@@ -20,6 +21,7 @@ class GLTF2View(var gltf: GLTF2) : Container3D() {
 class GLTF2ViewNode(val gltf: GLTF2, val node: GLTF2.GNode) : Container3D() {
     init {
         node.mesh?.let { addChild(GLTF2ViewMesh(gltf, gltf.meshes[it])) }
+        transform.setMatrix(node.matrix.mutable)
         for (child in node.children) {
             addChild(GLTF2ViewNode(gltf, gltf.nodes[child]))
         }
