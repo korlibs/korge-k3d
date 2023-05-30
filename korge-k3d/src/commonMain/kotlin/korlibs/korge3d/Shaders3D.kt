@@ -168,7 +168,7 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		SET(normalMat, Shaders3D.K3DPropsUB.u_NormMat)
 		SET(v_Pos, vec3(modelViewMat * (vec4(localPos["xyz"], 1f.lit))))
 		SET(v_Norm, vec3(normalMat * normalize(vec4(localNorm["xyz"], 1f.lit))))
-		if (hasTexture) SET(v_TexCoords, a_tex["xy"])
+		if (hasTexture) SET(v_TexCoords, vec2(a_tex["x"], a_tex["y"]))
 		SET(out, u_ProjMat * vec4(v_Pos, 1f.lit))
 	}
 

@@ -27,9 +27,17 @@ class CratesScene : Scene() {
     suspend fun SContainer.sceneInit3() {
         var rotation = 0.degrees
         scene3D {
-            axisLines(length = 10f)
+            axisLines(length = 4f)
             //gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
+            //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
+            //val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
+            //val view = gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(.5f)
+            //val view = gltf2View(resourcesVfs["gltf/cube/Cube.gltf"].readGLTF2())
+            //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(1f)
+            //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(1f)
+
+
             addUpdater {
                 view.rotation(y = rotation)
                 rotation += 1.degrees

@@ -16,7 +16,11 @@ import korlibs.logger.*
 import korlibs.math.geom.*
 import korlibs.memory.*
 
-suspend fun VfsFile.readGLTF2(): GLTF2 = GLTF2.readGLB(this)
+suspend fun VfsFile.readGLB(): GLTF2 = GLTF2.readGLB(this)
+suspend fun VfsFile.readGLTF2(): GLTF2 {
+    if (this.extensionLC == "glb") return readGLB()
+    return GLTF2.readGLTF(this.readString(), null, this)
+}
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc
 // https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0
@@ -29,7 +33,8 @@ data class GLTF2(
     val accessors: List<GAccessor>,
     val meshes: List<GMesh>,
     val materials: List<GMaterial>,
-    val materials3D: List<Material3D>
+    val materials3D: List<Material3D>,
+    val nodes: List<GNode>,
 ) {
 
     interface GElement
@@ -83,7 +88,13 @@ data class GLTF2(
     data class GOrthoCamera(
         val name: String, val xmag: Float, val ymag: Float, val zfar: Float, val znear: Float
     ) : GCamera
-    data class GNode(val name: String, val matrix: Matrix4, val children: List<Int>, val cameraIndex: Int?) : GElement
+    data class GNode(
+        val name: String,
+        val matrix: Matrix4,
+        val children: List<Int>,
+        val cameraIndex: Int?,
+        val mesh: Int?
+    ) : GElement
     data class GScene(val name: String, val nodes: List<GNode>) : GElement
 
     data class GBuffer(val byteLength: Int, val uri: String? = null, val data: Buffer) {
@@ -215,7 +226,7 @@ data class GLTF2(
                     else -> TODO("Unsupported camera type '$type'")
                 }
             }
-            val nodes = json["nodes"].list.map {
+            val nodes: List<GNode> = json["nodes"].list.map {
                 val name = it["name"].str
                 val children = it["children"].list.map { it.int }
                 val cameraIndex = it["camera"].toIntOrNull()
@@ -235,7 +246,7 @@ data class GLTF2(
                     val v = it["scale"].floatArray
                     matrix *= Matrix4.scale(v[0], v[1], v[2])
                 }
-                GNode(name, matrix, children, cameraIndex)
+                GNode(name, matrix, children, cameraIndex, it["mesh"].toIntOrNull())
             }
             val scenes = json["scenes"].list.map {
                 val name = it["name"].str
@@ -358,11 +369,17 @@ data class GLTF2(
             }
 
             val materials3D: List<Material3D> = materials.map { gmat ->
+                val baseColorFactor = gmat.gMetallicRoughness.baseColorFactor
                 Material3D(
                     diffuse = gmat.gMetallicRoughness.baseColorTexture
                         ?.let { Material3D.LightTexture(readTexture(it)) }
                         //?.let { null }
-                        ?: Material3D.LightColor(Colors.FUCHSIA)
+                        ?: Material3D.LightColor(RGBA.float(
+                            baseColorFactor.getOrElse(0) { 1f },
+                            baseColorFactor.getOrElse(1) { 1f },
+                            baseColorFactor.getOrElse(2) { 1f },
+                            baseColorFactor.getOrElse(3) { 1f }
+                        ))
                 )
             }
 
@@ -375,7 +392,15 @@ data class GLTF2(
             println("materials[${materials.size}]=$materials")
             println("materials3D[${materials3D.size}]=$materials3D")
             return GLTF2(
-                buffers, bufferViews, scenes, cameras, accessors, meshes, materials, materials3D
+                buffers,
+                bufferViews,
+                scenes,
+                cameras,
+                accessors,
+                meshes,
+                materials,
+                materials3D,
+                nodes
             )
         }
     }

@@ -9,11 +9,28 @@ fun Container3D.gltf2View(gltf: GLTF2) = GLTF2View(gltf).addTo(this)
 
 class GLTF2View(var gltf: GLTF2) : Container3D() {
     init {
-        for (mesh in gltf.meshes) {
-            for (primitive in mesh.primitives) {
-                addChild(GLTF2ViewPrimitive(gltf, primitive))
-                //println("primitive=$primitive")
+        for (scene in gltf.scenes) {
+            for (node in scene.nodes) {
+                addChild(GLTF2ViewNode(gltf, node))
             }
+        }
+    }
+}
+
+class GLTF2ViewNode(val gltf: GLTF2, val node: GLTF2.GNode) : Container3D() {
+    init {
+        node.mesh?.let { addChild(GLTF2ViewMesh(gltf, gltf.meshes[it])) }
+        for (child in node.children) {
+            addChild(GLTF2ViewNode(gltf, gltf.nodes[child]))
+        }
+    }
+}
+
+class GLTF2ViewMesh(val gltf: GLTF2, val mesh: GLTF2.GMesh) : Container3D() {
+    init {
+        for (primitive in mesh.primitives) {
+            addChild(GLTF2ViewPrimitive(gltf, primitive))
+            //println("primitive=$primitive")
         }
     }
 }
