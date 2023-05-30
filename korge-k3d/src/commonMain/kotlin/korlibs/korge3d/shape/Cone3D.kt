@@ -16,7 +16,7 @@ inline fun Container3D.cone(
 ): Cone3D = Cone3D(radius).addTo(this, callback)
 
 
-class Cone3D(var radius: Float) : BaseViewWithMesh3D(mesh) {
+class Cone3D(var radius: Float) : ShapeViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix() = Matrix4.scale(radius, radius, radius)
 
     companion object {

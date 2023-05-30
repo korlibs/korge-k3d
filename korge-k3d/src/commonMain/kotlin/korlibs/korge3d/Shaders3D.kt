@@ -10,16 +10,16 @@ open class Shaders3D {
 	//@ThreadLocal
 	private val programCache = LinkedHashMap<String, Program>()
 
-	var printShaders = false
-    //var printShaders = true
+	//var printShaders = false
+    var printShaders = true
 
 	@Suppress("RemoveCurlyBracesFromTemplate")
 	fun getProgram3D(nlights: Int, nweights: Int, meshMaterial: Material3D?, hasTexture: Boolean): Program {
 		return programCache.getOrPut("program_L${nlights}_W${nweights}_M${meshMaterial?.kind}_T${hasTexture}") {
 			StandardShader3D(nlights, nweights, meshMaterial, hasTexture).program.apply {
 				if (printShaders) {
-					println(GlslGenerator(ShaderType.VERTEX, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable())).generate(this.vertex))
-					println(GlslGenerator(ShaderType.FRAGMENT, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable())).generate(this.fragment))
+					println(GlslGenerator(ShaderType.VERTEX, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable(isUniformBuffersSupported = true))).generate(this.vertex))
+					println(GlslGenerator(ShaderType.FRAGMENT, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable(isUniformBuffersSupported = true))).generate(this.fragment))
 				}
 			}
 		}
@@ -88,12 +88,12 @@ open class Shaders3D {
             name = "programColor3D"
         )
 
-		val lights = (0 until 4).map { LightUB(it, 5 + it) }
+		val lights = (0 until 4).map { LightUB(it, 6 + it) }
 
-		val emission = MaterialUB("emission", 1, 1)
-		val ambient = MaterialUB("ambient", 2, 2)
-		val diffuse = MaterialUB("diffuse", 3, 3)
-		val specular = MaterialUB("specular", 4, 4)
+		val emission = MaterialUB("emission", 2, 1)
+		val ambient = MaterialUB("ambient", 3, 2)
+		val diffuse = MaterialUB("diffuse", 4, 3)
+		val specular = MaterialUB("specular", 5, 4)
 
 
 		val layoutPosCol = VertexLayout(a_pos, a_col)

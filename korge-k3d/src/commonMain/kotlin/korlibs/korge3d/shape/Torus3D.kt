@@ -14,7 +14,7 @@ inline fun Container3D.torus(
 ): Torus3D = Torus3D(scale).addTo(this, callback)
 
 
-class Torus3D(var scale: Float) : BaseViewWithMesh3D(mesh) {
+class Torus3D(var scale: Float) : ShapeViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix() = Matrix4.scale(scale, scale, scale)
 
     companion object {

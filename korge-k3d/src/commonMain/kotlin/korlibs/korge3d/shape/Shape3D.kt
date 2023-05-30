@@ -31,8 +31,8 @@ class Shape3D(
     }
 }
 
-abstract class BaseViewWithMesh3D(mesh: Mesh3D) : ViewWithMesh3D(mesh.copy()) {
-    var material: Material3D?
+abstract class ShapeViewWithMesh3D(mesh: Mesh3D) : ViewWithMesh3D(mesh.copy()) {
+    override var material: Material3D?
         get() = mesh.material
         set(value) {
             mesh.material = value
@@ -40,7 +40,7 @@ abstract class BaseViewWithMesh3D(mesh: Mesh3D) : ViewWithMesh3D(mesh.copy()) {
         }
 }
 
-fun <T : BaseViewWithMesh3D> T.material(material: Material3D?): T {
+fun <T : ShapeViewWithMesh3D> T.material(material: Material3D?): T {
     this.material = material
     return this
 }

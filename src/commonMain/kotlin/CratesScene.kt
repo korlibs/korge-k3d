@@ -25,10 +25,15 @@ class CratesScene : Scene() {
     }
 
     suspend fun SContainer.sceneInit3() {
+        var rotation = 0.degrees
         scene3D {
-            axisLines(length = 1f)
+            axisLines(length = 10f)
             //gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
-            gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
+            val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
+            addUpdater {
+                view.rotation(y = rotation)
+                rotation += 1.degrees
+            }
             //gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(50f)
         }
     }
@@ -69,7 +74,7 @@ class CratesScene : Scene() {
             cone(1f).position(0, -1, 0).material(crateMaterial)
             cylinder(1f).position(0, -2, 0).material(crateMaterial)
             //cube(2.0, 2.0)
-            gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).position(Vector3(3, 0, 0))
+            gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).position(Vector3(3, 0, 0)).scale(10f).rotation(y = 180.degrees)
 
             val cube2 = cube().position(0, 2, 0).scale(1, 2, 1).rotation(0.degrees, 0.degrees, 45.degrees).material(crateMaterial)
             val cube3 = cube().position(-5, 0, 0).material(crateMaterial)

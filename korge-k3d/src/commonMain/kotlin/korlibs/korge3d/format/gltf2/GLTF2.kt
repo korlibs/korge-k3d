@@ -1,12 +1,17 @@
 package korlibs.korge3d.format.gltf2
 
+import korlibs.datastructure.*
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
+import korlibs.image.bitmap.*
+import korlibs.image.color.*
+import korlibs.image.format.*
 import korlibs.io.dynamic.*
 import korlibs.io.file.*
 import korlibs.io.lang.*
 import korlibs.io.serialization.json.*
 import korlibs.io.stream.*
+import korlibs.korge3d.*
 import korlibs.logger.*
 import korlibs.math.geom.*
 import korlibs.memory.*
@@ -23,9 +28,13 @@ data class GLTF2(
     val cameras: List<GCamera>,
     val accessors: List<GAccessor>,
     val meshes: List<GMesh>,
-    val materials: List<GMaterial>
+    val materials: List<GMaterial>,
+    val materials3D: List<Material3D>
 ) {
+
     interface GElement
+    open class GBaseElement : GElement, Extra by Extra.Mixin()
+
     interface GCamera : GElement
     enum class GAttributeKind {
         POSITION, NORMAL, TANGENT, COLOR, TEXCOORD, JOINTS, WEIGHTS;
@@ -82,7 +91,11 @@ data class GLTF2(
     }
     data class GBufferView(val gbuffer: GBuffer, val slice: Buffer, val offsetInBuffer: Int, val length: Int)
     data class GTexture(val source: Int) : GElement
-    data class GImage(val uri: String?) : GElement
+    data class GImage(
+        val uri: String?,
+        val bufferView: Int?,
+        val mimeType: String?,
+    ) : GElement
     data class GAccessor(
         val bufferView: Int,
         val byteOffset: Int,
@@ -108,17 +121,19 @@ data class GLTF2(
         val material: Int,
         val drawType: AGDrawType
     )
-    data class GMesh(val name: String, val primitives: List<GPrimitive>)
+    data class GMesh(val name: String, val primitives: List<GPrimitive>) : Extra by Extra.Mixin()
     data class GMaterialTexture(
         val scale: Int, val index: Int, val texCoord: Int
-    )
+    ) : Extra by Extra.Mixin()
 
     data class GMaterial(
         val name: String,
         val normalTexture: GMaterialTexture?,
         val emissiveFactor: FloatArray,
         val gMetallicRoughness: GMetallicRoughness
-    ) : GElement
+    ) : GBaseElement() {
+
+    }
 
     data class GMetallicRoughness(
         val baseColorFactor: FloatArray,
@@ -267,9 +282,8 @@ data class GLTF2(
                 val primitives = it["primitives"].list.map {
                     val indices = it["indices"].int
                     val material = it["material"].int
-                    val mode = it["mode"].int
+                    val mode = it["mode"].toIntOrNull() ?: 4
                     val attributes = it["attributes"].map.map {
-
                         GAttribute(it.key.str) to it.value.int
                     }.toMap()
                     val drawType = when (mode) {
@@ -287,8 +301,10 @@ data class GLTF2(
                 GMesh(name, primitives)
             }
             val images = json["images"].list.map {
-                val uri = it["uri"].str
-                GImage(uri)
+                val uri = it["uri"].toStringOrNull()
+                val bufferView = it["bufferView"].toIntOrNull()
+                val mimeType = it["mimeType"].toStringOrNull()
+                GImage(uri, bufferView, mimeType)
             }
             val textures = json["textures"].list.map {
                 val source = it["source"].int
@@ -321,6 +337,35 @@ data class GLTF2(
                     metallicRoughnessTexture
                 ))
             }
+
+            val bitmaps: List<Bitmap> = images.map {
+                (when {
+                    it.bufferView != null -> {
+                        val bytes = bufferViews[it.bufferView].slice.i8.getArray()
+                        bytes.openAsync().readBitmap()
+                    }
+                    it.uri != null -> {
+                        file?.parent?.get(it.uri)?.readBitmap()
+                    }
+                    else -> null
+                } ?: Bitmaps.white.base).also { img ->
+                    println("file=$file, it=$it, img=$img")
+                }
+            }
+
+            suspend fun readTexture(tex: GMaterialTexture): Bitmap {
+                return bitmaps[textures[tex.index].source]
+            }
+
+            val materials3D: List<Material3D> = materials.map { gmat ->
+                Material3D(
+                    diffuse = gmat.gMetallicRoughness.metallicRoughnessTexture
+                        //?.let { Material3D.LightTexture(readTexture(it)) }
+                        ?.let { null }
+                        ?: Material3D.LightColor(Colors.FUCHSIA)
+                )
+            }
+
             println("buffers[${buffers.size}]=$buffers")
             println("bufferViews[${bufferViews.size}]=$bufferViews")
             println("scenes[${scenes.size}]=$scenes")
@@ -328,8 +373,9 @@ data class GLTF2(
             println("accessors[${accessors.size}]=$accessors")
             println("meshes[${meshes.size}]=$meshes")
             println("materials[${materials.size}]=$materials")
+            println("materials3D[${materials3D.size}]=$materials3D")
             return GLTF2(
-                buffers, bufferViews, scenes, cameras, accessors, meshes, materials
+                buffers, bufferViews, scenes, cameras, accessors, meshes, materials, materials3D
             )
         }
     }

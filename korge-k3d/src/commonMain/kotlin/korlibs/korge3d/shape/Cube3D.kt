@@ -15,7 +15,7 @@ inline fun Container3D.cube(
     callback: Cube3D.() -> Unit = {}
 ): Cube3D = Cube3D(width, height, depth).addTo(this, callback)
 
-class Cube3D(var width: Float, var height: Float, var depth: Float) : BaseViewWithMesh3D(mesh) {
+class Cube3D(var width: Float, var height: Float, var depth: Float) : ShapeViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix(): Matrix4 = Matrix4.scale(width, height, depth)
 
     companion object {

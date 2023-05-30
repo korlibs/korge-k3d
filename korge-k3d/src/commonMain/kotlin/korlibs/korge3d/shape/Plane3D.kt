@@ -8,7 +8,7 @@ import korlibs.math.geom.*
 inline fun Container3D.plane(normal: Vector3, width: Float = 1f, depth: Float = 1f, callback: Plane3D.() -> Unit = {}): Plane3D =
     Plane3D(normal, width, depth).addTo(this, callback)
 
-class Plane3D(var normal: Vector3, var width: Float = 1f, var depth: Float = 1f) : BaseViewWithMesh3D(mesh) {
+class Plane3D(var normal: Vector3, var width: Float = 1f, var depth: Float = 1f) : ShapeViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix(): Matrix4 {
         return Quaternion.fromVectors(Vector3.UP, normal).toMatrix().scaled(width, 1f, depth)
     }

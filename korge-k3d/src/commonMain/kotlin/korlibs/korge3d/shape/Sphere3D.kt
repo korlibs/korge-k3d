@@ -14,7 +14,7 @@ inline fun Container3D.sphere(
 ): Sphere3D = Sphere3D(radius).addTo(this, callback)
 
 
-class Sphere3D(var radius: Float) : BaseViewWithMesh3D(mesh) {
+class Sphere3D(var radius: Float) : ShapeViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix() = Matrix4.scale(radius, radius, radius)
 
     companion object {

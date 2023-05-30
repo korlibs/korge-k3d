@@ -2,6 +2,7 @@ package korlibs.korge3d.format.gltf2
 
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
+import korlibs.image.color.*
 import korlibs.korge3d.*
 import korlibs.memory.*
 
@@ -12,19 +13,20 @@ class GLTF2View(var gltf: GLTF2) : Container3D() {
         for (mesh in gltf.meshes) {
             for (primitive in mesh.primitives) {
                 addChild(GLTF2ViewPrimitive(gltf, primitive))
+                //println("primitive=$primitive")
             }
         }
     }
 }
 
-class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : View3D() {
+class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : BaseViewWithMesh3D() {
     val drawType: AGDrawType get() = primitive.drawType
     val vertexData: AGVertexArrayObject = AGVertexArrayObject(*primitive.attributes.map { attr ->
         val att = when (attr.key) {
-            GLTF2.GAttribute.POSITION -> a_Pos
-            GLTF2.GAttribute.NORMAL -> a_Normal
+            GLTF2.GAttribute.POSITION -> Shaders3D.a_pos
+            GLTF2.GAttribute.NORMAL -> Shaders3D.a_norm
             GLTF2.GAttribute.TANGENT -> a_Tangent
-            GLTF2.GAttribute.TEXCOORD_0 -> a_TexCoord0
+            GLTF2.GAttribute.TEXCOORD_0 -> Shaders3D.a_tex
             else -> TODO("${attr.key}")
         }
         val accessor = gltf.accessors[attr.value]
@@ -32,7 +34,7 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
         val buffer = bufferView.slice.slice(accessor.byteOffset)
 
         when (att){
-            a_Pos, a_Normal -> {
+            Shaders3D.a_pos, Shaders3D.a_norm -> {
                 check(accessor.componentTType == VarKind.TFLOAT)
                 check(accessor.ncomponent == 3)
             }
@@ -40,7 +42,7 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
                 check(accessor.componentTType == VarKind.TFLOAT)
                 check(accessor.ncomponent == 4)
             }
-            a_TexCoord0 -> {
+            Shaders3D.a_tex -> {
                 check(accessor.componentTType == VarKind.TFLOAT)
                 check(accessor.ncomponent == 2)
             }
@@ -56,24 +58,11 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
     val indexDataOffset = 0
     val indexSlice = indexAccessor.bufferView(gltf).slice.slice(indexAccessor.byteOffset)
     val indexData = AGBuffer().also { it.upload(indexSlice) }
-    val vertexCount = indexSlice.sizeInBytes / indexType.sizeInBytes
+    val vertexCount = indexSlice.sizeInBytes / indexType.bytesSize
 
-    companion object {
-        val a_Pos: Attribute = Attribute("a_Pos", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 0)
-        val a_Normal: Attribute = Attribute("a_Normal", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 1)
-        val a_Tangent: Attribute = Attribute("a_Tangent", VarType.Float4, normalized = false, precision = Precision.LOW, fixedLocation = 1)
-        val a_TexCoord0: Attribute = Attribute("a_TexCoord0", VarType.Float2, normalized = false, precision = Precision.LOW, fixedLocation = 2)
-
-        val PROGRAM = Program(
-            VertexShaderDefault {
-                SET(out, u_ProjMat * u_ViewMat * vec4(GLTF2ViewPrimitive.a_Pos, 1f.lit))
-                //SET(out, vec4(a_Pos["xy"], 0f.lit, 1f.lit))
-            },
-            FragmentShader {
-                SET(out, vec4(1f.lit, 0f.lit, 1f.lit, 1f.lit))
-            }
-        )
-    }
+    //val meshMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
+    //override val material = Material3D(diffuse = Material3D.LightColor(Colors.RED.withAd(0.5)))
+    override val material = gltf.materials3D[primitive.material]
 
     override fun render(ctx: RenderContext3D) {
         //ctx[DefaultShaders.ProjViewUB].push {
@@ -83,11 +72,22 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
         //    it[this.u_ViewMat] = Matrix4()
         //}
 
-        val program = PROGRAM
+        //val program = ctx.shaders.getProgram3D(
+        //val program = PROGRAM ?: ctx.shaders.getProgram3D(
+        val program = ctx.shaders.getProgram3D(
+            ctx.lights.size.clamp(0, 4),
+            //mesh.maxWeights,
+            0,
+            material,
+            false
+            //mesh.hasTexture
+        )
         putUniforms(ctx)
-        val uniformBlocks = ctx.rctx.createCurrentUniformsRef(program)
 
         //println("uniformBlocks=$uniformBlocks")
+
+        //println("drawType=$drawType")
+        //println("vertexData=$vertexData")
 
         ctx.ag.draw(
             AGBatch(
@@ -97,8 +97,8 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
                 indexType = indexType,
                 indices = indexData,
                 vertexData = vertexData,
-                program = PROGRAM,
-                uniformBlocks = uniformBlocks,
+                program = program,
+                uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
                 textureUnits = ctx.rctx.textureUnits.clone(),
                 vertexCount = vertexCount,
                 drawOffset = 0,
@@ -106,23 +106,22 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
             )
         )
     }
-}
 
-// @TODO: starting with 4.0.0-rc2 this should be available
-val AGIndexType.sizeInBytes: Int get() = when (this) {
-    AGIndexType.UBYTE -> 1
-    AGIndexType.USHORT -> 2
-    AGIndexType.UINT -> 4
-    else -> -4
-}
-
-fun createMeshPrimitive(primitive: GLTF2.GPrimitive) {
-    AGVertexArrayObject(AGVertexData())
-    primitive.attributes.map {
-        when (it.key) {
-            GLTF2.GAttribute.POSITION -> GLTF2ViewPrimitive.a_Pos
-            else -> TODO("${it.key}")
-        }
+    companion object {
+        //val a_Pos: Attribute = Attribute("a_Pos", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 0)
+        //val a_Normal: Attribute = Attribute("a_Normal", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 1)
+        val a_Tangent: Attribute = Attribute("a_Tangent", VarType.Float4, normalized = false, precision = Precision.LOW, fixedLocation = 2)
+        val a_TexCoord0: Attribute = Attribute("a_TexCoord0", VarType.Float2, normalized = false, precision = Precision.LOW, fixedLocation = 3)
     }
 }
+
+//fun createMeshPrimitive(primitive: GLTF2.GPrimitive) {
+//    AGVertexArrayObject(AGVertexData())
+//    primitive.attributes.map {
+//        when (it.key) {
+//            GLTF2.GAttribute.POSITION -> Shaders3D.a_pos
+//            else -> TODO("${it.key}")
+//        }
+//    }
+//}
 

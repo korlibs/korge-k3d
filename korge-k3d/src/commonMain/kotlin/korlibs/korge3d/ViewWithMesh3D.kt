@@ -12,11 +12,10 @@ inline fun Container3D.mesh(mesh: Mesh3D, callback: ViewWithMesh3D.() -> Unit = 
     return ViewWithMesh3D(mesh).addTo(this, callback)
 }
 
-
-open class ViewWithMesh3D(
-    var mesh: Mesh3D,
-    var skeleton: Skeleton3D? = null
+abstract class BaseViewWithMesh3D(
 ) : View3D() {
+
+    abstract val material: Material3D?
 
     private val tempMat1 = MMatrix3D()
     private val tempMat2 = MMatrix3D()
@@ -34,6 +33,7 @@ open class ViewWithMesh3D(
                     it[u_color] = actual.color.premultiplied
                 }
                 is Material3D.LightTexture -> {
+                    //println("TEXTURE LIGHT: ${actual.bitmap}")
                     ctx.rctx.textureUnits.set(
                         u_texUnit.index,
                         actual.bitmap?.let { ctx.rctx.agBitmapTextureManager.getTextureBase(it).base },
@@ -47,7 +47,7 @@ open class ViewWithMesh3D(
     override fun putUniforms(ctx: RenderContext3D) {
         super.putUniforms(ctx)
 
-        val meshMaterial = mesh.material
+        val meshMaterial = material
 
         if (meshMaterial != null) {
             setMaterialLight(ctx, Shaders3D.ambient, meshMaterial.ambient)
@@ -56,6 +56,15 @@ open class ViewWithMesh3D(
             setMaterialLight(ctx, Shaders3D.specular, meshMaterial.specular)
         }
     }
+
+}
+
+open class ViewWithMesh3D(
+    var mesh: Mesh3D,
+    var skeleton: Skeleton3D? = null
+) : BaseViewWithMesh3D() {
+
+    override val material: Material3D? get() = mesh.material
 
     override fun render(ctx: RenderContext3D) {
         val ag = ctx.ag
