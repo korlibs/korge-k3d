@@ -13,6 +13,7 @@ import korlibs.korge3d.*
 import korlibs.korge3d.format.gltf2.*
 import korlibs.korge3d.material.*
 import korlibs.korge3d.shape.*
+import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 import korlibs.time.*
 
@@ -36,6 +37,8 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
             val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
+                .rotation(Quaternion.fromAxisAngle(Vector3.RIGHT, 180.degrees))
+                //.rotation(x = -90.degrees, y = -90.degrees, z = 0.degrees)
             //val view = gltf2View(resourcesVfs["gltf/SpecGlossVsMetalRough.glb"].readGLTF2()).scale(25f)
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
 
@@ -47,7 +50,7 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(1f)
 
             fun rotateY(delta: Angle) {
-                view.rotation(y = rotation)
+                view.rotation(Quaternion.fromAxisAngle(Vector3.RIGHT, 180.degrees) * Quaternion.fromAxisAngle(Vector3.UP, rotation))
                 rotation += delta
             }
 
@@ -58,6 +61,10 @@ class CratesScene : Scene() {
                 downFrame(Key.RIGHT, 4.milliseconds) { rotateY(+1.degrees) }
                 downFrame(Key.UP, 4.milliseconds) { slider.value += .01 }
                 downFrame(Key.DOWN, 4.milliseconds) { slider.value -= .01 }
+            }
+
+            onMouseDrag {
+                rotateY(-it.deltaDx.degrees)
             }
 
             addUpdater {

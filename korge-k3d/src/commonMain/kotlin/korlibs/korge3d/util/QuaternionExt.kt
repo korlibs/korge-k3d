@@ -15,10 +15,12 @@ fun Quaternion.Companion.fromVectors(v1: Vector3, v2: Vector3): Quaternion {
             val tmp = Vector3(start.y, -start.x, 0f).normalized()
             return Quaternion(tmp.x, tmp.y, tmp.z, 0f)
         }
+
         dot > 0.9999999f -> {
             // If vectors are same
             return Quaternion()
         }
+
         else -> {
             val s = kotlin.math.sqrt((1 + dot) * 2)
             val invs = 1 / s
@@ -33,4 +35,16 @@ fun Quaternion.Companion.fromVectors(v1: Vector3, v2: Vector3): Quaternion {
             ).normalized()
         }
     }
+}
+
+fun Quaternion.Companion.fromAxisAngle(axis: Vector3, angle: Angle): Quaternion {
+    val naxis = axis.normalized()
+    val angle2 = angle / 2
+    val s = sin(angle2)
+    return Quaternion(
+        naxis.x * s,
+        naxis.y * s,
+        naxis.z * s,
+        cos(angle2)
+    )
 }

@@ -237,6 +237,11 @@ fun <T : View3D> T.rotation(x: Angle = 0.degrees, y: Angle = 0.degrees, z: Angle
     return this
 }
 
+fun <T : View3D> T.rotation(quat: Quaternion): T {
+    transform.setRotation(quat)
+    invalidateRender()
+    return this
+}
 
 fun <T : View3D> T.scale(x: Float = 1f, y: Float = x, z: Float = x, w: Float = 1f): T {
     transform.setScale(x, y, z, w)

@@ -1,4 +1,7 @@
+import korlibs.*
 import korlibs.korge.gradle.*
+import korlibs.korge.gradle.kotlin
+import korlibs.korge.gradle.targets.android.*
 
 plugins {
     //alias(libs.plugins.korge)
@@ -31,3 +34,11 @@ dependencies {
     add("commonMainApi", project(":deps"))
 }
 
+afterEvaluate {
+    project.kotlin.jvm().compilations.all {
+        kotlinOptions.jvmTarget = "11"
+    }
+    project.kotlin.android().compilations.all {
+        kotlinOptions.jvmTarget = "11"
+    }
+}
