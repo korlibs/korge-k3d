@@ -68,12 +68,12 @@ abstract class Camera3D : View3D() {
 
     //TODO: position, target and up are also stored in transform....do we need repetition here?
     val position = MVector4(0f, 1f, 10f)
-    var yaw = -90.degrees
+    var yaw = (-90).degrees
     var pitch = 0.0.degrees
     var roll = 0.0.degrees
     var zoom = 45.degrees
 
-     val front = MVector4(0f, 0f, -1f)
+    val front = MVector4(0f, 0f, -1f)
     private val worldUp = MVector4(0f, 1f, 0f)
     private val up = MVector4(0f, 1f, 0f)
     private val temp = MVector4()

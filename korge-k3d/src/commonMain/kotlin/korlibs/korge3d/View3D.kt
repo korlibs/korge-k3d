@@ -7,6 +7,8 @@ import korlibs.math.geom.*
 
 
 abstract class View3D : BaseView() {
+    val stage3D: Stage3D? get() = if (this is Stage3D) this else this.parent?.stage3D
+
     companion object {
         val DEFAULT_DEPTH_FUNC = AGDepthAndFrontFace.DEFAULT.withDepthFunc(depthFunc = AGCompareMode.LESS_EQUAL)
     }
@@ -134,6 +136,7 @@ abstract class View3D : BaseView() {
         ctx.rctx[Shaders3D.K3DPropsUB].push {
             it[u_NormMat] = Matrix4.IDENTITY
             it[u_ModMat] = prepareExtraModelMatrix() * modelMat.immutable
+            it[u_OcclusionStrength] = ctx.occlusionStrength
         }
 
         ctx.lights.fastForEachWithIndex { index, light: Light3D ->

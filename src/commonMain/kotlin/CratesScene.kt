@@ -1,9 +1,11 @@
+import korlibs.event.*
 import korlibs.image.bitmap.*
 import korlibs.image.color.*
 import korlibs.image.format.*
 import korlibs.io.async.launchImmediately
 import korlibs.io.file.std.resourcesVfs
 import korlibs.korge.KeepOnReload
+import korlibs.korge.input.*
 import korlibs.korge.scene.Scene
 import korlibs.korge.tween.tween
 import korlibs.korge.view.*
@@ -11,7 +13,7 @@ import korlibs.korge3d.*
 import korlibs.korge3d.format.gltf2.*
 import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
-import korlibs.time.seconds
+import korlibs.time.*
 
 class CratesScene : Scene() {
     @KeepOnReload
@@ -27,10 +29,13 @@ class CratesScene : Scene() {
     suspend fun SContainer.sceneInit3() {
         var rotation = 0.degrees
         scene3D {
+            camera = Camera3D.Perspective()
             axisLines(length = 4f)
             //gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
-            val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
+            //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
+            val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
+            //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
 
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
@@ -39,10 +44,19 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(1f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(1f)
 
+            fun rotateY(delta: Angle) {
+                view.rotation(y = rotation)
+                rotation += delta
+            }
+
+            keys {
+                downFrame(Key.LEFT, 4.milliseconds) { rotateY(-1.degrees) }
+                downFrame(Key.RIGHT, 4.milliseconds) { rotateY(+1.degrees) }
+                downFrame(Key.UP, 4.milliseconds) { stage3D!!.occlusionStrength += .01f }
+                downFrame(Key.DOWN, 4.milliseconds) { stage3D!!.occlusionStrength -= .01f }
+            }
 
             addUpdater {
-                view.rotation(y = rotation)
-                rotation += 1.degrees
             }
             //gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(50f)
         }

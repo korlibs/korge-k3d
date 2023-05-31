@@ -9,13 +9,13 @@ fun Container3D.axisLines(basePosition: Vector3 = Vector3.ZERO, length: Float = 
     val l2 = length * lengthWhiteScale
     container3D {
         position(basePosition)
-        polyline3D(Colors.BLUEVIOLET) {
+        polyline3D(Colors["#e20050"]) {
             moveTo(Vector3(-ll, 0f, 0f))
             lineTo(Vector3(ll, 0f, 0f))
         }
         polyline3D(Colors.MEDIUMVIOLETRED) {
-            moveTo(Vector3(0f, -ll, 0f))
-            lineTo(Vector3(0f, ll, 0f))
+            moveTo(Vector3.DOWN * ll)
+            lineTo(Vector3.UP * ll)
         }
         polyline3D(Colors["#8cb04d"]) {
             moveTo(Vector3(0f, 0f, -ll))

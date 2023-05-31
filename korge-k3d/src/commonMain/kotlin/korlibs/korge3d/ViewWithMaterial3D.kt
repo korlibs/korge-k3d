@@ -40,6 +40,14 @@ abstract class ViewWithMaterial3D(
             setMaterialLight(ctx, Shaders3D.diffuse, meshMaterial.diffuse)
             setMaterialLight(ctx, Shaders3D.emission, meshMaterial.emission)
             setMaterialLight(ctx, Shaders3D.specular, meshMaterial.specular)
+
+            if (meshMaterial.occlusionTexture != null) {
+                ctx.rctx.textureUnits.set(
+                    Shaders3D.u_OcclussionTexUnit.index,
+                    ctx.rctx.agBitmapTextureManager.getTextureBase(meshMaterial.occlusionTexture).base,
+                    AGTextureUnitInfo.DEFAULT.withLinear(true).withWrap(AGWrapMode.REPEAT)
+                )
+            }
         }
     }
 

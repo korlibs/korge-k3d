@@ -25,6 +25,7 @@ class RenderContext3D() {
     val dynamicVertexDataPool = Pool { AGVertexData() }
     val dynamicIndexBufferPool = Pool { AGBuffer() }
     val ambientColor: MVector4 = MVector4()
+    var occlusionStrength: Float = 1f
     val textureManager by lazy { AgBitmapTextureManager(ag) }
     val bufferManager by lazy { AgBufferManager(ag) }
 

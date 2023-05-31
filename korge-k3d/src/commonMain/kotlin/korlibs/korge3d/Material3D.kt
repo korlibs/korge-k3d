@@ -14,7 +14,8 @@ data class Material3D(
 	//val specular: Light = LightColor(RGBA.float(.5f, .5f, .5f, 1f)),
 	val specular: Light = LightColor(Colors.BLACK),
 	val shininess: Float = .5f,
-	val indexOfRefraction: Float = 1f
+	val indexOfRefraction: Float = 1f,
+    val occlusionTexture: Bitmap? = null,
 ) {
     val hasTexture: Boolean = emission.hasTexture || ambient.hasTexture || diffuse.hasTexture || specular.hasTexture
 

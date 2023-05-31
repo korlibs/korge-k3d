@@ -151,7 +151,8 @@ data class GLTF2(
         val metallicFactor: Float,
         val roughnessFactor: Float,
         val baseColorTexture: GMaterialTexture?,
-        val metallicRoughnessTexture: GMaterialTexture?
+        val metallicRoughnessTexture: GMaterialTexture?,
+        val occlusionTexture: GMaterialTexture?,
     ) : GElement
 
     companion object {
@@ -332,6 +333,7 @@ data class GLTF2(
             val materials = json["materials"].list.map {
                 val name = it["name"].str
                 val normalTexture = it["normalTexture"].toGMaterialTexture()
+                val occlusionTexture = it["occlusionTexture"].toGMaterialTexture()
                 val pbrMetallicRoughness = it["pbrMetallicRoughness"]
                 val emissiveFactor = it["emissiveFactor"].floatArray
                 val baseColorFactor = pbrMetallicRoughness["baseColorFactor"].floatArray
@@ -345,7 +347,8 @@ data class GLTF2(
                     metallicFactor,
                     roughnessFactor,
                     baseColorTexture,
-                    metallicRoughnessTexture
+                    metallicRoughnessTexture,
+                    occlusionTexture
                 ))
             }
 
@@ -369,9 +372,10 @@ data class GLTF2(
             }
 
             val materials3D: List<Material3D> = materials.map { gmat ->
-                val baseColorFactor = gmat.gMetallicRoughness.baseColorFactor
+                val gMetallicRoughness = gmat.gMetallicRoughness
+                val baseColorFactor = gMetallicRoughness.baseColorFactor
                 Material3D(
-                    diffuse = gmat.gMetallicRoughness.baseColorTexture
+                    diffuse = gMetallicRoughness.baseColorTexture
                         ?.let { Material3D.LightTexture(readTexture(it)) }
                         //?.let { null }
                         ?: Material3D.LightColor(RGBA.float(
@@ -379,7 +383,8 @@ data class GLTF2(
                             baseColorFactor.getOrElse(1) { 1f },
                             baseColorFactor.getOrElse(2) { 1f },
                             baseColorFactor.getOrElse(3) { 1f }
-                        ))
+                        )),
+                    occlusionTexture = gMetallicRoughness.occlusionTexture?.let { readTexture(it) },
                 )
             }
 

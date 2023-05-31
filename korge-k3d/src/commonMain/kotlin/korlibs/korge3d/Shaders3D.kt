@@ -30,6 +30,7 @@ open class Shaders3D {
         val u_Shininess by float()
         val u_IndexOfRefraction by float()
         val u_AmbientColor by vec4()
+        val u_OcclusionStrength by float()
         val u_BindShapeMatrix by mat4()
         val u_BindShapeMatrixInv by mat4()
         val u_ModMat by mat4()
@@ -94,6 +95,7 @@ open class Shaders3D {
 		val ambient = MaterialUB("ambient", 3, 2)
 		val diffuse = MaterialUB("diffuse", 4, 3)
 		val specular = MaterialUB("specular", 5, 4)
+        val u_OcclussionTexUnit by Sampler("u_texUnit_occlusion", 5, SamplerVarType.Sampler2D)
 
 
 		val layoutPosCol = VertexLayout(a_pos, a_col)
@@ -184,6 +186,16 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		for (n in 0 until nlights) {
 			addLight(Shaders3D.lights[n], out)
 		}
+
+        if (meshMaterial != null) {
+            if (meshMaterial.occlusionTexture != null) {
+                // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc#double-sided:~:text=The%20occlusion%20texture%3B%20it%20indicates%20areas%20that%20receive%20less%20indirect%20lighting
+                // 1.0 + strength * (occlusionTexture - 1.0)
+
+                SET(out["rgb"], out["rgb"] * (1f.lit + Shaders3D.K3DPropsUB.u_OcclusionStrength * (texture2D(Shaders3D.u_OcclussionTexUnit, Shaders3D.v_TexCoords["xy"]).r - 1f.lit)))
+                //SET(out["rgb"], vec3(1f.lit, 1f.lit, 1f.lit) * texture2D(Shaders3D.u_OcclussionTexUnit, Shaders3D.v_TexCoords["xy"])["r"])
+            }
+        }
 		//SET(out, vec4(v_Temp1.x, v_Temp1.y, v_Temp1.z, 1f.lit))
 	}
 
