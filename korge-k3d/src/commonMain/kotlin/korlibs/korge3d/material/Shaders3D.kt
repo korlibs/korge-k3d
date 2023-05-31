@@ -1,9 +1,8 @@
-package korlibs.korge3d
+package korlibs.korge3d.material
 
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
 import korlibs.graphics.shader.gl.*
-
 
 open class Shaders3D {
 
@@ -14,7 +13,7 @@ open class Shaders3D {
     var printShaders = true
 
 	@Suppress("RemoveCurlyBracesFromTemplate")
-	fun getProgram3D(nlights: Int, nweights: Int, meshMaterial: Material3D?, hasTexture: Boolean): Program {
+	fun getProgram3D(nlights: Int, nweights: Int, meshMaterial: PBRMaterial3D?, hasTexture: Boolean): Program {
 		return programCache.getOrPut("program_L${nlights}_W${nweights}_M${meshMaterial?.kind}_T${hasTexture}") {
 			StandardShader3D(nlights, nweights, meshMaterial, hasTexture).program.apply {
 				if (printShaders) {
@@ -125,17 +124,17 @@ open class Shaders3D {
 
 
 data class StandardShader3D(
-	override val nlights: Int,
-	override val nweights: Int,
-	override val meshMaterial: Material3D?,
-	override val hasTexture: Boolean
+    override val nlights: Int,
+    override val nweights: Int,
+    override val meshMaterial: PBRMaterial3D?,
+    override val hasTexture: Boolean
 ) : AbstractStandardShader3D()
 
 
 abstract class AbstractStandardShader3D() : BaseShader3D() {
 	abstract val nlights: Int
 	abstract val nweights: Int
-	abstract val meshMaterial: Material3D?
+	abstract val meshMaterial: PBRMaterial3D?
 	abstract val hasTexture: Boolean
 
 	override fun Program.Builder.vertex() = Shaders3D.run {
@@ -199,12 +198,12 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		//SET(out, vec4(v_Temp1.x, v_Temp1.y, v_Temp1.z, 1f.lit))
 	}
 
-	open fun Program.Builder.computeMaterialLightColor(out: Operand, uniform: Shaders3D.MaterialUB, light: Material3D.Light) {
+	open fun Program.Builder.computeMaterialLightColor(out: Operand, uniform: Shaders3D.MaterialUB, light: PBRMaterial3D.Light) {
 		when (light) {
-			is Material3D.LightColor -> {
+			is PBRMaterial3D.LightColor -> {
 				SET(out, uniform.u_color)
 			}
-			is Material3D.LightTexture -> {
+			is PBRMaterial3D.LightTexture -> {
 				SET(out, vec4(texture2D(uniform.u_texUnit, Shaders3D.v_TexCoords["xy"])["rgb"], 1f.lit))
 			}
 			else -> error("Unsupported MateriaList: $light")

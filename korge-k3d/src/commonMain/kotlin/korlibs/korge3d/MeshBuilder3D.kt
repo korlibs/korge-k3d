@@ -9,6 +9,7 @@ import korlibs.korge3d.internal.toNBuffer
 import korlibs.korge3d.internal.vector3DTemps
 import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
+import korlibs.korge3d.material.*
 import korlibs.math.geom.*
 import kotlin.math.PI
 import kotlin.math.cos
@@ -35,7 +36,7 @@ class MeshBuilder3D(
     var nextVertexIndex = 0
     val indexData = ShortArrayList()
 
-    private var _material: Material3D? = null
+    private var _material: PBRMaterial3D? = null
 
     fun reset() {
         vertexData.clear()
@@ -44,15 +45,15 @@ class MeshBuilder3D(
     }
 
     fun material(
-        emission: Material3D.Light = Material3D.LightColor(Colors.BLACK),
+        emission: PBRMaterial3D.Light = PBRMaterial3D.LightColor(Colors.BLACK),
         //default with some ambient so that we see something if material not set
-        ambient: Material3D.Light = Material3D.LightColor(RGBA(0x2, 0x2, 0x2, 0xFF)),
-        diffuse: Material3D.Light = Material3D.LightColor(Colors.BLACK),
-        specular: Material3D.Light = Material3D.LightColor(Colors.BLACK),
+        ambient: PBRMaterial3D.Light = PBRMaterial3D.LightColor(RGBA(0x2, 0x2, 0x2, 0xFF)),
+        diffuse: PBRMaterial3D.Light = PBRMaterial3D.LightColor(Colors.BLACK),
+        specular: PBRMaterial3D.Light = PBRMaterial3D.LightColor(Colors.BLACK),
         shininess: Float = .5f,
         indexOfRefraction: Float = 1f
     ) {
-        _material = Material3D(emission, ambient, diffuse, specular, shininess, indexOfRefraction)
+        _material = PBRMaterial3D(emission, ambient, diffuse, specular, shininess, indexOfRefraction)
     }
 
     fun addVertex(pos: Vector3, normal: Vector3 = Vector3.ZERO, texcoords: Vector2 = Vector2(pos.x, pos.y)): Int {

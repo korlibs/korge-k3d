@@ -1,7 +1,6 @@
 import korlibs.event.*
 import korlibs.image.bitmap.*
 import korlibs.image.color.*
-import korlibs.image.format.*
 import korlibs.io.async.launchImmediately
 import korlibs.io.file.std.resourcesVfs
 import korlibs.korge.KeepOnReload
@@ -12,6 +11,7 @@ import korlibs.korge.ui.*
 import korlibs.korge.view.*
 import korlibs.korge3d.*
 import korlibs.korge3d.format.gltf2.*
+import korlibs.korge3d.material.*
 import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
 import korlibs.time.*
@@ -60,8 +60,6 @@ class CratesScene : Scene() {
                 downFrame(Key.DOWN, 4.milliseconds) { slider.value -= .01 }
             }
 
-
-
             addUpdater {
             }
             //gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(50f)
@@ -84,9 +82,9 @@ class CratesScene : Scene() {
 
         val crateTex = KR.crate.read().mipmaps(true)
         //val crateTex = KR.dice.__file.readBitmap(QOI).mipmaps(true)
-        val crateMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
+        val crateMaterial = PBRMaterial3D(diffuse = PBRMaterial3D.LightTexture(crateTex))
 
-        val transparentMaterial = Material3D(diffuse = Material3D.LightColor(Colors.RED.withAd(0.25)))
+        val transparentMaterial = PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(Colors.RED.withAd(0.25)))
 
         //solidRect(512, 512, MaterialColors.AMBER_200).alpha(0.5)
         image(korgeTex).alpha(0.5)

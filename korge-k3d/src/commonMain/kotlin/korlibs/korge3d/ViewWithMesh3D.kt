@@ -1,6 +1,7 @@
 package korlibs.korge3d
 
 import korlibs.graphics.*
+import korlibs.korge3d.material.*
 import korlibs.memory.*
 
 inline fun Container3D.mesh(mesh: Mesh3D, callback: ViewWithMesh3D.() -> Unit = {}): ViewWithMesh3D {
@@ -12,7 +13,7 @@ open class ViewWithMesh3D(
     var skeleton: Skeleton3D? = null
 ) : ViewWithMaterial3D() {
 
-    override val material: Material3D? get() = mesh.material
+    override val material: PBRMaterial3D? get() = mesh.material
 
     override fun render(ctx: RenderContext3D) {
         val ag = ctx.ag

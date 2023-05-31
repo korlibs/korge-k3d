@@ -3,6 +3,8 @@ package korlibs.korge3d
 import korlibs.datastructure.iterators.*
 import korlibs.graphics.*
 import korlibs.korge.view.*
+import korlibs.korge3d.material.*
+import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 
 

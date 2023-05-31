@@ -1,25 +1,26 @@
 package korlibs.korge3d
 
 import korlibs.graphics.*
+import korlibs.korge3d.material.*
 
 abstract class ViewWithMaterial3D(
 ) : View3D() {
 
-    abstract val material: Material3D?
+    abstract val material: PBRMaterial3D?
     protected val textureUnits = AGTextureUnits()
 
     fun setMaterialLight(
         ctx: RenderContext3D,
         uniform: Shaders3D.MaterialUB,
-        actual: Material3D.Light
+        actual: PBRMaterial3D.Light
     ) {
         ctx.rctx[uniform].push {
             //println("uniform=$uniform, actual=$actual")
             when (actual) {
-                is Material3D.LightColor -> {
+                is PBRMaterial3D.LightColor -> {
                     it[u_color] = actual.color.premultiplied
                 }
-                is Material3D.LightTexture -> {
+                is PBRMaterial3D.LightTexture -> {
                     //println("TEXTURE LIGHT: ${actual.bitmap}")
                     textureUnits.set(
                         u_texUnit.index,

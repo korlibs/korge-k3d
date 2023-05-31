@@ -4,6 +4,7 @@ import korlibs.datastructure.iterators.*
 import korlibs.graphics.*
 import korlibs.image.color.*
 import korlibs.korge3d.*
+import korlibs.korge3d.material.*
 import korlibs.math.geom.*
 
 inline fun Container3D.polyline3D(
@@ -29,7 +30,7 @@ class Polyline3D(
                 s += polyline.size
             }
         }.also {
-            it.material = Material3D(diffuse = Material3D.LightColor(color))
+            it.material = PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(color))
         }
     }
 

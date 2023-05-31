@@ -6,6 +6,7 @@ import korlibs.graphics.*
 import korlibs.korge.render.AgBitmapTextureManager
 import korlibs.korge.render.AgBufferManager
 import korlibs.korge.render.RenderContext
+import korlibs.korge3d.material.*
 import korlibs.math.geom.*
 
 

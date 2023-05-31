@@ -7,6 +7,7 @@ import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
 import korlibs.image.format.readBitmap
 import korlibs.io.file.std.resourcesVfs
+import korlibs.korge3d.material.*
 import korlibs.math.geom.Angle
 import korlibs.math.geom.MMatrix3D
 
@@ -190,22 +191,22 @@ fun Library3D.Instance3D.instantiate(jointParent: Joint3D? = null, ctx: LibraryI
 }
 
 
-fun Library3D.LightKindDef.instantiate(): Material3D.Light {
+fun Library3D.LightKindDef.instantiate(): PBRMaterial3D.Light {
 	return when (this) {
-		is Library3D.LightTexDef -> Material3D.LightTexture(this.texture?.surface?.initFrom?.texure)
-		is Library3D.LightColorDef -> Material3D.LightColor(this.color)
+		is Library3D.LightTexDef -> PBRMaterial3D.LightTexture(this.texture?.surface?.initFrom?.texure)
+		is Library3D.LightColorDef -> PBRMaterial3D.LightColor(this.color)
 		else -> error("Unsupported $this")
 	}
 }
 
 
-fun Library3D.MaterialDef.instantiate(): Material3D {
+fun Library3D.MaterialDef.instantiate(): PBRMaterial3D {
 	val effect = this.effects.firstOrNull() as? Library3D.StandardEffectDef?
-	return Material3D(
-		emission = effect?.emission?.instantiate() ?: Material3D.LightColor(Colors.BLACK),
-		ambient = effect?.ambient?.instantiate() ?: Material3D.LightColor(Colors.BLACK),
-		diffuse = effect?.diffuse?.instantiate() ?: Material3D.LightColor(Colors.BLACK),
-		specular = effect?.specular?.instantiate() ?: Material3D.LightColor(Colors.BLACK),
+	return PBRMaterial3D(
+		emission = effect?.emission?.instantiate() ?: PBRMaterial3D.LightColor(Colors.BLACK),
+		ambient = effect?.ambient?.instantiate() ?: PBRMaterial3D.LightColor(Colors.BLACK),
+		diffuse = effect?.diffuse?.instantiate() ?: PBRMaterial3D.LightColor(Colors.BLACK),
+		specular = effect?.specular?.instantiate() ?: PBRMaterial3D.LightColor(Colors.BLACK),
         shininess = effect?.shininess ?: 0.5f,
 		indexOfRefraction = effect?.index_of_refraction ?: 1f
 	)

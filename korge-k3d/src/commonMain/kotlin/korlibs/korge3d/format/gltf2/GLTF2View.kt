@@ -3,6 +3,7 @@ package korlibs.korge3d.format.gltf2
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
 import korlibs.korge3d.*
+import korlibs.korge3d.material.*
 import korlibs.math.geom.*
 import korlibs.memory.*
 

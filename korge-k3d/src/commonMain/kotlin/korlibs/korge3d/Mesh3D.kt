@@ -5,6 +5,7 @@ import korlibs.memory.*
 import korlibs.graphics.*
 import korlibs.graphics.shader.Program
 import korlibs.graphics.shader.VertexLayout
+import korlibs.korge3d.material.*
 
 data class BufferWithVertexLayout(
     val buffer: Buffer,
@@ -24,7 +25,7 @@ data class Mesh3D constructor(
     val hasTexture: Boolean = false,
     val maxWeights: Int = 0,
     var skin: Skin3D? = null,
-    var material: Material3D? = null
+    var material: PBRMaterial3D? = null
 ) {
     companion object {
         val EMPTY = MeshBuilder3D { }

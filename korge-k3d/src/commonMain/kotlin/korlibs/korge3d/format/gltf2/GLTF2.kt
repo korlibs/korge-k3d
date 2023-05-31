@@ -11,7 +11,7 @@ import korlibs.io.file.*
 import korlibs.io.lang.*
 import korlibs.io.serialization.json.*
 import korlibs.io.stream.*
-import korlibs.korge3d.*
+import korlibs.korge3d.material.*
 import korlibs.logger.*
 import korlibs.math.geom.*
 import korlibs.memory.*
@@ -33,7 +33,7 @@ data class GLTF2(
     val accessors: List<GAccessor>,
     val meshes: List<GMesh>,
     val materials: List<GMaterial>,
-    val materials3D: List<Material3D>,
+    val materials3D: List<PBRMaterial3D>,
     val nodes: List<GNode>,
 ) {
 
@@ -371,14 +371,14 @@ data class GLTF2(
                 return bitmaps[textures[tex.index].source]
             }
 
-            val materials3D: List<Material3D> = materials.map { gmat ->
+            val materials3D: List<PBRMaterial3D> = materials.map { gmat ->
                 val gMetallicRoughness = gmat.gMetallicRoughness
                 val baseColorFactor = gMetallicRoughness.baseColorFactor
-                Material3D(
+                PBRMaterial3D(
                     diffuse = gMetallicRoughness.baseColorTexture
-                        ?.let { Material3D.LightTexture(readTexture(it)) }
+                        ?.let { PBRMaterial3D.LightTexture(readTexture(it)) }
                         //?.let { null }
-                        ?: Material3D.LightColor(RGBA.float(
+                        ?: PBRMaterial3D.LightColor(RGBA.float(
                             baseColorFactor.getOrElse(0) { 1f },
                             baseColorFactor.getOrElse(1) { 1f },
                             baseColorFactor.getOrElse(2) { 1f },
