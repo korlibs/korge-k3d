@@ -33,7 +33,7 @@ class CratesScene : Scene() {
         scene3D {
             camera = Camera3D.Perspective()
             axisLines(length = 4f)
-            //gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
+            //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
             val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
@@ -54,16 +54,19 @@ class CratesScene : Scene() {
                 rotation += delta
             }
 
-            val slider = uiSlider(1f, min = -1f, max = 2f, step = .0125f).also { slider -> slider.onChange { stage3D!!.occlusionStrength = slider.value.toFloat() } }
+            val slider = uiSlider(1f, min = -1f, max = 2f, step = .0125f)
+                .also { slider -> slider.onChange { stage3D!!.occlusionStrength = slider.value.toFloat() } }
+                .xy(30, 30)
+                .scale(1)
 
             keys {
-                downFrame(Key.LEFT, 4.milliseconds) { rotateY(-1.degrees) }
-                downFrame(Key.RIGHT, 4.milliseconds) { rotateY(+1.degrees) }
+                downFrame(Key.LEFT, 4.milliseconds) { rotateY(+1.degrees) }
+                downFrame(Key.RIGHT, 4.milliseconds) { rotateY(-1.degrees) }
                 downFrame(Key.UP, 4.milliseconds) { slider.value += .01 }
                 downFrame(Key.DOWN, 4.milliseconds) { slider.value -= .01 }
             }
 
-            onMouseDrag {
+            solidRect(2000, 1000, Colors.TRANSPARENT).xy(0, 100).onMouseDrag {
                 rotateY(-it.deltaDx.degrees)
             }
 
