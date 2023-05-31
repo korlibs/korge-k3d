@@ -117,7 +117,7 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
                 vertexData = vertexData,
                 program = program,
                 uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
-                textureUnits = ctx.rctx.textureUnits.clone(),
+                textureUnits = textureUnits,
                 vertexCount = vertexCount,
                 drawOffset = 0,
                 depthAndFrontFace = DEFAULT_DEPTH_FUNC,

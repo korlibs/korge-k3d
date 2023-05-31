@@ -8,6 +8,7 @@ import korlibs.korge.KeepOnReload
 import korlibs.korge.input.*
 import korlibs.korge.scene.Scene
 import korlibs.korge.tween.tween
+import korlibs.korge.ui.*
 import korlibs.korge.view.*
 import korlibs.korge3d.*
 import korlibs.korge3d.format.gltf2.*
@@ -35,6 +36,7 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
             val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
+            //val view = gltf2View(resourcesVfs["gltf/SpecGlossVsMetalRough.glb"].readGLTF2()).scale(25f)
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
 
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
@@ -49,12 +51,16 @@ class CratesScene : Scene() {
                 rotation += delta
             }
 
+            val slider = uiSlider(1f, min = -1f, max = 2f, step = .0125f).also { slider -> slider.onChange { stage3D!!.occlusionStrength = slider.value.toFloat() } }
+
             keys {
                 downFrame(Key.LEFT, 4.milliseconds) { rotateY(-1.degrees) }
                 downFrame(Key.RIGHT, 4.milliseconds) { rotateY(+1.degrees) }
-                downFrame(Key.UP, 4.milliseconds) { stage3D!!.occlusionStrength += .01f }
-                downFrame(Key.DOWN, 4.milliseconds) { stage3D!!.occlusionStrength -= .01f }
+                downFrame(Key.UP, 4.milliseconds) { slider.value += .01 }
+                downFrame(Key.DOWN, 4.milliseconds) { slider.value -= .01 }
             }
+
+
 
             addUpdater {
             }

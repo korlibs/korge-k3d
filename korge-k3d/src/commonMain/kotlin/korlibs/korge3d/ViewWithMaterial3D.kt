@@ -6,6 +6,7 @@ abstract class ViewWithMaterial3D(
 ) : View3D() {
 
     abstract val material: Material3D?
+    protected val textureUnits = AGTextureUnits()
 
     fun setMaterialLight(
         ctx: RenderContext3D,
@@ -20,7 +21,7 @@ abstract class ViewWithMaterial3D(
                 }
                 is Material3D.LightTexture -> {
                     //println("TEXTURE LIGHT: ${actual.bitmap}")
-                    ctx.rctx.textureUnits.set(
+                    textureUnits.set(
                         u_texUnit.index,
                         actual.bitmap?.let { ctx.rctx.agBitmapTextureManager.getTextureBase(it).base },
                         AGTextureUnitInfo.DEFAULT.withLinear(true).withWrap(AGWrapMode.REPEAT)
@@ -31,6 +32,7 @@ abstract class ViewWithMaterial3D(
     }
 
     override fun putUniforms(ctx: RenderContext3D) {
+        textureUnits.clear()
         super.putUniforms(ctx)
 
         val meshMaterial = material
@@ -42,7 +44,7 @@ abstract class ViewWithMaterial3D(
             setMaterialLight(ctx, Shaders3D.specular, meshMaterial.specular)
 
             if (meshMaterial.occlusionTexture != null) {
-                ctx.rctx.textureUnits.set(
+                textureUnits.set(
                     Shaders3D.u_OcclussionTexUnit.index,
                     ctx.rctx.agBitmapTextureManager.getTextureBase(meshMaterial.occlusionTexture).base,
                     AGTextureUnitInfo.DEFAULT.withLinear(true).withWrap(AGWrapMode.REPEAT)

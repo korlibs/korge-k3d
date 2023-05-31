@@ -45,7 +45,7 @@ open class ViewWithMesh3D(
                         vertexCount = mesh.vertexCount,
                         blending = blendMode.factors,
                         uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
-                        textureUnits = ctx.rctx.textureUnits.clone(),
+                        textureUnits = textureUnits,
                         depthAndFrontFace = DEFAULT_DEPTH_FUNC,
                         /*
                         uniforms = uniformValues.apply {
