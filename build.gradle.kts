@@ -6,7 +6,7 @@ import korlibs.korge.gradle.targets.android.*
 plugins {
     //alias(libs.plugins.korge)
     //id("com.soywiz.korge") version "999.0.0.999"
-    id("com.soywiz.korge") version "4.0.3"
+    id("com.soywiz.korge") version "4.0.4-dev-1.9.20-2914"
 }
 
 korge {
@@ -26,7 +26,8 @@ korge {
     targetDesktop()
     targetDesktopCross()
     targetIos()
-    targetAndroidDirect()
+    targetAndroid()
+    targetWasm()
     serializationJson()
 }
 
