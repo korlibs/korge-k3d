@@ -6,6 +6,8 @@ import kotlin.math.*
 
 private fun sq(v: Float): Float = v * v
 
+// NOTE: a sphere is a capsule of 0 length, and a segment is a capsule of 0 radius
+
 object Distances {
     fun distance(c1: Segment3D, c2: Segment3D): Float {
         val dP1 = c1.p1 - c1.p0
