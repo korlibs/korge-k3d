@@ -10,6 +10,7 @@ import korlibs.korge3d.internal.vector3DTemps
 import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
 import korlibs.korge3d.material.*
+import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 import kotlin.math.PI
 import kotlin.math.cos
@@ -29,7 +30,6 @@ class MeshBuilder3D(
 
     companion object {
         operator fun invoke(drawType: AGDrawType = AGDrawType.TRIANGLES, callback: MeshBuilder3D.() -> Unit): Mesh3D = MeshBuilder3D(drawType).apply(callback).build()
-        private const val PIf = PI.toFloat()
     }
 
     val vertexData = floatArrayListOf()

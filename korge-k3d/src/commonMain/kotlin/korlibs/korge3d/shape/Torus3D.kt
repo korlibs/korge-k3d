@@ -2,6 +2,7 @@ package korlibs.korge3d.shape
 
 import korlibs.graphics.*
 import korlibs.korge3d.*
+import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 import kotlin.math.*
 
@@ -18,8 +19,6 @@ class Torus3D(var scale: Float) : ShapeViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix() = Matrix4.scale(scale, scale, scale)
 
     companion object {
-        private const val PIf = PI.toFloat()
-
         val mesh = MeshBuilder3D(drawType = AGDrawType.TRIANGLES) {
             val majorSegments = 16
             val minorSegments = 16

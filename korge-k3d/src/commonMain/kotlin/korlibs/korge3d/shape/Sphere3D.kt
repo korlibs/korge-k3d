@@ -2,6 +2,7 @@ package korlibs.korge3d.shape
 
 import korlibs.graphics.*
 import korlibs.korge3d.*
+import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 import kotlin.math.*
 
@@ -18,8 +19,6 @@ class Sphere3D(var radius: Float) : ShapeViewWithMesh3D(mesh) {
     override fun prepareExtraModelMatrix() = Matrix4.scale(radius, radius, radius)
 
     companion object {
-        private const val PIf = PI.toFloat()
-
         val mesh = MeshBuilder3D(drawType = AGDrawType.TRIANGLES) {
             val STACKS = 16
             val SLICES = 16
