@@ -80,68 +80,75 @@ object CollisionDetection {
     }
 
     fun collision(capsule: Capsule3D, triangle: Triangle3D): CollisionResult {
-        val tip = capsule.tip
         val base = capsule.base
+        val tip = capsule.tip
         val radius = capsule.radius
         val p0 = triangle.p0
         val p1 = triangle.p1
         val p2 = triangle.p2
         val N = triangle.normal
+
         val CapsuleNormal = (tip - base).normalized()
         val LineEndOffset = CapsuleNormal * radius
         val A = base + LineEndOffset
         val B = tip - LineEndOffset
 
-        var reference_point: Vector3
-        var line_plane_intersection: Vector3? = null
         val dotProduct = N.dot(CapsuleNormal)
+        var reference_point: Vector3 = Vector3.ZERO
+        var line_plane_intersection: Vector3? = null
 
-        if (dotProduct.absoluteValue < 1e-6) { // Capsule line is parallel to the triangle plane
-            reference_point = p0
-        } else {
+        var inside: Boolean = false
+
+        if (dotProduct.absoluteValue >= 1e-6) { // Capsule line is not parallel to the triangle plane
             val t = N.dot((p0 - base) / dotProduct)
             line_plane_intersection = base + CapsuleNormal * t
-            reference_point = closestPointOnLineSegment(A, B, line_plane_intersection)
-        }
 
-        if (line_plane_intersection != null) {
             val c0 = (line_plane_intersection - p0).cross(p1 - p0)
             val c1 = (line_plane_intersection - p1).cross(p2 - p1)
             val c2 = (line_plane_intersection - p2).cross(p0 - p2)
-            val inside = c0.dot(N) <= 0 && c1.dot(N) <= 0 && c2.dot(N) <= 0
+            inside = c0.dot(N) <= 0 && c1.dot(N) <= 0 && c2.dot(N) <= 0
 
-            if (!inside) {
-                var best_dist = Float.MAX_VALUE
-                val point1 = closestPointOnLineSegment(p0, p1, line_plane_intersection)
-                val v1 = line_plane_intersection - point1
-                val distsq1 = v1.dot(v1)
-                if (distsq1 < best_dist) {
-                    reference_point = point1
-                    best_dist = distsq1
-                }
-
-                val point2 = closestPointOnLineSegment(p1, p2, line_plane_intersection)
-                val v2 = line_plane_intersection - point2
-                val distsq2 = v2.dot(v2)
-                if (distsq2 < best_dist) {
-                    reference_point = point2
-                    best_dist = distsq2
-                }
-
-                val point3 = closestPointOnLineSegment(p2, p0, line_plane_intersection)
-                val v3 = line_plane_intersection - point3
-                val distsq3 = v3.dot(v3)
-                if (distsq3 < best_dist) {
-                    reference_point = point3
-                    best_dist = distsq3
-                }
+            if (inside) {
+                reference_point = line_plane_intersection
             }
         }
 
-        val best_dist = (reference_point - B).length
-        val intersects = best_dist <= radius
+        if (line_plane_intersection == null || !inside) {
+            // Find the closest point on the triangle to the line_plane_intersection or an arbitrary point on the capsule line
+            val target_point = line_plane_intersection ?: A
+            // Edge 1:
+            val point1 = closestPointOnLineSegment(p0, p1, target_point)
+            var v1 = target_point - point1
+            var distsq = v1.dot(v1)
+            var best_dist = distsq
+            reference_point = point1
 
-        return CollisionResult(intersects, if (intersects) best_dist - radius else 0f, if (intersects) (CapsuleNormal * -1) else null, if (intersects) reference_point else null)
+            // Edge 2:
+            val point2 = closestPointOnLineSegment(p1, p2, target_point)
+            v1 = target_point - point2
+            distsq = v1.dot(v1)
+            if(distsq < best_dist)
+            {
+                reference_point = point2
+                best_dist = distsq
+            }
+
+            // Edge 3:
+            val point3 = closestPointOnLineSegment(p2, p0, target_point)
+            v1 = target_point - point3
+            distsq = v1.dot(v1)
+            if(distsq < best_dist)
+            {
+                reference_point = point3
+                best_dist = distsq
+            }
+        }
+
+        val center = closestPointOnLineSegment(A, B, reference_point)
+
+        val intersects = (center - reference_point).length <= radius
+
+        return CollisionResult(intersects, if (intersects) radius - (center - reference_point).length else 0f, if (intersects) (CapsuleNormal * -1) else null, if (intersects) reference_point else null)
     }
 
     //private fun normalize(v: Vector3): Vector3 = v.normalized()

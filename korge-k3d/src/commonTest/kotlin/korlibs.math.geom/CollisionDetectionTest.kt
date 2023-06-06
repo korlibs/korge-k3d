@@ -16,7 +16,7 @@ class CollisionDetectionTest {
     fun test2() {
         println(CollisionDetection.collision(
             Capsule3D(Vector3.ZERO, Vector3.UP, .1f),
-            Triangle3D(Vector3.ZERO, Vector3.UP * 2, Vector3.LEFT)
+            Triangle3D(Vector3.ZERO + Vector3.RIGHT * .1, Vector3.UP * 2, Vector3.LEFT)
         ))
     }
 }
