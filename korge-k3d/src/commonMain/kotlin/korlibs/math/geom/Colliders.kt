@@ -90,7 +90,12 @@ object Colliders {
 
     fun collide(s: SphereCollider, m1: Transform3D, p: PlaneCollider, m2: Transform3D): ContactPoint? {
         val ss = SphereCollider(s.center + m1.translation.immutable.toVector3(), s.radius, s.material)
-        val pp = PlaneCollider(p.p + m2.translation.immutable.toVector3(), m2.rotation.toRotation3x3Matrix().inverted().transform(p.normal), p.material)
+
+        val pp = PlaneCollider(
+            m2.matrix.immutable.transform(p.p),
+            m2.rotation.toRotation3x3Matrix().inverted().transform(p.normal),
+            p.material
+        )
 
         //println("m2.rotation=${m2.rotation.normalized().toMatrix()}")
 

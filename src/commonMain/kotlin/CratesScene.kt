@@ -43,9 +43,12 @@ class CratesScene : Scene() {
         var rotation = 0.degrees
         val rubber = PhysicsMaterial(bounciness = .75f)
         val gravity = Vector3.DOWN * 9.8f
-        val quat = Quaternion.fromVectors(Vector3.UP, Vector3.RIGHT) * .15f
+        val initialQuadScale = .05f
+        val bquat = Quaternion.fromVectors(Vector3.UP, Vector3.RIGHT)
+        val quat = bquat.scaled(initialQuadScale)
         //val quat = Quaternion.IDENTITY
 
+        lateinit var cube: Cube3D
         val scene3D = scene3D {
             axisLines(length = 1f)
             //cube(1f, .2f, 4f).position(Vector3.UP)
@@ -54,7 +57,7 @@ class CratesScene : Scene() {
                 .collider(SphereCollider(Vector3.ZERO, 1f, rubber))
                 .material(PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(Colors.RED)))
                 .rigidBody(RigidBody3D(1f, true))
-            cube(4f, .01f, 4f)
+            cube = cube(4f, .01f, 4f)
                 .position(Vector3.DOWN * 1f)
                 .rotation(quat)
                 //.scale(1f)
@@ -63,7 +66,23 @@ class CratesScene : Scene() {
                 .material(PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(Colors.GREEN)))
                 .rigidBody(RigidBody3D(1f, false))
         }
+
+
+        uiVerticalStack {
+            uiButton("RESTART") {
+                onClick {
+                    sceneContainer.changeTo({ CratesScene() })
+                }
+            }
+            uiSlider(initialQuadScale, -1f, 1f, .0001f, decimalPlaces = 4) {
+                onChange {
+                    cube.rotation(bquat.scaled(this.value.toFloat()))
+                }
+            }
+        }
+
         // @TODO: Use BVH3D
+        var firstCollision = 0
         addUpdater { dt ->
             scene3D.stage3D.foreachDescendant { view ->
                 val rigidBody = view.rigidBody
@@ -76,11 +95,19 @@ class CratesScene : Scene() {
                         if (other !== view) {
                             val otherCollider = other.collider
                             if (otherCollider != null) {
+                                if (firstCollision == 0) {
+                                    println(rigidBody.velocity)
+                                }
                                 val collision = Colliders.collide(collider, view.transform, otherCollider, other.transform)
                                 if (collision != null) {
                                     view.position += rigidBody.velocity.normalized() * collision.separation
                                     val ratio = ((collider.material.bounciness + otherCollider.material.bounciness) * 0.5)
                                     //val velocityLength = rigidBody.velocity.length
+
+                                    if (firstCollision == 0) {
+                                        firstCollision = 1
+                                        println("ratio=$ratio, rigidBody.velocity=${rigidBody.velocity}, reflected=${rigidBody.velocity.reflected(collision.normal)}, collision=$collision")
+                                    }
 
                                     rigidBody.velocity = rigidBody.velocity.reflected(collision.normal) * ratio
                                     //rigidBody.velocity = -rigidBody.velocity * ratio
@@ -92,9 +119,9 @@ class CratesScene : Scene() {
                             }
                         }
                     }
-                    if (!collides) {
+                    //if (!collides) {
                         view.position = (view.position + rigidBody.velocity * dt.seconds)
-                    }
+                    //}
                 }
                 //if (it.rigidBody != null) println(it.rigidBody)
                 //if (it.collider != null) println(it.collider)
