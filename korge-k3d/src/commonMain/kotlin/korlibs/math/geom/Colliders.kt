@@ -12,7 +12,7 @@ data class ContactPoint(
     val separation: Float
 )
 
-class PhysicsMaterial(
+data class PhysicsMaterial(
     val bounciness: Float = 0f
 )
 
@@ -28,7 +28,7 @@ interface Collider {
     //fun getBoundingAABB(): AABB3D
 }
 
-class PlaneCollider(val p: Vector3, val normal: Vector3, override val material: PhysicsMaterial) : Collider {
+data class PlaneCollider(val p: Vector3, val normal: Vector3, override val material: PhysicsMaterial) : Collider {
     override fun sdf(p: Vector3): Float {
         return getClosestPoint(p) distanceTo p
     }
@@ -42,12 +42,12 @@ class PlaneCollider(val p: Vector3, val normal: Vector3, override val material: 
     //override fun getNormalVector(p: Vector3): Vector3 = TODO("Not yet implemented")
 }
 
-class BoxCollider(val center: Vector3, val size: Vector3, override val material: PhysicsMaterial) : Collider {
+data class BoxCollider(val center: Vector3, val size: Vector3, override val material: PhysicsMaterial) : Collider {
     //override fun getClosestPoint(p: Vector3): Vector3 = TODO("Not yet implemented")
     //override fun getNormalVector(p: Vector3): Vector3 = TODO("Not yet implemented")
 }
 
-class SphereCollider(val center: Vector3, val radius: Float, override val material: PhysicsMaterial) : Collider {
+data class SphereCollider(val center: Vector3, val radius: Float, override val material: PhysicsMaterial) : Collider {
     override fun sdf(p: Vector3): Float {
         return (p distanceTo center) - radius
     }
@@ -83,18 +83,28 @@ class SphereCollider(val center: Vector3, val radius: Float, override val materi
 private infix fun Vector3.distanceTo(other: Vector3): Float = (other - this).length
 
 object Colliders {
-    fun collide(s: SphereCollider, m1: Transform3D, p: PlaneCollider, m2: Transform3D): Boolean {
+    fun collide(s: SphereCollider, p: PlaneCollider): ContactPoint? {
+        val dist = (p.getClosestPoint(s.center) distanceTo s.center) - s.radius
+        return if (dist >= 0f) null else ContactPoint(p.getClosestPoint(s.center), p.normal, s, p, dist)
+    }
+
+    fun collide(s: SphereCollider, m1: Transform3D, p: PlaneCollider, m2: Transform3D): ContactPoint? {
         val ss = SphereCollider(s.center + m1.translation.immutable.toVector3(), s.radius, s.material)
-        val pp = PlaneCollider(p.p + m2.translation.immutable.toVector3(), p.normal, p.material)
+        val pp = PlaneCollider(p.p + m2.translation.immutable.toVector3(), m2.rotation.toRotation3x3Matrix().inverted().transform(p.normal), p.material)
+
+        //println("m2.rotation=${m2.rotation.normalized().toMatrix()}")
+
+        //println("pp=$pp")
+        //println(m2.rotation)
         //val distancePlaneToCenter = p.getClosestPoint(s.center) distanceTo s.center
         //println("distancePlaneToCenter=$distancePlaneToCenter, radius=${s.radius}")
         //println("pp.getClosestPoint(ss.center)=${pp.getClosestPoint(ss.center)}")
         //println("ss.center=${ss.center}")
-        return (pp.getClosestPoint(ss.center) distanceTo ss.center) < ss.radius
+        return collide(ss, pp)
         //return false
     }
 
-    fun collide(a: Collider, m1: Transform3D, b: Collider, m2: Transform3D): Boolean {
+    fun collide(a: Collider, m1: Transform3D, b: Collider, m2: Transform3D): ContactPoint? {
         if (a is SphereCollider && b is PlaneCollider) return collide(a, m1, b, m2)
         TODO()
     }

@@ -9,8 +9,8 @@ open class Shaders3D {
 	//@ThreadLocal
 	private val programCache = LinkedHashMap<String, Program>()
 
-	//var printShaders = false
-    var printShaders = true
+	var printShaders = false
+    //var printShaders = true
 
 	@Suppress("RemoveCurlyBracesFromTemplate")
 	fun getProgram3D(nlights: Int, nweights: Int, meshMaterial: PBRMaterial3D?, hasTexture: Boolean): Program {
@@ -165,7 +165,7 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		//	SET(localPos, u_BindShapeMatrixInv * localPos)
 		//}
 
-		SET(modelViewMat, Shaders3D.K3DPropsUB.u_ModMat * u_ViewMat)
+		SET(modelViewMat, u_ViewMat * Shaders3D.K3DPropsUB.u_ModMat)
 		SET(normalMat, Shaders3D.K3DPropsUB.u_NormMat)
 		SET(v_Pos, vec3(modelViewMat * (vec4(localPos["xyz"], 1f.lit))))
 		SET(v_Norm, vec3(normalMat * normalize(vec4(localNorm["xyz"], 1f.lit))))

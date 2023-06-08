@@ -230,6 +230,11 @@ fun <T : View3D> T.position(x: Float, y: Float, z: Float, w: Float = 1f): T {
 fun <T : View3D> T.position(x: Int, y: Int, z: Int, w: Int = 1): T = position(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
 fun <T : View3D> T.position(pos: Vector3): T = position(pos.x, pos.y, pos.z)
+var View3D.position: Vector3
+    get() = transform.translation.immutable.toVector3()
+    set(value) {
+        position(value)
+    }
 
 fun <T : View3D> T.rotation(x: Angle = 0.degrees, y: Angle = 0.degrees, z: Angle = 0.degrees): T {
 	transform.setRotation(x, y, z)

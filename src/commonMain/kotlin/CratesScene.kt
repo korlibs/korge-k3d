@@ -41,19 +41,26 @@ fun <T : View3D> T.rigidBody(rigidBody: RigidBody3D): T {
 class CratesScene : Scene() {
     override suspend fun SContainer.sceneMain() {
         var rotation = 0.degrees
-        val rubber = PhysicsMaterial(bounciness = .9f)
+        val rubber = PhysicsMaterial(bounciness = .75f)
         val gravity = Vector3.DOWN * 9.8f
+        val quat = Quaternion.fromVectors(Vector3.UP, Vector3.RIGHT) * .15f
+        //val quat = Quaternion.IDENTITY
+
         val scene3D = scene3D {
             axisLines(length = 1f)
+            //cube(1f, .2f, 4f).position(Vector3.UP)
             sphere(1f)
                 .position(Vector3.UP * 4f)
                 .collider(SphereCollider(Vector3.ZERO, 1f, rubber))
                 .material(PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(Colors.RED)))
                 .rigidBody(RigidBody3D(1f, true))
-            cube(4f, .001f, 4f)
+            cube(4f, .01f, 4f)
+                .position(Vector3.DOWN * 1f)
+                .rotation(quat)
+                //.scale(1f)
+                //.rotation(x = 45.degrees)
                 .collider(PlaneCollider(Vector3.ZERO, Vector3.UP, rubber))
-                //.collider(BoxCollider(Vector3.ZERO, Vector3(4f, .2f, 4f), PhysicsMaterial(bounciness = .9f)))
-                .material(PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(Colors.GREEN))).position(Vector3.ZERO)
+                .material(PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(Colors.GREEN)))
                 .rigidBody(RigidBody3D(1f, false))
         }
         // @TODO: Use BVH3D
@@ -64,18 +71,30 @@ class CratesScene : Scene() {
                 if (rigidBody != null && collider != null && rigidBody.useGravity) {
                     rigidBody.acceleration = gravity
                     rigidBody.velocity += rigidBody.acceleration * dt.seconds
+                    var collides = false
                     scene3D.stage3D.foreachDescendant { other ->
                         if (other !== view) {
                             val otherCollider = other.collider
                             if (otherCollider != null) {
-                                if (Colliders.collide(collider, view.transform, otherCollider, other.transform)) {
-                                    rigidBody.velocity = Vector3.ZERO
+                                val collision = Colliders.collide(collider, view.transform, otherCollider, other.transform)
+                                if (collision != null) {
+                                    view.position += rigidBody.velocity.normalized() * collision.separation
+                                    val ratio = ((collider.material.bounciness + otherCollider.material.bounciness) * 0.5)
+                                    //val velocityLength = rigidBody.velocity.length
+
+                                    rigidBody.velocity = rigidBody.velocity.reflected(collision.normal) * ratio
+                                    //rigidBody.velocity = -rigidBody.velocity * ratio
+                                    //println("rigidBody.velocity=${rigidBody.velocity}")
+                                    collides = true
+                                    //println("rigidBody.velocity=${rigidBody.velocity}")
                                 }
                                 //println("$collider -- $otherCollider")
                             }
                         }
                     }
-                    view.position(view.transform.translation.immutable.toVector3() + rigidBody.velocity * dt.seconds)
+                    if (!collides) {
+                        view.position = (view.position + rigidBody.velocity * dt.seconds)
+                    }
                 }
                 //if (it.rigidBody != null) println(it.rigidBody)
                 //if (it.collider != null) println(it.collider)
