@@ -1,3 +1,4 @@
+import korlibs.datastructure.*
 import korlibs.event.*
 import korlibs.image.bitmap.*
 import korlibs.image.color.*
@@ -17,7 +18,74 @@ import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 import korlibs.time.*
 
+data class RigidBody3D(
+    val mass: Float,
+    val useGravity: Boolean
+) {
+    var acceleration = Vector3.ZERO
+    var velocity = Vector3.ZERO
+}
+
+var View3D.collider: Collider? by Extra.Property { null }
+fun <T : View3D> T.collider(collider: Collider): T {
+    this.collider = collider
+    return this
+}
+
+var View3D.rigidBody: RigidBody3D? by Extra.Property { null }
+fun <T : View3D> T.rigidBody(rigidBody: RigidBody3D): T {
+    this.rigidBody = rigidBody
+    return this
+}
+
 class CratesScene : Scene() {
+    override suspend fun SContainer.sceneMain() {
+        var rotation = 0.degrees
+        val rubber = PhysicsMaterial(bounciness = .9f)
+        val gravity = Vector3.DOWN * 9.8f
+        val scene3D = scene3D {
+            axisLines(length = 1f)
+            sphere(1f)
+                .position(Vector3.UP * 4f)
+                .collider(SphereCollider(Vector3.ZERO, 1f, rubber))
+                .material(PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(Colors.RED)))
+                .rigidBody(RigidBody3D(1f, true))
+            cube(4f, .001f, 4f)
+                .collider(PlaneCollider(Vector3.ZERO, Vector3.UP, rubber))
+                //.collider(BoxCollider(Vector3.ZERO, Vector3(4f, .2f, 4f), PhysicsMaterial(bounciness = .9f)))
+                .material(PBRMaterial3D(diffuse = PBRMaterial3D.LightColor(Colors.GREEN))).position(Vector3.ZERO)
+                .rigidBody(RigidBody3D(1f, false))
+        }
+        // @TODO: Use BVH3D
+        addUpdater { dt ->
+            scene3D.stage3D.foreachDescendant { view ->
+                val rigidBody = view.rigidBody
+                val collider = view.collider
+                if (rigidBody != null && collider != null && rigidBody.useGravity) {
+                    rigidBody.acceleration = gravity
+                    rigidBody.velocity += rigidBody.acceleration * dt.seconds
+                    scene3D.stage3D.foreachDescendant { other ->
+                        if (other !== view) {
+                            val otherCollider = other.collider
+                            if (otherCollider != null) {
+                                if (Colliders.collide(collider, view.transform, otherCollider, other.transform)) {
+                                    rigidBody.velocity = Vector3.ZERO
+                                }
+                                //println("$collider -- $otherCollider")
+                            }
+                        }
+                    }
+                    view.position(view.transform.translation.immutable.toVector3() + rigidBody.velocity * dt.seconds)
+                }
+                //if (it.rigidBody != null) println(it.rigidBody)
+                //if (it.collider != null) println(it.collider)
+            }
+        }
+    }
+}
+
+
+class CratesScene2 : Scene() {
     @KeepOnReload
     var trans = Transform3D()
     @KeepOnReload

@@ -37,7 +37,7 @@ class Sphere3D(var radius: Float) : ShapeViewWithMesh3D(mesh) {
                     val y = (radius * cos(phi))
                     val z = (radius * sin(phi) * sin(theta))
 
-                    val p = Vector3(x, y, z)
+                    val p = Vector3(x, y, z) * 2f
 
                     addVertex(p, p.normalized(), Vector2(u, v))
 

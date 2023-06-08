@@ -1,0 +1,101 @@
+package korlibs.math.geom
+
+import korlibs.korge3d.*
+import korlibs.korge3d.util.*
+import kotlin.math.*
+
+data class ContactPoint(
+    val point: Vector3,
+    val normal: Vector3,
+    val collider0: Collider,
+    val collider1: Collider,
+    val separation: Float
+)
+
+class PhysicsMaterial(
+    val bounciness: Float = 0f
+)
+
+//class RaycastHit3D(val position: Vector3)
+//data class VectorWithNormal(val p: Vector3, val n: Vector3)
+
+interface Collider {
+    val material: PhysicsMaterial
+    fun sdf(p: Vector3): Float = TODO()
+    fun getClosestPoint(p: Vector3): Vector3 = TODO()
+    //fun getNormalVector(p: Vector3): Vector3 = TODO()
+    fun raycast(ray: Ray3D, maxDistance: Float = Float.POSITIVE_INFINITY): Vector3? = TODO()
+    //fun getBoundingAABB(): AABB3D
+}
+
+class PlaneCollider(val p: Vector3, val normal: Vector3, override val material: PhysicsMaterial) : Collider {
+    override fun sdf(p: Vector3): Float {
+        return getClosestPoint(p) distanceTo p
+    }
+
+    override fun getClosestPoint(p: Vector3): Vector3 {
+        val plane = this
+        val v = p - plane.p
+        val dist = v dot plane.normal
+        return p - plane.normal * dist
+    }
+    //override fun getNormalVector(p: Vector3): Vector3 = TODO("Not yet implemented")
+}
+
+class BoxCollider(val center: Vector3, val size: Vector3, override val material: PhysicsMaterial) : Collider {
+    //override fun getClosestPoint(p: Vector3): Vector3 = TODO("Not yet implemented")
+    //override fun getNormalVector(p: Vector3): Vector3 = TODO("Not yet implemented")
+}
+
+class SphereCollider(val center: Vector3, val radius: Float, override val material: PhysicsMaterial) : Collider {
+    override fun sdf(p: Vector3): Float {
+        return (p distanceTo center) - radius
+    }
+
+    override fun getClosestPoint(p: Vector3): Vector3 = (p - center).normalized() * radius
+    //override fun getNormalVector(p: Vector3): Vector3 = (p - center).normalized()
+
+    override fun raycast(ray: Ray3D, maxDistance: Float): Vector3? {
+        val sphere = this
+        val oc = ray.pos - sphere.center
+
+        val a = ray.dir dot ray.dir
+        val b = 2.0 * (oc dot ray.dir)
+        val c = (oc dot oc) - sphere.radius * sphere.radius
+
+        val discriminant = b * b - 4 * a * c
+
+        return when {
+            discriminant < 0 -> null
+            else -> {
+                val t = (-b - sqrt(discriminant)) / (2.0 * a)
+                if (t < 0) {
+                    val t = (-b + sqrt(discriminant)) / (2.0 * a)
+                    if (t < 0) null else ray.pos + ray.dir * t
+                } else {
+                    ray.pos + ray.dir * t
+                }
+            }
+        }
+    }
+}
+
+private infix fun Vector3.distanceTo(other: Vector3): Float = (other - this).length
+
+object Colliders {
+    fun collide(s: SphereCollider, m1: Transform3D, p: PlaneCollider, m2: Transform3D): Boolean {
+        val ss = SphereCollider(s.center + m1.translation.immutable.toVector3(), s.radius, s.material)
+        val pp = PlaneCollider(p.p + m2.translation.immutable.toVector3(), p.normal, p.material)
+        //val distancePlaneToCenter = p.getClosestPoint(s.center) distanceTo s.center
+        //println("distancePlaneToCenter=$distancePlaneToCenter, radius=${s.radius}")
+        //println("pp.getClosestPoint(ss.center)=${pp.getClosestPoint(ss.center)}")
+        //println("ss.center=${ss.center}")
+        return (pp.getClosestPoint(ss.center) distanceTo ss.center) < ss.radius
+        //return false
+    }
+
+    fun collide(a: Collider, m1: Transform3D, b: Collider, m2: Transform3D): Boolean {
+        if (a is SphereCollider && b is PlaneCollider) return collide(a, m1, b, m2)
+        TODO()
+    }
+}
