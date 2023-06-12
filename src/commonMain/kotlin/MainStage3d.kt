@@ -13,18 +13,19 @@ class MainStage3d : Scene() {
     override suspend fun SContainer.sceneInit() {
         contentSceneContainer = sceneContainer(views)
 
-        sceneButton<CratesScene>("Crates", 0)
-        sceneButton<MonkeyScene>("Monkey", 1)
-        sceneButton<SkinningScene>("Skinning", 2)
+        uiHorizontalStack {
+            sceneButton<CratesScene>("Crates")
+            sceneButton<PhysicsScene>("Physics")
+            sceneButton<MonkeyScene>("Monkey")
+            sceneButton<SkinningScene>("Skinning")
+        }
 
         contentSceneContainer.changeToDisablingButtons<CratesScene>(this)
         //contentSceneContainer.changeToDisablingButtons<SkinningScene>(this)
     }
 
-    inline fun <reified T : Scene> Container.sceneButton(title: String, x: Int) {
+    inline fun <reified T : Scene> Container.sceneButton(title: String) {
         uiButton(title)
-            .scale(1.5)
-            .xy(8 + x * 200, views.virtualHeight - 120)
             .onClick { contentSceneContainer.changeToDisablingButtons<T>(this) }
 
         //this += Button(title) { contentSceneContainer.changeToDisablingButtons<T>(this) }
