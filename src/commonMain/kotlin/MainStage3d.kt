@@ -11,7 +11,7 @@ class MainStage3d : Scene() {
     lateinit var contentSceneContainer: SceneContainer
 
     override suspend fun SContainer.sceneInit() {
-        contentSceneContainer = sceneContainer(views)
+        contentSceneContainer = sceneContainer(views).xy(0, 32)
 
         uiHorizontalStack {
             sceneButton<CratesScene>("Crates")

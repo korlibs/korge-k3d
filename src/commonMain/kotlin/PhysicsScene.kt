@@ -71,7 +71,7 @@ class PhysicsScene : Scene() {
         uiVerticalStack {
             uiButton("RESTART") {
                 onClick {
-                    sceneContainer.changeTo({ CratesScene() })
+                    sceneContainer.changeTo({ PhysicsScene() })
                 }
             }
             uiSlider(initialQuadScale, -1f, 1f, .0001f, decimalPlaces = 4) {
