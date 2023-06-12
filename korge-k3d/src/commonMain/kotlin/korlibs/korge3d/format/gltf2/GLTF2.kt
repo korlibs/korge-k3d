@@ -27,6 +27,7 @@ suspend fun VfsFile.readGLTF2(): GLTF2 {
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc
 // https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0
 data class GLTF2(
+    val asset: GAsset,
     val buffers: List<GBuffer>,
     // @TODO: We could map bufferViews to Buffer + offset
     val bufferViews: List<GBufferView>,
@@ -37,6 +38,7 @@ data class GLTF2(
     val materials: List<GMaterial>,
     val materials3D: List<PBRMaterial3D>,
     val nodes: List<GNode>,
+    val skins: List<GSkin>,
 ) {
 
     interface GElement
@@ -95,9 +97,13 @@ data class GLTF2(
         val matrix: Matrix4,
         val children: List<Int>,
         val cameraIndex: Int?,
-        val mesh: Int?
+        val mesh: Int?,
+        val skin: Int?,
     ) : GElement
     data class GScene(val name: String, val nodes: List<GNode>) : GElement
+    data class GAsset(
+        val version: String
+    )
 
     data class GBuffer(val byteLength: Int, val uri: String? = null, val data: Buffer) {
         override fun toString(): String = "GBuffer($byteLength, uri=${uri?.substr(0, 128)}, data=${data})"
@@ -110,7 +116,14 @@ data class GLTF2(
         val byteStride: Int,
         val target: Int,
     )
-    data class GTexture(val source: Int) : GElement
+    data class GTexture(
+        val source: Int
+    ) : GElement
+    data class GSkin(
+        val inverseBindMatrices: Int,
+        val joints: IntArray,
+        val skeleton: Int,
+    ) : GElement
     data class GImage(
         val uri: String?,
         val bufferView: Int?,
@@ -247,6 +260,8 @@ data class GLTF2(
             }
             val nodes: List<GNode> = json["nodes"].list.map {
                 val name = it["name"].str
+                val skin = it["skin"].toIntOrNull()
+                val mesh = it["mesh"].toIntOrNull()
                 val children = it["children"].list.map { it.int }
                 val cameraIndex = it["camera"].toIntOrNull()
                 var matrix: Matrix4 = Matrix4.IDENTITY
@@ -265,12 +280,16 @@ data class GLTF2(
                     val v = it["scale"].floatArray
                     matrix *= Matrix4.scale(v[0], v[1], v[2])
                 }
-                GNode(name, matrix, children, cameraIndex, it["mesh"].toIntOrNull())
+                GNode(name, matrix, children, cameraIndex, mesh = mesh, skin = skin)
             }
             val scenes = json["scenes"].list.map {
                 val name = it["name"].str
                 val nodes = it["nodes"].list.map { nodes[it.int] }
                 GScene(name, nodes)
+            }
+            val asset = json["asset"].let {
+                val version = it["version"].str
+                GAsset(version)
             }
             val accessors: List<GAccessor> = json["accessors"].list.map {
                 val bufferView = it["bufferView"].int
@@ -340,6 +359,12 @@ data class GLTF2(
                 val source = it["source"].int
                 GTexture(source)
             }
+            val skins = json["skins"].list.map {
+                val inverseBindMatrices = it["inverseBindMatrices"].int
+                val joints = it["joints"].intArray
+                val skeleton = it["skeleton"].int
+                GSkin(inverseBindMatrices, joints, skeleton)
+            }
             fun Dyn.toGMaterialTexture(): GMaterialTexture? {
                 if (this.isNull) return null
                 val scale = this["scale"].int
@@ -406,6 +431,10 @@ data class GLTF2(
                 )
             }
 
+            if (asset.version != "2.0") {
+                println("!! WARNING: Unsupported glTF2 version ${asset.version}")
+            }
+            println("asset=$asset")
             println("buffers[${buffers.size}]=$buffers")
             println("bufferViews[${bufferViews.size}]=$bufferViews")
             println("scenes[${scenes.size}]=$scenes")
@@ -414,7 +443,9 @@ data class GLTF2(
             println("meshes[${meshes.size}]=$meshes")
             println("materials[${materials.size}]=$materials")
             println("materials3D[${materials3D.size}]=$materials3D")
+            println("skins[${skins.size}]=$skins")
             return GLTF2(
+                asset,
                 buffers,
                 bufferViews,
                 scenes,
@@ -423,7 +454,8 @@ data class GLTF2(
                 meshes,
                 materials,
                 materials3D,
-                nodes
+                nodes,
+                skins
             )
         }
     }
