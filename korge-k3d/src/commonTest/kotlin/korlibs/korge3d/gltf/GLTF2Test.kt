@@ -11,4 +11,14 @@ class GLTF2Test {
         val gltf2 = resourcesVfs["Box.glb"].readGLTF2()
         GLTF2ViewPrimitive(gltf2, gltf2.meshes.first().primitives.first())
     }
+
+    @Test
+    fun testSimpleSkin() = suspendTest {
+        val gltf2 = resourcesVfs["SimpleSkin/SimpleSkin.gltf"].readGLTF2()
+    }
+
+    @Test
+    fun testSimpleSkinSeparated() = suspendTest {
+        val gltf2 = resourcesVfs["SimpleSkin/separated/SimpleSkin.gltf"].readGLTF2()
+    }
 }

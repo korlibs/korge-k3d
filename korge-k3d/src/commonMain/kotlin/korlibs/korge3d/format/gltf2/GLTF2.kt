@@ -1,5 +1,6 @@
 package korlibs.korge3d.format.gltf2
 
+import korlibs.crypto.encoding.*
 import korlibs.datastructure.*
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
@@ -8,6 +9,7 @@ import korlibs.image.color.*
 import korlibs.image.format.*
 import korlibs.io.dynamic.*
 import korlibs.io.file.*
+import korlibs.io.file.std.*
 import korlibs.io.lang.*
 import korlibs.io.serialization.json.*
 import korlibs.io.stream.*
@@ -98,9 +100,16 @@ data class GLTF2(
     data class GScene(val name: String, val nodes: List<GNode>) : GElement
 
     data class GBuffer(val byteLength: Int, val uri: String? = null, val data: Buffer) {
-        override fun toString(): String = "GBuffer($byteLength, uri=$uri, data=${data})"
+        override fun toString(): String = "GBuffer($byteLength, uri=${uri?.substr(0, 128)}, data=${data})"
     }
-    data class GBufferView(val gbuffer: GBuffer, val slice: Buffer, val offsetInBuffer: Int, val length: Int)
+    data class GBufferView(
+        val gbuffer: GBuffer,
+        val slice: Buffer,
+        val offsetInBuffer: Int,
+        val length: Int,
+        val byteStride: Int,
+        val target: Int,
+    )
     data class GTexture(val source: Int) : GElement
     data class GImage(
         val uri: String?,
@@ -181,6 +190,14 @@ data class GLTF2(
             return readGLTF(json, bin, file)
         }
 
+        fun resolveUri(parent: VfsFile?, uri: String): VfsFile? {
+            val base64Prefix = "data:application/gltf-buffer;base64,"
+            if (uri.startsWith(base64Prefix)) {
+                return uri.removePrefix(base64Prefix).fromBase64().asMemoryVfsFile("buffer.bin")
+            }
+            return parent?.get(uri)
+        }
+
         // @TODO: Use kotlinx-serialization
         suspend fun readGLTF(jsonString: String, bin: ByteArray? = null, file: VfsFile? = null): GLTF2 {
             //println(jsonString)
@@ -188,17 +205,18 @@ data class GLTF2(
             val buffers = json["buffers"].list.map {
                 val byteLength = it["byteLength"].int
                 val uri = it["uri"].toStringOrNull()
-                val data = uri?.let { file?.parent?.get(it)?.readBytes() } ?: bin
+                val data = uri?.let { resolveUri(file?.parent, it)?.readBytes() } ?: bin
                 GBuffer(byteLength, uri, Buffer(data ?: byteArrayOf()))
             }
             val bufferViews = json["bufferViews"].list.map {
                 val bufferIndex = it["buffer"].int
                 val byteLength = it["byteLength"].int
                 val byteOffset = it["byteOffset"].int
+                val byteStride = it["byteStride"].int
+                val target = it["target"].int
                 val buffer = buffers[bufferIndex]
                 val slice = buffer.data.sliceWithSize(byteOffset, byteLength)
-                GBufferView(buffer, slice, byteOffset, byteLength)
-
+                GBufferView(buffer, slice, byteOffset, byteLength, byteStride, target)
             }
             val cameras: List<GCamera> = json["cameras"].list.map {
                 val name = it["name"].str
@@ -359,7 +377,7 @@ data class GLTF2(
                         bytes.openAsync().readBitmap()
                     }
                     it.uri != null -> {
-                        file?.parent?.get(it.uri)?.readBitmap()
+                        resolveUri(file?.parent, it.uri)?.readBitmap()
                     }
                     else -> null
                 } ?: Bitmaps.white.base).also { img ->
