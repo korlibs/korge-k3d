@@ -1,12 +1,9 @@
-import korlibs.*
 import korlibs.korge.gradle.*
-import korlibs.korge.gradle.kotlin
-import korlibs.korge.gradle.targets.android.*
 
 plugins {
     //alias(libs.plugins.korge)
     //id("com.soywiz.korge") version "999.0.0.999"
-    id("com.soywiz.korge") version "4.0.3"
+    id("com.soywiz.korge") version "4.0.5a"
 }
 
 korge {
