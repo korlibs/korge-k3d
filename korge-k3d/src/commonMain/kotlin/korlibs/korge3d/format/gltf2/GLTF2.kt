@@ -12,16 +12,189 @@ import korlibs.io.file.*
 import korlibs.io.file.std.*
 import korlibs.io.lang.*
 import korlibs.io.serialization.json.*
+import korlibs.io.serialization.json.Json
 import korlibs.io.stream.*
 import korlibs.korge3d.material.*
 import korlibs.logger.*
 import korlibs.math.geom.*
 import korlibs.memory.*
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
 
-suspend fun VfsFile.readGLB(): GLTF2 = GLTF2.readGLB(this)
-suspend fun VfsFile.readGLTF2(): GLTF2 {
-    if (this.extensionLC == "glb") return readGLB()
-    return GLTF2.readGLTF(this.readString(), null, this)
+data class GLTF2ReadOptions(
+    //val ignoreUnknownKeys: Boolean = true,
+    val ignoreUnknownKeys: Boolean = false,
+) {
+    companion object {
+        val DEFAULT = GLTF2ReadOptions()
+    }
+}
+
+suspend fun VfsFile.readGLB(options: GLTF2ReadOptions = GLTF2ReadOptions.DEFAULT): GLTF2 = GLTF2.readGLB(this, options = options)
+suspend fun VfsFile.readGLTF2(options: GLTF2ReadOptions = GLTF2ReadOptions.DEFAULT): GLTF2 {
+    if (this.extensionLC == "glb") return readGLB(options)
+    return GLTF2.readGLTF(this.readString(), null, this, options)
+}
+
+@Serializable
+data class GLTF2Json(
+    val asset: Asset = Asset(),
+    val extensionsUsed: List<String> = emptyList(),
+    val extensionsRequired: List<String> = emptyList(),
+    val scene: Int = -1,
+    val images: List<Image> = emptyList(),
+    val textures: List<Texture> = emptyList(),
+    val scenes: List<Scene> = emptyList(),
+    val nodes: List<Node> = emptyList(),
+    val meshes: List<Mesh> = emptyList(),
+    val skins: List<Skin> = emptyList(),
+    val animations: List<Animation> = emptyList(),
+    val buffers: List<Buffer> = emptyList(),
+    val bufferViews: List<BufferView> = emptyList(),
+    val accessors: List<Accessor> = emptyList(),
+    val materials: List<Material> = emptyList(),
+    val samplers: List<Sampler> = emptyList(),
+) {
+    @Serializable
+    data class Asset(
+        val version: String = "2.0",
+        val generator: String? = null,
+        val copyright: String? = null,
+    )
+    @Serializable
+    data class Scene(
+        val name: String? = null,
+        val nodes: IntArray = intArrayOf(),
+    )
+    @Serializable
+    data class Node(
+        val name: String? = null,
+        val skin: Int = -1,
+        val mesh: Int = -1,
+        val children: IntArray? = null,
+        val scale: FloatArray? = null,
+        val translation: FloatArray? = null,
+        val rotation: FloatArray? = null,
+        val matrix: FloatArray? = null,
+    )
+    @Serializable
+    data class Mesh(
+        val name: String? = null,
+        val primitives: List<Primitive> = emptyList(),
+        val weights: FloatArray? = null,
+    ) {
+        @Serializable
+        data class Primitive(
+            val attributes: Map<String, Int> = emptyMap(),
+            val indices: Int = -1,
+            val material: Int = -1,
+            val mode: Int = 4,
+            val targets: List<Map<String, Int>> = emptyList(),
+        )
+    }
+    @Serializable
+    data class Skin(
+        val name: String? = null,
+        val inverseBindMatrices: Int = -1,
+        val joints: IntArray? = null,
+        val skeleton: Int = -1,
+    )
+    @Serializable
+    data class Animation(
+        val name: String? = null,
+        val channels: List<Channel> = emptyList(),
+        val samplers: List<Sampler> = emptyList(),
+    ) {
+        @Serializable
+        data class Channel(
+            val sampler: Int = -1,
+            val target: Target? = null,
+        ) {
+            @Serializable
+            data class Target(
+                val node: Int = -1,
+                val path: String? = null,
+            )
+        }
+        @Serializable
+        data class Sampler(
+            val input: Int = -1,
+            val interpolation: String = "LINEAR",
+            val output: Int = -1,
+        )
+    }
+    @Serializable
+    data class Buffer(
+        val name: String? = null,
+        val uri: String? = null,
+        val byteLength: Int = 0,
+    )
+    @Serializable
+    data class BufferView(
+        val name: String? = null,
+        val buffer: Int = -1,
+        val byteLength: Int = 0,
+        val byteOffset: Int = 0,
+        val target: Int = -1,
+        val byteStride: Int = 0,
+    )
+    @Serializable
+    data class Accessor(
+        val name: String? = null,
+        val bufferView: Int = 0,
+        val byteOffset: Int = 0,
+        val componentType: Int = 0,
+        val count: Int = 0,
+        val min: FloatArray = FloatArray(0),
+        val max: FloatArray = FloatArray(0),
+        val type: String = "SCALAR",
+    )
+    @Serializable
+    data class Material(
+        val name: String? = null,
+        val alphaMode: String? = null, // OPAQUE
+        val doubleSided: Boolean = true,
+        val extensions: Map<String, JsonObject> = emptyMap(),
+        val emissiveFactor: FloatArray? = null,
+        val emissiveTexture: Texture? = null,
+        val pbrMetallicRoughness: PBRMetallicRoughness? = null,
+        val normalTexture: Texture? = null,
+        val occlusionTexture: Texture? = null,
+    ) {
+        @Serializable
+        data class PBRMetallicRoughness(
+            val baseColorTexture: Texture? = null,
+            val baseColorFactor: FloatArray? = null,
+            val metallicFactor: Float = 0f,
+            val roughnessFactor: Float = 0f,
+            val metallicRoughnessTexture: Texture? = null,
+        )
+        @Serializable
+        data class Texture(
+            val scale: Int = -1,
+            val index: Int = -1,
+            val texCoord: Int = -1,
+        )
+    }
+    @Serializable
+    data class Texture(
+        val sampler: Int = -1,
+        val source: Int = -1,
+    )
+    @Serializable
+    data class Image(
+        val name: String? = null,
+        val uri: String? = null,
+        val bufferView: Int = -1,
+        val mimeType: String? = null,
+    )
+    @Serializable
+    data class Sampler(
+        val magFilter: Int = -1,
+        val minFilter: Int = -1,
+        val wrapS: Int = -1,
+        val wrapT: Int = -1,
+    )
 }
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc
@@ -39,6 +212,7 @@ data class GLTF2(
     val materials3D: List<PBRMaterial3D>,
     val nodes: List<GNode>,
     val skins: List<GSkin>,
+    val animations: List<GAnimation>,
 ) {
 
     interface GElement
@@ -154,7 +328,10 @@ data class GLTF2(
         val material: Int,
         val drawType: AGDrawType
     )
-    data class GMesh(val name: String, val primitives: List<GPrimitive>) : Extra by Extra.Mixin()
+    data class GMesh(
+        val name: String,
+        val primitives: List<GPrimitive>,
+    ) : Extra by Extra.Mixin()
     data class GMaterialTexture(
         val scale: Int, val index: Int, val texCoord: Int
     ) : Extra by Extra.Mixin()
@@ -177,11 +354,16 @@ data class GLTF2(
         val occlusionTexture: GMaterialTexture?,
     ) : GElement
 
+    data class GAnimationChannelTarget(val node: Int, val path: String)
+    data class GAnimationChannel(val sampler: Int, val target: GAnimationChannelTarget)
+    data class GAnimationSampler(val input: Int, val interpolation: String, val output: Int)
+    data class GAnimation(val name: String?, val channels: List<GAnimationChannel>, val samplers: List<GAnimationSampler>)
+
     companion object {
         val logger = Logger("GLTF2")
 
-        suspend fun readGLB(file: VfsFile): GLTF2 = readGLB(file.readBytes(), file)
-        suspend fun readGLB(data: ByteArray, file: VfsFile? = null): GLTF2 {
+        suspend fun readGLB(file: VfsFile, options: GLTF2ReadOptions = GLTF2ReadOptions.DEFAULT): GLTF2 = readGLB(file.readBytes(), file, options)
+        suspend fun readGLB(data: ByteArray, file: VfsFile? = null, options: GLTF2ReadOptions = GLTF2ReadOptions.DEFAULT): GLTF2 {
             val s = data.openSync()
             if (s.readString(4) != "glTF") error("Not a glTF binary")
             val version = s.readS32LE()
@@ -200,7 +382,7 @@ data class GLTF2(
                 logger.trace { "CHUNK[$chunkName] = $chunkSize" }
             }
 
-            return readGLTF(json, bin, file)
+            return readGLTF(json, bin, file, options)
         }
 
         fun resolveUri(parent: VfsFile?, uri: String): VfsFile? {
@@ -212,7 +394,23 @@ data class GLTF2(
         }
 
         // @TODO: Use kotlinx-serialization
-        suspend fun readGLTF(jsonString: String, bin: ByteArray? = null, file: VfsFile? = null): GLTF2 {
+        suspend fun readGLTF(jsonString: String, bin: ByteArray? = null, file: VfsFile? = null, options: GLTF2ReadOptions = GLTF2ReadOptions.DEFAULT): GLTF2 {
+
+
+            println("options=$options")
+
+            //println("jsonString=$jsonString")
+
+            val json2 = try {
+                kotlinx.serialization.json.Json { this.ignoreUnknownKeys = options.ignoreUnknownKeys }
+                    .decodeFromString<GLTF2Json>(jsonString)
+            } catch (e: Throwable) {
+                println("ERROR parsing: $jsonString")
+                throw e
+            }
+
+            println(json2)
+
             //println(jsonString)
             val json = Json.parseFastDyn(jsonString)
             val buffers = json["buffers"].list.map {
@@ -359,6 +557,25 @@ data class GLTF2(
                 val source = it["source"].int
                 GTexture(source)
             }
+            val animations = json["animations"].list.map {
+                val name = it["name"].toStringOrNull()
+                val channels = it["channels"].list.map {
+                    val sampler = it["sampler"].int
+                    val target = it["target"].let {
+                        val node = it["node"].int
+                        val path = it["path"].str
+                        GAnimationChannelTarget(node, path)
+                    }
+                    GAnimationChannel(sampler, target)
+                }
+                val samplers = it["samplers"].list.map {
+                    val input = it["input"].int
+                    val interpolation = it["interpolation"].str
+                    val output = it["output"].int
+                    GAnimationSampler(input, interpolation, output)
+                }
+                GAnimation(name, channels, samplers)
+            }
             val skins = json["skins"].list.map {
                 val inverseBindMatrices = it["inverseBindMatrices"].int
                 val joints = it["joints"].intArray
@@ -444,6 +661,7 @@ data class GLTF2(
             println("materials[${materials.size}]=$materials")
             println("materials3D[${materials3D.size}]=$materials3D")
             println("skins[${skins.size}]=$skins")
+            println("animations[${animations.size}]=$animations")
             return GLTF2(
                 asset,
                 buffers,
@@ -455,7 +673,8 @@ data class GLTF2(
                 materials,
                 materials3D,
                 nodes,
-                skins
+                skins,
+                animations
             )
         }
     }
