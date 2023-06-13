@@ -1,30 +1,25 @@
 package korlibs.korge3d
 
-import korlibs.korge.render.RenderContext
-import korlibs.korge.view.Container
-import korlibs.korge.view.View
-import korlibs.korge.view.Views
-import korlibs.korge.view.addTo
-import korlibs.image.color.Colors
-import korlibs.image.color.RGBA
-import korlibs.image.color.setToColorPremultiplied
+import korlibs.event.*
+import korlibs.image.color.*
+import korlibs.korge.render.*
+import korlibs.korge.view.*
 
 
 inline fun Container.scene3D(views: Views3D = Views3D(stage!!.views), callback: Stage3D.() -> Unit = {}): Stage3DView {
-    val stage3D = Stage3D(views)
-    val view = Stage3DView(stage3D)
+    val view = Stage3DView(views)
     view.addTo(this)
-    stage3D.apply(callback)
+    view.stage3D.apply(callback)
     return view
 }
 
 
-class Views3D(val views: Views) {
-}
+class Views3D(val views: Views)
 
-
-class Stage3D(val views: Views3D) : Container3D() {
-	lateinit var view: Stage3DView
+class Stage3D(val views: Views3D, val viewParent: Stage3DView) : Container3D() {
+    init {
+        changeEventListenerParent(viewParent)
+    }
 	//var ambientColor: RGBA = Colors.WHITE
     var occlusionStrength: Float = 1f
 	var ambientColor: RGBA = Colors.BLACK // No ambient light
@@ -36,10 +31,8 @@ class Stage3D(val views: Views3D) : Container3D() {
 }
 
 
-class Stage3DView(val stage3D: Stage3D) : View() {
-	init {
-		stage3D.view = this
-	}
+class Stage3DView(val views: Views3D) : View() {
+    val stage3D: Stage3D = Stage3D(views, this)
 
 	private val ctx3D = RenderContext3D()
 	override fun renderInternal(ctx: RenderContext) {
@@ -62,4 +55,11 @@ class Stage3DView(val stage3D: Stage3D) : View() {
 		}
 		stage3D.render(ctx3D)
 	}
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Event Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    override fun <T : BEvent> dispatchChildren(type: EventType<T>, event: T, result: EventResult?) {
+        stage3D.dispatch(type, event, result)
+    }
 }

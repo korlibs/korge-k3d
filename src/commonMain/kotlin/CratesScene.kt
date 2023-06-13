@@ -3,6 +3,7 @@ import korlibs.image.bitmap.*
 import korlibs.image.color.*
 import korlibs.io.async.launchImmediately
 import korlibs.io.file.std.resourcesVfs
+import korlibs.io.lang.*
 import korlibs.korge.KeepOnReload
 import korlibs.korge.input.*
 import korlibs.korge.scene.Scene
@@ -47,9 +48,8 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
 
-            addUpdater {
-                view.updateAnimationDelta(it)
-            }
+            //this@sceneInit3.onEvent(UpdateEvent) { println("updateEvent: $it") }
+
             //val view = gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(.5f)
             //val view = gltf2View(resourcesVfs["gltf/cube/Cube.gltf"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(1f)

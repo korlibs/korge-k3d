@@ -22,6 +22,11 @@ class GLTF2View(override var gltf: GLTF2) : Container3D(), GLTF2Holder {
                 nodeToViews[node] = view
             }
         }
+
+        addUpdater(first = false) {
+            //println("updater!")
+            updateAnimationDelta(it)
+        }
     }
 
     var currentTime = 0.seconds

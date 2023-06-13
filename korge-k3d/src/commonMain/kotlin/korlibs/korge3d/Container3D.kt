@@ -2,6 +2,7 @@ package korlibs.korge3d
 
 import korlibs.datastructure.*
 import korlibs.datastructure.iterators.*
+import korlibs.event.*
 
 fun Container3D.container3D(block: Container3D.() -> Unit): Container3D = Container3D().addTo(this, block)
 
@@ -27,7 +28,7 @@ open class Container3D : View3D() {
 	fun addChild(child: View3D) {
 		child.removeFromParent()
 		__children += child
-		child._parent = this
+		child.parent = this
 		child.transform.parent = this.transform
         invalidateRender()
 	}
@@ -40,12 +41,16 @@ open class Container3D : View3D() {
 		}
 	}
 
-    //override fun <T : TEvent<T>> dispatchChildren(type: EventType<T>, event: T, result: EventResult?) {
-    //    // @TODO: What if we mutate the list now
-    //    fastForEachChild {
-    //        if (it.onEventCount(type) > 0) it.dispatch(type, event, result)
-    //    }
-    //}
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Event Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private var __tempDispatchChildren: FastArrayList<View3D>? = null
+    override fun <T : BEvent> dispatchChildren(type: EventType<T>, event: T, result: EventResult?) {
+        if (__tempDispatchChildren == null) __tempDispatchChildren = FastArrayList(children.size)
+        __children.fastForEachWithTemp(__tempDispatchChildren!!) {
+            it.dispatch(type, event, result)
+        }
+    }
 }
 
 

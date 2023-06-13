@@ -35,7 +35,7 @@ class MainStage3d : Scene() {
 
     
     private suspend fun Stage3D.orbit(v: View3D, distance: Float, time: TimeSpan) {
-        view.tween(time = time) { ratio ->
+        viewParent.tween(time = time) { ratio ->
             val angle = 360.degrees * ratio
             camera.positionLookingAt(
                 cos(angle) * distance, 0f, sin(angle) * distance, // Orbiting camera

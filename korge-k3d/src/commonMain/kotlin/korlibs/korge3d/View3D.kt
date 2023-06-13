@@ -21,6 +21,9 @@ abstract class View3D : BaseView() {
 	var id: String? = null
 	var name: String? = null
 	val transform = Transform3D()
+    var speed: Float = 1f
+
+    val globalSpeed: Float get() = parent?.globalSpeed?.times(speed) ?: speed
 
     var blendMode: BlendMode = BlendMode.NONE
 
@@ -117,8 +120,8 @@ abstract class View3D : BaseView() {
             //_stage = _parent?._stage
             //setInvalidateNotifier()
             onParentChanged()
-            changeEventListenerParent(value)
             invalidateRender()
+            changeEventListenerParent(value)
         }
 
     protected open fun onParentChanged() {
