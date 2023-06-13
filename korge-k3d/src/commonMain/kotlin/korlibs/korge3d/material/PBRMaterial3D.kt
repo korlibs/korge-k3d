@@ -13,6 +13,7 @@ data class PBRMaterial3D(
     val shininess: Float = .5f,
     val indexOfRefraction: Float = 1f,
     val occlusionTexture: Bitmap? = null,
+    val doubleSided: Boolean = false,
 ) {
     val hasTexture: Boolean = emission.hasTexture || ambient.hasTexture || diffuse.hasTexture || specular.hasTexture
 

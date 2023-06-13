@@ -70,6 +70,7 @@ data class GLTF2(
                         baseColorFactor.getOrElse(3) { 1f }
                     )),
                 occlusionTexture = gmat.occlusionTexture?.let { it.getTexture(gltf) },
+                doubleSided = gmat.doubleSided,
             )
         }
     }
@@ -136,6 +137,7 @@ data class GLTF2(
     @Serializable
     data class Node(
         val name: String? = null,
+        /** skin/skeleton to apply to this mesh */
         val skin: Int = -1,
         val mesh: Int = -1,
         val children: IntArray? = null,
@@ -196,14 +198,21 @@ data class GLTF2(
     @Serializable
     data class Skin(
         val name: String? = null,
+        /** The index of the accessor containing the floating-point 4x4 inverse-bind matrices. */
         val inverseBindMatrices: Int = -1,
+        /** Indices of skeleton nodes, used as joints in this skin. */
         val joints: IntArray? = null,
+        /** he index of the node used as a skeleton root. */
         val skeleton: Int = -1,
-    ) : Base()
+    ) : Base() {
+        fun skeletonNode(gltf: GLTF2): Node = gltf.nodes[skeleton]
+    }
     @Serializable
     data class Animation(
         val name: String? = null,
+        /** An array of animation channels. An animation channel combines an animation sampler with a target property being animated. Different channels of the same animation **MUST NOT** have the same targets. */
         val channels: List<Channel> = emptyList(),
+        /** An array of animation samplers. An animation sampler combines timestamps with a sequence of output values and defines an interpolation algorithm. */
         val samplers: List<Sampler> = emptyList(),
     ) : Base() {
         @Serializable
@@ -352,13 +361,27 @@ data class GLTF2(
     @Serializable
     data class Accessor(
         val name: String? = null,
+        /** The index of the buffer view. When undefined, the accessor **MUST** be initialized with zeros; `sparse` property or extensions **MAY** override zeros with actual values. */
         val bufferView: Int = 0,
+        /** The offset relative to the start of the buffer view in bytes. */
         val byteOffset: Int = 0,
+        /**
+         * The datatype of the accessor's components.
+         * UNSIGNED_INT type **MUST NOT** be used for any accessor that is not referenced by `mesh.primitive.indices`.
+         * `type` parameter of `vertexAttribPointer()`.  The corresponding typed arrays are `Int8Array`, `Uint8Array`, `Int16Array`, `Uint16Array`, `Uint32Array`, and `Float32Array`. */
         val componentType: Int = 0,
-        val count: Int = 0,
+        /** Specifies whether integer data values are normalized before usage." */
+        val normalized: Boolean = false,
+        /** The number of elements referenced by this accessor, not to be confused with the number of bytes or number of components. */
+        val count: Int = 1,
+        /** Minimum value of each component in this accessor. */
         val min: FloatArray = FloatArray(0),
+        /** Maximum value of each component in this accessor. */
         val max: FloatArray = FloatArray(0),
+        /** Specifies if the accessor's elements are scalars, vectors, or matrices. */
         val type: AccessorType = AccessorType.SCALAR,
+        /** Sparse storage of elements that deviate from their initialization value. */
+        //val sparse: Any?,
     ) : Base() {
         val componentTType: VarKind get() = when (componentType) {
             /* 5120 */ 0x1400 -> VarKind.TBYTE // signed byte --- f = max(c / 127.0, -1.0)   --- c = round(f * 127.0)
@@ -475,7 +498,20 @@ data class GLTF2(
         val name: String? = null,
         val type: String,
         val perspective: Perspective? = null,
+        val orthographic: Orthographic? = null,
     ) : Base() {
+        @Serializable
+        data class Orthographic(
+            val xmag: Float,
+            val ymag: Float,
+            val zfar: Float,
+            val znear: Float,
+        ) : Base() {
+            //fun toCamera(): Camera3D {
+            //    return Camera3D.Orthographic(yfov.radians, znear, zfar)
+            //}
+        }
+
         @Serializable
         data class Perspective(
             val aspectRatio: Float = 1.5f,

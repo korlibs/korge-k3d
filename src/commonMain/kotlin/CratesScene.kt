@@ -29,7 +29,8 @@ class CratesScene : Scene() {
     }
 
     suspend fun SContainer.sceneInit3() {
-        var rotation = 0.degrees
+        var rotationY = 0.degrees
+        var rotationX = 0.degrees
         scene3D {
             camera = Camera3D.Perspective()
             axisLines(length = 4f)
@@ -43,20 +44,21 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
             //val view = gltf2View(resourcesVfs["gltf/SpecGlossVsMetalRough.glb"].readGLTF2()).scale(25f)
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
-            //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
-            //val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
             //val view = gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(.5f)
+            //val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
             //val view = gltf2View(resourcesVfs["gltf/cube/Cube.gltf"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(300f)
             val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(3f)
+            //val view = gltf2View(resourcesVfs["gltf/SimpleSkin/SimpleSkin.gltf"].readGLTF2()).scale(1f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(3f)
 
             camera = view.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
 
             view.rotation(quat)
-            fun rotateY(delta: Angle) {
-                view.rotation(quat * Quaternion.fromAxisAngle(Vector3.UP, rotation))
-                rotation += delta
+            fun rotate(deltaY: Angle, deltaX: Angle) {
+                view.rotation(quat * Quaternion.fromAxisAngle(Vector3.UP, rotationY) * Quaternion.fromAxisAngle(Vector3.RIGHT, rotationX))
+                rotationY += deltaY
+                rotationX += deltaX
             }
 
             val slider = uiSlider(1f, min = -1f, max = 2f, step = .0125f)
@@ -65,14 +67,14 @@ class CratesScene : Scene() {
                 .scale(1)
 
             keys {
-                downFrame(Key.LEFT, 4.milliseconds) { rotateY(+1.degrees) }
-                downFrame(Key.RIGHT, 4.milliseconds) { rotateY(-1.degrees) }
+                downFrame(Key.LEFT, 4.milliseconds) { rotate(+1.degrees, 0.degrees) }
+                downFrame(Key.RIGHT, 4.milliseconds) { rotate(-1.degrees, 0.degrees) }
                 downFrame(Key.UP, 4.milliseconds) { slider.value += .01 }
                 downFrame(Key.DOWN, 4.milliseconds) { slider.value -= .01 }
             }
 
             solidRect(2000, 1000, Colors.TRANSPARENT).xy(0, 100).onMouseDrag {
-                rotateY(-it.deltaDx.degrees)
+                rotate(-it.deltaDx.degrees, -it.deltaDy.degrees)
             }
 
             addUpdater {

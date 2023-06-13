@@ -14,13 +14,23 @@ fun Container3D.gltf2View(gltf: GLTF2) = GLTF2View(gltf).addTo(this)
 
 class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Container3D(), GLTF2Holder {
     val nodeToViews = LinkedHashMap<GLTF2.Node, GLTF2ViewNode>()
+    val skinsToView =  LinkedHashMap<GLTF2.Skin, GLTF2ViewNode>()
+
+    fun addNode(node: GLTF2.Node, skin: GLTF2.Skin? = null): GLTF2ViewNode {
+        val view = GLTF2ViewNode(gltf, node, this, skin)
+        addChild(view)
+        return view
+    }
 
     init {
         for (scene in gltf.scenes) {
             for (node in scene.childrenNodes) {
-                val view = GLTF2ViewNode(gltf, node, this)
-                addChild(view)
+                addNode(node)
             }
+        }
+
+        for (skin in gltf.skins) {
+            skinsToView[skin] = addNode(skin.skeletonNode(gltf), skin = skin)
         }
 
         if (autoAnimate) {
@@ -75,12 +85,12 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
     }
 }
 
-class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node, val view: GLTF2View) : Container3D(), GLTF2Holder {
+class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node, val view: GLTF2View, val skin: GLTF2.Skin? = null) : Container3D(), GLTF2Holder {
     val meshView = if (node.mesh >= 0) GLTF2ViewMesh(gltf, gltf.meshes[node.mesh]).addTo(this) else null
     init {
         transform.setMatrix(node.mmatrix.mutable)
         for (child in node.childrenNodes) {
-            addChild(GLTF2ViewNode(gltf, child, view))
+            addChild(GLTF2ViewNode(gltf, child, view, skin = skin))
         }
         view.nodeToViews[node] = this
     }
@@ -201,6 +211,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
                 indexType = indexType,
                 indices = indexData,
                 vertexData = vertexData,
+                cullFace = if (material.doubleSided) AGCullFace.NONE else AGCullFace.BACK,
                 program = program,
                 uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
                 textureUnits = textureUnits,

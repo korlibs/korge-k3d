@@ -3,6 +3,7 @@ package korlibs.korge3d.gltf
 import korlibs.io.async.*
 import korlibs.io.file.std.*
 import korlibs.korge3d.format.gltf2.*
+import korlibs.math.geom.*
 import korlibs.memory.*
 import kotlin.test.*
 
@@ -10,7 +11,8 @@ class GLTF2Test {
     @Test
     fun test() = suspendTest {
         val gltf2 = resourcesVfs["Box.glb"].readGLTF2()
-        GLTF2ViewPrimitive(gltf2, gltf2.meshes.first().primitives.first())
+        val mesh = gltf2.meshes.first()
+        GLTF2ViewPrimitive(gltf2, mesh.primitives.first(), mesh)
     }
 
     @Test
@@ -52,37 +54,16 @@ class GLTF2Test {
         val sampler = gltf.animations[0].samplers[0]
 
         val time = 0.4f
-        val view = GLTF2ViewPrimitive(gltf, gltf.nodes.first().mesh(gltf).primitives.first())
-        view.weights = sampler.doLookup(gltf, time, view.nweights).toVector4()
-        println(view.weights)
+        val mesh = gltf.nodes.first().mesh(gltf)
+        val view = GLTF2ViewPrimitive(gltf, mesh.primitives.first(), mesh)
+        view.weights = sampler.doLookup(gltf, time).toVector4()
+        assertEquals(Vector4(0.15624999f, 0f, 0f, 0f), view.weights)
+    }
 
-
-        /*
-        //println(sampler.times(gltf).size)
-        println(sampler.lookup(gltf, -1f))
-        println(sampler.lookup(gltf, 0f))
-        println(sampler.lookup(gltf, 0.04f))
-        println(sampler.lookup(gltf, 0.07f))
-        println(sampler.lookup(gltf, 0.2f))
-        println(sampler.lookup(gltf, 4f))
-        println(sampler.lookup(gltf, 100f))
-
-
-        val value = GLTF2Vector(2, 1)
-        val times = sampler.times(gltf)
-        println("times=" + times.toFloatArray().toList())
-        val weights = sampler.outputBuffer(gltf, 2)
-
-        val lookup = sampler.lookup(gltf, 0.04f)
-        value.setInterpolated(0, weights, lookup.lowIndex, weights, lookup.highIndex, lookup.ratio)
-        for (n in 0 until 36) {
-            val time = 0.125f * n
-            println("time=$time, value=" + sampler.doLookup(gltf, time, dims = 2))
-        }
-
-        //println(buffer.toFloatArray().toList())
-        println(gltf.animations.joinToString("\n"))
-
-         */
+    @Test
+    fun testSimpleSkinning() = suspendTest {
+        val gltf = resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()
+        val view = GLTF2View(gltf)
+        //gltf.skins[0].
     }
 }
