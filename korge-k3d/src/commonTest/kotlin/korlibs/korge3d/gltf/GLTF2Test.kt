@@ -64,6 +64,8 @@ class GLTF2Test {
     fun testSimpleSkinning() = suspendTest {
         val gltf = resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()
         val view = GLTF2View(gltf)
-        //gltf.skins[0].
+        val matrices = gltf.skins[0].inverseBindMatricesAccessor(gltf)
+        val accessor = GLTF2AccessorVectorMAT4(GLTF2AccessorVector(matrices, matrices.bufferSlice(gltf)))
+        println(accessor)
     }
 }

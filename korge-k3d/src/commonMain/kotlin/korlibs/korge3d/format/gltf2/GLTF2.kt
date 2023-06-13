@@ -125,26 +125,42 @@ data class GLTF2(
 
     @Serializable
     data class Asset(
+        /** The glTF version in the form of `<major>.<minor>` that this asset targets. */
         val version: String = "2.0",
+        /** Tool that generated this glTF model.  Useful for debugging. */
         val generator: String? = null,
+        /** A copyright message suitable for display to credit the content creator. */
         val copyright: String? = null,
+        /** The minimum glTF version in the form of `<major>.<minor>` that this asset targets. This property **MUST NOT** be greater than the asset version. */
+        val minVersion: String? = null,
     ) : Base()
     @Serializable
     data class Scene(
         val name: String? = null,
+        /** The indices of each root node */
         val nodes: IntArray = intArrayOf(),
     ) : Base()
     @Serializable
     data class Node(
         val name: String? = null,
-        /** skin/skeleton to apply to this mesh */
+        /** The index of the camera referenced by this node. */
+        val camera: Int = -1,
+        /** The index of the skin referenced by this node. When a skin is referenced by a node within a scene, all joints used by the skin **MUST** belong to the same scene. When defined, `mesh` **MUST** also be defined. */
         val skin: Int = -1,
+        /** The index of the mesh in this node. */
         val mesh: Int = -1,
+        /** The indices of this node's children. */
         val children: IntArray? = null,
+        /** The node's non-uniform scale, given as the scaling factors along the x, y, and z axes. */
         val scale: FloatArray? = null,
+        /** The node's translation along the x, y, and z axes. */
         val translation: FloatArray? = null,
+        /** The node's unit quaternion rotation in the order (x, y, z, w), where w is the scalar. */
         val rotation: FloatArray? = null,
+        /** A floating-point 4x4 transformation matrix stored in column-major order. */
         val matrix: FloatArray? = null,
+        /** The weights of the instantiated morph target. The number of array elements **MUST** match the number of morph targets of the referenced mesh. When defined, `mesh` **MUST** also be defined. */
+        val weights: IntArray? = null,
     ) : Base() {
         val mmatrix by lazy {
             var out: Matrix4 = Matrix4.IDENTITY
@@ -159,8 +175,9 @@ data class GLTF2(
     @Serializable
     data class Mesh(
         val name: String? = null,
+        /** An array of primitives, each defining geometry to be rendered. */
         val primitives: List<Primitive> = emptyList(),
-        /** Optional default weights for morphing */
+        /** Array of weights to be applied to the morph targets. The number of array elements **MUST** match the number of morph targets. */
         val weights: FloatArray? = null,
     ) : Base() {
         @Transient
@@ -177,11 +194,15 @@ data class GLTF2(
     }
     @Serializable
     data class Primitive(
+        /** A plain JSON object, where each key corresponds to a mesh attribute semantic and each value is the index of the accessor containing attribute's data. */
         val attributes: Map<PrimitiveAttribute, Int> = emptyMap(),
+        /** The index of the accessor that contains the vertex indices.  When this is undefined, the primitive defines non-indexed geometry.  When defined, the accessor **MUST** have `SCALAR` type and an unsigned integer component type. */
         val indices: Int = -1,
+        /** The index of the material to apply to this primitive when rendering. */
         val material: Int = -1,
+        /** The topology type of primitives to render. */
         val mode: Int = 4,
-        /** Morph targets: one per morphing weight. Typically, 4 as max for standard. */
+        /** An array of morph targets. Morph targets: one per morphing weight. Typically, 4 as max for standard. A plain JSON object specifying attributes displacements in a morph target, where each key corresponds to one of the three supported attribute semantic (`POSITION`, `NORMAL`, or `TANGENT`) and each value is the index of the accessor containing the attribute displacements' data. */
         val targets: List<Map<PrimitiveAttribute, Int>> = emptyList(),
     ) : Base() {
         val drawType: AGDrawType get() = when (mode) {
@@ -205,6 +226,7 @@ data class GLTF2(
         /** he index of the node used as a skeleton root. */
         val skeleton: Int = -1,
     ) : Base() {
+        fun inverseBindMatricesAccessor(gltf: GLTF2): Accessor = gltf.accessors[inverseBindMatrices]
         fun skeletonNode(gltf: GLTF2): Node = gltf.nodes[skeleton]
     }
     @Serializable
@@ -567,6 +589,18 @@ data class GLTF2(
             }
         }
     }
+}
+
+inline class GLTF2AccessorVectorMAT4(val vec: GLTF2AccessorVector) {
+    val size: Int get() = vec.size
+    operator fun get(index: Int): Matrix4 = Matrix4.fromColumns(FloatArray(16) { vec[index, it] })
+    operator fun set(index: Int, value: Matrix4) {
+        val values = value.copyToColumns()
+        for (n in 0 until 16) vec[index, n] = values[n]
+    }
+    fun toList(): List<Matrix4> = (0 until size).map { this[it] }
+
+    override fun toString(): String = "${toList()}"
 }
 
 data class GLTF2AccessorVector(val accessor: GLTF2.Accessor, val buffer: Buffer) {
