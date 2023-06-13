@@ -39,12 +39,7 @@ open class Shaders3D {
     object Bones4UB : UniformBlock(fixedLocation = 2) {
         //val MAX_BONE_MATS = 16
         val MAX_BONE_MATS = 64
-
-        val u_BoneMat0 by mat4()
-        val u_BoneMat1 by mat4()
-        val u_BoneMat2 by mat4()
-        val u_BoneMat3 by mat4()
-        val u_BoneMats = arrayOf(u_BoneMat0, u_BoneMat1, u_BoneMat2, u_BoneMat3)
+        val u_BoneMats by array(MAX_BONE_MATS) { mat4() }
     }
 
     companion object {
@@ -65,8 +60,8 @@ open class Shaders3D {
         val a_norTarget = Array(4) { Attribute("a_Nor$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 1) }
         val a_tanTarget = Array(4) { Attribute("a_Tan$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 2) }
 
-        val a_boneIndex = Array(4) { Attribute("a_BoneIndex$it", VarType.Float4, normalized = false, fixedLocation = 4 + it) }
-		val a_weight = Array(4) { Attribute("a_Weight$it", VarType.Float4, normalized = false, fixedLocation = 8 + it) }
+        val a_joints = Array(4) { Attribute("a_Joint$it", VarType.Float4, normalized = false, fixedLocation = 4 + it) }
+		val a_weights = Array(4) { Attribute("a_Weight$it", VarType.Float4, normalized = false, fixedLocation = 8 + it) }
 
 		val v_col = Varying("v_Col", VarType.Float3)
 
@@ -278,8 +273,8 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 		//SET(out["rgb"], out["rgb"] + clamp(light.specular * pow(max(dot(R, E), 0f.lit), 0.3f.lit * u_Shininess), 0f.lit, 1f.lit)["rgb"])
 	}
 
-	fun Program.Builder.getBoneIndex(index: Int): Operand = int(Shaders3D.a_boneIndex[index / 4][index % 4])
-	fun Program.Builder.getWeight(index: Int): Operand = Shaders3D.a_weight[index / 4][index % 4]
+	fun Program.Builder.getBoneIndex(index: Int): Operand = int(Shaders3D.a_joints[index / 4][index % 4])
+	fun Program.Builder.getWeight(index: Int): Operand = Shaders3D.a_weights[index / 4][index % 4]
 	fun Program.Builder.getBone(index: Int): Operand = Shaders3D.Bones4UB.u_BoneMats[index]
 }
 

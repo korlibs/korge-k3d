@@ -271,8 +271,8 @@ class ColladaParser {
                             add(Shaders3D.a_pos)
                             if (hasNormals) add(Shaders3D.a_nor)
                             if (hasTexture) add(Shaders3D.a_tex)
-                            for (n in 0 until 4) if (maxWeights > n * 4) add(Shaders3D.a_boneIndex[n])
-                            for (n in 0 until 4) if (maxWeights > n * 4) add(Shaders3D.a_weight[n])
+                            for (n in 0 until 4) if (maxWeights > n * 4) add(Shaders3D.a_joints[n])
+                            for (n in 0 until 4) if (maxWeights > n * 4) add(Shaders3D.a_weights[n])
                         }),
                     )),
                     combinedIndexData.toNBuffer(),

@@ -46,7 +46,8 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
 
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
-            val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
+            //val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
+            val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(.5f)
 
             //this@sceneInit3.onEvent(UpdateEvent) { println("updateEvent: $it") }
 

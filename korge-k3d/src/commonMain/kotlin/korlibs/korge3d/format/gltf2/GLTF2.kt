@@ -18,6 +18,8 @@ import korlibs.math.geom.*
 import korlibs.math.interpolation.*
 import korlibs.memory.*
 import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 
 suspend fun VfsFile.readGLB(options: GLTF2.ReadOptions = GLTF2.ReadOptions.DEFAULT): GLTF2 = GLTF2.readGLB(this, options = options)
@@ -25,16 +27,6 @@ suspend fun VfsFile.readGLTF2(options: GLTF2.ReadOptions = GLTF2.ReadOptions.DEF
     if (this.extensionLC == "glb") return readGLB(options)
     return GLTF2.readGLTF(this.readString(), null, this, options)
 }
-
-interface GLTF2Holder {
-    val gltf: GLTF2
-    val GLTF2.Node.childrenNodes: List<GLTF2.Node> get() = this.childrenNodes(gltf) ?: emptyList()
-    val GLTF2.Scene.childrenNodes: List<GLTF2.Node> get() = this.childrenNodes(gltf) ?: emptyList()
-}
-
-fun GLTF2.Node.childrenNodes(gltf: GLTF2): List<GLTF2.Node>? = this.children?.map { gltf.nodes[it] }
-fun GLTF2.Scene.childrenNodes(gltf: GLTF2): List<GLTF2.Node>? = this.nodes?.map { gltf.nodes[it] }
-fun GLTF2.Node.mesh(gltf: GLTF2): GLTF2.Mesh = gltf.meshes[this.mesh]
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc
 // https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0
@@ -177,6 +169,8 @@ data class GLTF2(
         val isNormal: Boolean get() = str == "NORMAL"
         val isTangent: Boolean get() = str == "TANGENT"
         val isTexcoord0: Boolean get() = str == "TEXCOORD_0"
+        val isJoints0: Boolean get() = str == "JOINTS_0"
+        val isWeights0: Boolean get() = str == "WEIGHTS_0"
     }
     @Serializable
     data class Primitive(
@@ -219,8 +213,32 @@ data class GLTF2(
             @Serializable
             data class Target(
                 val node: Int = -1,
-                val path: String? = null,
+                val path: TargetPath? = null,
             ) : Base()
+
+            @Serializable(with = TargetPathSerializer::class)
+            enum class TargetPath(val key: String) {
+                TRANSLATION("translation"),
+                ROTATION("rotation"),
+                SCALE("scale"),
+                WEIGHTS("weights"),
+                UNKNOWN("unknown"),
+                ;
+                companion object {
+                    val BY_KEY = values().associateBy { it.key }
+                }
+            }
+
+            @Serializer(forClass = TargetPath::class)
+            object TargetPathSerializer : KSerializer<TargetPath> {
+                override val descriptor: SerialDescriptor
+                    get() = PrimitiveSerialDescriptor("TargetPath", PrimitiveKind.STRING)
+                override fun serialize(encoder: Encoder, value: TargetPath) {
+                    encoder.encodeString(value.key)
+                }
+                override fun deserialize(decoder: Decoder): TargetPath =
+                    TargetPath.BY_KEY[decoder.decodeString()] ?: TargetPath.UNKNOWN
+            }
         }
         @Serializable
         data class Sampler(
@@ -295,6 +313,12 @@ data class GLTF2(
             gltf.buffers[buffer].buffer.sliceWithSize(byteOffset, byteLength)
     }
     @Serializable
+    enum class AccessorType(
+        val ncomponent: Int
+    ) {
+        SCALAR(1), VEC2(2), VEC3(3), VEC4(4), MAT2(4), MAT3(9), MAT4(16);
+    }
+    @Serializable
     data class Accessor(
         val name: String? = null,
         val bufferView: Int = 0,
@@ -303,28 +327,52 @@ data class GLTF2(
         val count: Int = 0,
         val min: FloatArray = FloatArray(0),
         val max: FloatArray = FloatArray(0),
-        val type: String = "SCALAR",
+        val type: AccessorType = AccessorType.SCALAR,
     ) : Base() {
-        val componentTType get() = when (componentType) {
-            0x1400 -> VarKind.TBYTE
-            0x1401 -> VarKind.TUNSIGNED_BYTE
-            0x1402 -> VarKind.TSHORT
-            0x1403 -> VarKind.TUNSIGNED_SHORT
-            0x1404 -> VarKind.TINT
-            0x1405 -> VarKind.TINT // TODO: TUNSIGNED_INT
-            0x1406 -> VarKind.TFLOAT
+        val componentTType: VarKind get() = when (componentType) {
+            /* 5120 */ 0x1400 -> VarKind.TBYTE // signed byte --- f = max(c / 127.0, -1.0)   --- c = round(f * 127.0)
+            /* 5121 */ 0x1401 -> VarKind.TUNSIGNED_BYTE // unsigned byte --- f = c / 255.0  --- c = round(f * 255.0)
+            /* 5122 */ 0x1402 -> VarKind.TSHORT // signed short --- f = max(c / 32767.0, -1.0) --- c = round(f * 32767.0)
+            /* 5123 */ 0x1403 -> VarKind.TUNSIGNED_SHORT // unsigned short --- f = c / 65535.0 --- c = round(f * 65535.0)
+            /* 5124 */ 0x1404 -> VarKind.TINT
+            /* 5125 */ 0x1405 -> VarKind.TINT // TODO: TUNSIGNED_INT
+            /* 5126 */ 0x1406 -> VarKind.TFLOAT
             else -> TODO("Unsupported componentType=$componentType")
         }
-        val ncomponent get() = when (type) {
-            "SCALAR" -> 1
-            "VEC2" -> 2
-            "VEC3" -> 3
-            "VEC4" -> 4
-            "MAT2" -> 4
-            "MAT3" -> 9
-            "MAT4" -> 16
-            else -> TODO("Unsupported type=$type")
+        val ncomponent get() = type.ncomponent
+        val requireNormalization: Boolean get() = when (componentTType) {
+            VarKind.TBOOL -> false
+            VarKind.TBYTE -> true
+            VarKind.TUNSIGNED_BYTE -> true
+            VarKind.TSHORT -> true
+            VarKind.TUNSIGNED_SHORT -> true
+            VarKind.TINT -> false
+            VarKind.TFLOAT -> false
         }
+
+        fun VarType.Companion.BOOL(count: Int) =
+            when (count) { 0 -> VarType.TVOID; 1 -> VarType.Bool1; 2 -> VarType.Bool2; 3 -> VarType.Bool3; 4 -> VarType.Bool4; else -> invalidOp; }
+        fun VarType.Companion.MAT(count: Int) =
+            when (count) { 0 -> VarType.TVOID; 1 -> VarType.Float1; 2 -> VarType.Mat2; 3 -> VarType.Mat3; 4 -> VarType.Mat4; else -> invalidOp; }
+
+        fun VarType.Companion.gen(kind: VarKind, ncomponent: Int, type: AccessorType): VarType {
+            return when (type) {
+                AccessorType.MAT2 -> VarType.MAT(2)
+                AccessorType.MAT3 -> VarType.MAT(3)
+                AccessorType.MAT4 -> VarType.MAT(4)
+                else -> when (kind) {
+                    VarKind.TBOOL -> VarType.BOOL(ncomponent)
+                    VarKind.TBYTE -> VarType.BYTE(ncomponent)
+                    VarKind.TUNSIGNED_BYTE -> VarType.UBYTE(ncomponent)
+                    VarKind.TSHORT -> VarType.SHORT(ncomponent)
+                    VarKind.TUNSIGNED_SHORT -> VarType.USHORT(ncomponent)
+                    VarKind.TINT -> VarType.INT(ncomponent)
+                    VarKind.TFLOAT -> VarType.FLOAT(ncomponent)
+                }
+            }
+        }
+
+        val varType: VarType = VarType.gen(componentTType, ncomponent, type)
         fun asIndexType(): AGIndexType = when (componentTType) {
             VarKind.TBOOL, VarKind.TBYTE, VarKind.TUNSIGNED_BYTE -> AGIndexType.UBYTE
             VarKind.TSHORT, VarKind.TUNSIGNED_SHORT -> AGIndexType.USHORT
@@ -488,3 +536,13 @@ data class GLTF2Vector(val dims: Int, val floats: Float32Buffer) {
         }
     }
 }
+
+interface GLTF2Holder {
+    val gltf: GLTF2
+    val GLTF2.Node.childrenNodes: List<GLTF2.Node> get() = this.childrenNodes(gltf) ?: emptyList()
+    val GLTF2.Scene.childrenNodes: List<GLTF2.Node> get() = this.childrenNodes(gltf) ?: emptyList()
+}
+
+fun GLTF2.Node.childrenNodes(gltf: GLTF2): List<GLTF2.Node>? = this.children?.map { gltf.nodes[it] }
+fun GLTF2.Scene.childrenNodes(gltf: GLTF2): List<GLTF2.Node>? = this.nodes?.map { gltf.nodes[it] }
+fun GLTF2.Node.mesh(gltf: GLTF2): GLTF2.Mesh = gltf.meshes[this.mesh]

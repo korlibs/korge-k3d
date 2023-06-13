@@ -47,7 +47,7 @@ class GLTF2View(override var gltf: GLTF2) : Container3D(), GLTF2Holder {
                 val rtime = currentTime % maxTime
 
                 when (target.path) {
-                    "weights" -> {
+                    GLTF2.Animation.Channel.TargetPath.WEIGHTS -> {
                         view.meshView?.primitiveViews?.fastForEach {
                             it.weights = sampler.doLookup(gltf, rtime, it.nweights).toVector4()
                         }
@@ -91,6 +91,8 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             prim.isNormal -> Shaders3D.a_nor
             prim.isTangent -> if (accessor.ncomponent == 3) Shaders3D.a_tan3 else Shaders3D.a_tan
             prim.isTexcoord0 -> Shaders3D.a_tex
+            prim.isJoints0 -> Shaders3D.a_joints[0]
+            prim.isWeights0 -> Shaders3D.a_weights[0]
             else -> TODO("${prim}")
         }
         val expectedComponents = when (att) {
@@ -98,16 +100,20 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             Shaders3D.a_tan3 -> 3
             Shaders3D.a_tan -> 4
             Shaders3D.a_tex -> 2
+            Shaders3D.a_joints[0] -> 4
+            Shaders3D.a_weights[0] -> 4
             else -> TODO("Unsupported $att")
         }
         check(accessor.ncomponent == expectedComponents) { "$prim in $accessor expected to have $expectedComponents components but had ${accessor.ncomponent}" }
 
-        when (att) {
-            Shaders3D.a_pos, Shaders3D.a_nor -> check(accessor.componentTType == VarKind.TFLOAT)
-            Shaders3D.a_tan, Shaders3D.a_tan3 -> check(accessor.componentTType == VarKind.TFLOAT)
-            Shaders3D.a_tex -> check(accessor.componentTType == VarKind.TFLOAT)
-            else -> TODO("Unsupported $att")
-        }
+        //when (att) {
+        //    Shaders3D.a_pos, Shaders3D.a_nor -> check(accessor.componentTType == VarKind.TFLOAT)
+        //    Shaders3D.a_tan, Shaders3D.a_tan3 -> check(accessor.componentTType == VarKind.TFLOAT)
+        //    Shaders3D.a_tex -> check(accessor.componentTType == VarKind.TFLOAT)
+        //    Shaders3D.a_joints[0] -> check(accessor.componentTType == VarKind.TFLOAT)
+        //    Shaders3D.a_weights[0] -> check(accessor.componentTType == VarKind.TFLOAT)
+        //    else -> TODO("Unsupported $att")
+        //}
 
         val ratt = when (att) {
             Shaders3D.a_pos -> if (targetIndex < 0) Shaders3D.a_pos else Shaders3D.a_posTarget[targetIndex]
@@ -116,7 +122,10 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             else -> att
         }
 
-        return AGVertexData(VertexLayout(ratt), buffer = AGBuffer().also { it.upload(buffer) })
+        return AGVertexData(VertexLayout(ratt.copy(
+            type = accessor.varType,
+            normalized = accessor.requireNormalization
+        )), buffer = AGBuffer().also { it.upload(buffer) })
     }
 
     val vertexData: AGVertexArrayObject = AGVertexArrayObject(
