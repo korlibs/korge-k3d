@@ -12,6 +12,7 @@ import korlibs.io.file.std.*
 import korlibs.io.lang.*
 import korlibs.io.stream.*
 import korlibs.korge3d.material.*
+import korlibs.korge3d.util.*
 import korlibs.logger.*
 import korlibs.math.geom.*
 import korlibs.math.interpolation.*
@@ -166,7 +167,10 @@ data class GLTF2(
         val primitives: List<Primitive> = emptyList(),
         /** Optional default weights for morphing */
         val weights: FloatArray? = null,
-    ) : Base()
+    ) : Base() {
+        @Transient
+        val weightsVector: Vector4 = if (weights != null) Vector4.func { weights.getOrElse(it) { 0f } } else Vector4.ZERO
+    }
     @Serializable
     inline class PrimitiveAttribute(val str: String) {
         val isPosition: Boolean get() = str == "POSITION"

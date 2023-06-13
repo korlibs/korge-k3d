@@ -73,13 +73,13 @@ class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node) : Container3
 
 class GLTF2ViewMesh(val gltf: GLTF2, val mesh: GLTF2.Mesh) : Container3D() {
     val primitiveViews = mesh.primitives.map {
-        GLTF2ViewPrimitive(gltf, it).addTo(this)
+        GLTF2ViewPrimitive(gltf, it, mesh).addTo(this)
     }
 }
 
-class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitive) : ViewWithMaterial3D(), GLTF2Holder {
+class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitive, val mesh: GLTF2.Mesh) : ViewWithMaterial3D(), GLTF2Holder {
     val nweights get() = primitive.targets.size
-    var weights = Vector4()
+    var weights = mesh.weightsVector
     val drawType: AGDrawType get() = primitive.drawType
 
     fun genAGVertexData(prim: GLTF2.PrimitiveAttribute, index: Int, targetIndex: Int): AGVertexData {
