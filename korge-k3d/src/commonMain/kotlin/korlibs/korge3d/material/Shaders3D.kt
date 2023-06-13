@@ -51,12 +51,23 @@ open class Shaders3D {
         val u_ProjMat = DefaultShaders.u_ProjMat
         val u_ViewMat = DefaultShaders.u_ViewMat
 
+        // MAX 16 vertex attributes
+
 		val a_pos = Attribute("a_Pos", VarType.Float3, normalized = false, precision = Precision.HIGH, fixedLocation = 0)
-		val a_norm = Attribute("a_Norm", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 1)
-		val a_tex = Attribute("a_TexCoords", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 2)
-        val a_col = Attribute("a_Col", VarType.Float3, normalized = true, Precision.LOW, fixedLocation = 3)
-		val a_boneIndex = Array(4) { Attribute("a_BoneIndex$it", VarType.Float4, normalized = false, fixedLocation = 4 + it) }
+		val a_nor = Attribute("a_Nor", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 1)
+        //val a_Tangent: Attribute = Attribute("a_Tangent", VarType.Float4, normalized = false, precision = Precision.LOW, fixedLocation = 2)
+        val a_tan = Attribute("a_Tan", VarType.Float4, normalized = false, precision = Precision.LOW, fixedLocation = 2)
+        val a_tan3 = Attribute("a_Tan", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 2)
+		val a_tex = Attribute("a_TexCoords", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 3)
+        val a_col = Attribute("a_Col", VarType.Float3, normalized = true, Precision.LOW, fixedLocation = 4)
+
+        val a_posTarget = Array(4) { Attribute("a_Pos$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 0) }
+        val a_norTarget = Array(4) { Attribute("a_Nor$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 1) }
+        val a_tanTarget = Array(4) { Attribute("a_Tan$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 2) }
+
+        val a_boneIndex = Array(4) { Attribute("a_BoneIndex$it", VarType.Float4, normalized = false, fixedLocation = 4 + it) }
 		val a_weight = Array(4) { Attribute("a_Weight$it", VarType.Float4, normalized = false, fixedLocation = 8 + it) }
+
 		val v_col = Varying("v_Col", VarType.Float3)
 
 		val v_Pos = Varying("v_Pos", VarType.Float3, precision = Precision.HIGH)
@@ -115,6 +126,10 @@ open class Shaders3D {
         //val u_texUnit by int("u_${kind}_texUnit")
     }
 
+    object WeightsUB : UniformBlock(fixedLocation = 32) {
+        val u_Weights by vec4()
+    }
+
 	//class MaterialLightUniform(val kind: String) {
 	//	//val mat = Material3D
 	//	val u_color = Uniform("u_${kind}_color", VarType.Float4)
@@ -137,6 +152,14 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 	abstract val meshMaterial: PBRMaterial3D?
 	abstract val hasTexture: Boolean
 
+    fun Program.Builder.weighted(attr: Attribute, targets: Array<Attribute>, nweights: Int): Operand {
+        var out: Operand = attr
+        for (n in 0 until nweights) {
+            out += (targets[n] * Shaders3D.WeightsUB.u_Weights[n])
+        }
+        return out
+    }
+
 	override fun Program.Builder.vertex() = Shaders3D.run {
 		val modelViewMat = createTemp(VarType.Mat4)
 		val normalMat = createTemp(VarType.Mat4)
@@ -149,8 +172,8 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 
 		//if (nweights == 0) {
 			//SET(boneMatrix, mat4Identity())
-			SET(localPos, vec4(a_pos, 1f.lit))
-			SET(localNorm, vec4(a_norm, 0f.lit))
+			SET(localPos, vec4(weighted(a_pos, a_posTarget, nweights), 1f.lit))
+			SET(localNorm, vec4(weighted(a_nor, a_norTarget, nweights), 0f.lit))
 		//} else {
 		//	SET(localPos, vec4(0f.lit))
 		//	SET(localNorm, vec4(0f.lit))

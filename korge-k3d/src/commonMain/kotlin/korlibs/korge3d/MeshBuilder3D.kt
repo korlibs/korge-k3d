@@ -12,7 +12,6 @@ import korlibs.image.color.RGBA
 import korlibs.korge3d.material.*
 import korlibs.korge3d.util.*
 import korlibs.math.geom.*
-import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -22,7 +21,7 @@ class MeshBuilder3D(
 ) {
     val layout = VertexLayout(
         Shaders3D.a_pos,
-        Shaders3D.a_norm,
+        Shaders3D.a_nor,
         Shaders3D.a_tex
     )
 

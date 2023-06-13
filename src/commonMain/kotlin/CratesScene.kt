@@ -1,4 +1,3 @@
-import korlibs.datastructure.*
 import korlibs.event.*
 import korlibs.image.bitmap.*
 import korlibs.image.color.*
@@ -14,7 +13,6 @@ import korlibs.korge3d.*
 import korlibs.korge3d.format.gltf2.*
 import korlibs.korge3d.material.*
 import korlibs.korge3d.shape.*
-import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 import korlibs.time.*
 
@@ -42,12 +40,16 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
-            val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f).rotation()
+            //val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f).rotation()
             //val view = gltf2View(resourcesVfs["gltf/SpecGlossVsMetalRough.glb"].readGLTF2()).scale(25f)
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
 
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
-            //val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
+            val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
+
+            addUpdater {
+                view.updateAnimationDelta(it)
+            }
             //val view = gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(.5f)
             //val view = gltf2View(resourcesVfs["gltf/cube/Cube.gltf"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(1f)

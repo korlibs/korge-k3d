@@ -14,6 +14,7 @@ import korlibs.io.stream.*
 import korlibs.korge3d.material.*
 import korlibs.logger.*
 import korlibs.math.geom.*
+import korlibs.math.interpolation.*
 import korlibs.memory.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
@@ -32,9 +33,11 @@ interface GLTF2Holder {
 
 fun GLTF2.Node.childrenNodes(gltf: GLTF2): List<GLTF2.Node>? = this.children?.map { gltf.nodes[it] }
 fun GLTF2.Scene.childrenNodes(gltf: GLTF2): List<GLTF2.Node>? = this.nodes?.map { gltf.nodes[it] }
+fun GLTF2.Node.mesh(gltf: GLTF2): GLTF2.Mesh = gltf.meshes[this.mesh]
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc
 // https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0
+// https://github.com/syoyo/tinygltf
 @Serializable
 data class GLTF2(
     val asset: Asset = Asset(),
@@ -117,9 +120,10 @@ data class GLTF2(
     open class Base : Extra by Extra.Mixin()
 
     fun resolveUri(file: VfsFile?, uri: String): VfsFile? {
-        val base64Prefix = "data:application/gltf-buffer;base64,"
-        if (uri.startsWith(base64Prefix)) {
-            return uri.removePrefix(base64Prefix).fromBase64().asMemoryVfsFile("buffer.bin")
+        if (uri.startsWith("data:")) {
+            val dataPart = uri.substringBefore(',', "")
+            val content = uri.substringAfter(',')
+            return content.fromBase64().asMemoryVfsFile("buffer.bin")
         }
         return file?.parent?.get(uri)
     }
@@ -160,6 +164,7 @@ data class GLTF2(
     data class Mesh(
         val name: String? = null,
         val primitives: List<Primitive> = emptyList(),
+        /** Optional default weights for morphing */
         val weights: FloatArray? = null,
     ) : Base()
     @Serializable
@@ -175,7 +180,8 @@ data class GLTF2(
         val indices: Int = -1,
         val material: Int = -1,
         val mode: Int = 4,
-        val targets: List<Map<String, Int>> = emptyList(),
+        /** Morph targets: one per morphing weight. Typically, 4 as max for standard. */
+        val targets: List<Map<PrimitiveAttribute, Int>> = emptyList(),
     ) : Base() {
         val drawType: AGDrawType get() = when (mode) {
             0 -> AGDrawType.POINTS
@@ -214,10 +220,51 @@ data class GLTF2(
         }
         @Serializable
         data class Sampler(
+            /** bufferView index with timestamps */
             val input: Int = -1,
             val interpolation: String = "LINEAR",
             val output: Int = -1,
-        ) : Base()
+        ) : Base() {
+            fun maxTime(gltf: GLTF2): Float {
+                val times = times(gltf)
+                return times[times.size - 1]
+            }
+            fun times(gltf: GLTF2): Float32Buffer = gltf.bufferViews[input].slice(gltf).f32
+            fun outputBuffer(gltf: GLTF2, dims: Int): GLTF2Vector = GLTF2Vector(dims, gltf.bufferViews[output].slice(gltf).f32)
+
+            data class Lookup(
+                var requestedTime: Float = 0f,
+                var lowIndex: Int = 0, var highIndex: Int = 0,
+                var lowTime: Float = 0f, var highTime: Float = 0f,
+                var interpolation: String = "LINEAR",
+            ) {
+                val ratio: Float get() = requestedTime.convertRange(lowTime, highTime, 0f, 1f)
+                val ratioClamped: Float get() = ratio.clamp01()
+            }
+            fun lookup(gltf: GLTF2, time: Float, out: Lookup = Lookup()): Lookup {
+                val times = times(gltf)
+                val lowIndex = genericBinarySearchLeft(0, times.size) { times[it].compareTo(time) }
+                val highIndex = if (lowIndex >= times.size - 1) lowIndex else lowIndex + 1
+                out.requestedTime = time
+                out.lowIndex = lowIndex
+                out.highIndex = highIndex
+                out.lowTime = times[lowIndex]
+                out.highTime = times[highIndex]
+                out.interpolation = interpolation
+                return out
+            }
+            fun doLookup(gltf: GLTF2, time: Float, dims: Int): GLTF2Vector {
+                val vec = GLTF2Vector(dims, 1)
+                doLookup(gltf, time, vec)
+                return vec
+            }
+            fun doLookup(gltf: GLTF2, time: Float, out: GLTF2Vector, outIndex: Int = 0) {
+                val lookup = lookup(gltf, time)
+                val output = outputBuffer(gltf, out.dims)
+                //println("lookup.ratioClamped=${lookup.ratioClamped}, lookup.lowIndex=${lookup.lowIndex}, lookup.highIndex=${lookup.highIndex}")
+                out.setInterpolated(outIndex, output, lookup.lowIndex, output, lookup.highIndex, lookup.ratioClamped)
+            }
+        }
     }
     @Serializable
     data class Buffer(
@@ -390,6 +437,50 @@ data class GLTF2(
                 println("ERROR parsing: $jsonString")
                 throw e
             }
+        }
+    }
+}
+
+data class GLTF2Vector(val dims: Int, val floats: Float32Buffer) {
+    constructor(dims: Int, size: Int = 1) : this(dims, Float32Buffer(size * dims))
+    fun checkDims(dims: Int) {
+        assert(this.dims == dims) { "Expected ${this.dims} dimensions, but found $dims" }
+    }
+    fun toVector4(): Vector4 {
+        return Vector4(
+            if (dims >= 1) this[0, 0] else 0f,
+            if (dims >= 2) this[0, 1] else 0f,
+            if (dims >= 3) this[0, 2] else 0f,
+            if (dims >= 4) this[0, 3] else 0f,
+        )
+    }
+
+    val size: Int get() = floats.size / dims
+    operator fun get(n: Int, dim: Int): Float = floats[n * dims + dim]
+    operator fun set(n: Int, dim: Int, value: Float) { floats[n * dims + dim] = value }
+
+    fun setInterpolated(index: Int, a: GLTF2Vector, aIndex: Int, b: GLTF2Vector, bIndex: Int, ratio: Float) {
+        a.checkDims(dims)
+        b.checkDims(dims)
+        for (dim in 0 until dims) {
+            //println("a[aIndex, dim], b[bIndex, dim]=${a[aIndex, dim]} : ${b[bIndex, dim]}")
+            this[index, dim] = ratio.toRatio().interpolate(a[aIndex, dim], b[bIndex, dim])
+        }
+    }
+
+    override fun toString(): String {
+        return buildString {
+            append("[")
+            for (n in 0 until size) {
+                if (n != 0) append(", ")
+                append("[")
+                for (dim in 0 until dims) {
+                    if (dim != 0) append(", ")
+                    append(this@GLTF2Vector[n, dim])
+                }
+                append("]")
+            }
+            append("]")
         }
     }
 }
