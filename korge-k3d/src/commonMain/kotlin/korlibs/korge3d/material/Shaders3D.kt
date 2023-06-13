@@ -5,17 +5,16 @@ import korlibs.graphics.shader.*
 import korlibs.graphics.shader.gl.*
 
 open class Shaders3D {
-
 	//@ThreadLocal
 	private val programCache = LinkedHashMap<String, Program>()
 
-	var printShaders = false
-    //var printShaders = true
+	//var printShaders = false
+    var printShaders = true
 
 	@Suppress("RemoveCurlyBracesFromTemplate")
-	fun getProgram3D(nlights: Int, nweights: Int, meshMaterial: PBRMaterial3D?, hasTexture: Boolean): Program {
-		return programCache.getOrPut("program_L${nlights}_W${nweights}_M${meshMaterial?.kind}_T${hasTexture}") {
-			StandardShader3D(nlights, nweights, meshMaterial, hasTexture).program.apply {
+	fun getProgram3D(nlights: Int, nmorphWeights: Int, meshMaterial: PBRMaterial3D?, hasTexture: Boolean, njoints: Int): Program {
+		return programCache.getOrPut("program_L${nlights}_W${nmorphWeights}_J${njoints}_M${meshMaterial?.kind}_T${hasTexture}") {
+			StandardShader3D(nlights, nmorphWeights, meshMaterial, hasTexture, njoints).program.apply {
 				if (printShaders) {
 					println(GlslGenerator(ShaderType.VERTEX, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable(isUniformBuffersSupported = true))).generate(this.vertex))
 					println(GlslGenerator(ShaderType.FRAGMENT, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable(isUniformBuffersSupported = true))).generate(this.fragment))
@@ -23,7 +22,6 @@ open class Shaders3D {
 			}
 		}
 	}
-
 
     object K3DPropsUB : UniformBlock(fixedLocation = 1) {
         val u_Shininess by float()
@@ -39,6 +37,7 @@ open class Shaders3D {
     object Bones4UB : UniformBlock(fixedLocation = 2) {
         //val MAX_BONE_MATS = 16
         val MAX_BONE_MATS = 64
+        //val u_JointCount by int()
         val u_BoneMats by array(MAX_BONE_MATS) { mat4() }
     }
 
@@ -69,30 +68,31 @@ open class Shaders3D {
 		val v_Norm = Varying("v_Norm", VarType.Float3, precision = Precision.HIGH)
 		val v_TexCoords = Varying("v_TexCoords", VarType.Float2, precision = Precision.MEDIUM)
 
-		val v_Temp1 = Varying("v_Temp1", VarType.Float4)
+		val t_Pos = Temp(0, VarType.Float4)
+        val t_Nor = Temp(1, VarType.Float4)
+        val t_boneTransform = Temp(2, VarType.Mat4)
 
-		val PROGRAM_COLOR_3D = Program(
-			vertex = VertexShader {
-				SET(v_col, a_col)
-				SET(out, u_ProjMat * K3DPropsUB.u_ModMat * u_ViewMat * vec4(a_pos, 1f.lit))
-			},
-			fragment = FragmentShader {
-				SET(out, vec4(v_col, 1f.lit))
-				//SET(out, vec4(1f.lit, 1f.lit, 1f.lit, 1f.lit))
-			},
-			name = "programColor3D"
-		)
-
-        val PROGRAM_DEBUG_COLOR_3D = Program(
-            vertex = VertexShader {
-                SET(out, u_ProjMat * K3DPropsUB.u_ModMat * u_ViewMat * vec4(a_pos, 1f.lit))
-            },
-            fragment = FragmentShader {
-                SET(out, vec4(1f.lit, 0f.lit, 1f.lit, 1f.lit))
-                //SET(out, vec4(1f.lit, 1f.lit, 1f.lit, 1f.lit))
-            },
-            name = "programColor3D"
-        )
+		//val PROGRAM_COLOR_3D = Program(
+		//	vertex = VertexShader {
+		//		SET(v_col, a_col)
+		//		SET(out, u_ProjMat * K3DPropsUB.u_ModMat * u_ViewMat * vec4(a_pos, 1f.lit))
+		//	},
+		//	fragment = FragmentShader {
+		//		SET(out, vec4(v_col, 1f.lit))
+		//		//SET(out, vec4(1f.lit, 1f.lit, 1f.lit, 1f.lit))
+		//	},
+		//	name = "programColor3D"
+		//)
+        //val PROGRAM_DEBUG_COLOR_3D = Program(
+        //    vertex = VertexShader {
+        //        SET(out, u_ProjMat * K3DPropsUB.u_ModMat * u_ViewMat * vec4(a_pos, 1f.lit))
+        //    },
+        //    fragment = FragmentShader {
+        //        SET(out, vec4(1f.lit, 0f.lit, 1f.lit, 1f.lit))
+        //        //SET(out, vec4(1f.lit, 1f.lit, 1f.lit, 1f.lit))
+        //    },
+        //    name = "programColor3D"
+        //)
 
 		val lights = (0 until 4).map { LightUB(it, 6 + it) }
 
@@ -132,20 +132,13 @@ open class Shaders3D {
 	//}
 }
 
-
 data class StandardShader3D(
-    override val nlights: Int,
-    override val nweights: Int,
-    override val meshMaterial: PBRMaterial3D?,
-    override val hasTexture: Boolean
-) : AbstractStandardShader3D()
-
-
-abstract class AbstractStandardShader3D() : BaseShader3D() {
-	abstract val nlights: Int
-	abstract val nweights: Int
-	abstract val meshMaterial: PBRMaterial3D?
-	abstract val hasTexture: Boolean
+    val nlights: Int,
+    val nweights: Int,
+    val meshMaterial: PBRMaterial3D?,
+    val hasTexture: Boolean,
+    val njoints: Int,
+) : BaseShader3D() {
 
     fun Program.Builder.weighted(attr: Attribute, targets: Array<Attribute>, nweights: Int): Operand {
         var out: Operand = attr
@@ -153,6 +146,22 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
             out += (targets[n] * Shaders3D.WeightsUB.u_Weights[n])
         }
         return out
+    }
+
+    fun Program.Builder.constructBoneTransform(njoints: Int): Operand {
+        var out: Operand? = null
+        val swizzles = listOf("x", "y", "z", "w")
+        for (n in 0 until njoints) {
+            val weightIndex = n / 4
+            val weightComponent = n % 4
+            val weight = Shaders3D.a_weights[weightIndex][swizzles[weightComponent]]
+            val joint = int(Shaders3D.a_joints[weightIndex][swizzles[weightComponent]])
+            val boneMatrix = Shaders3D.Bones4UB.u_BoneMats[joint]
+
+            val chunk = (weight * boneMatrix)
+            out = if (out == null) chunk else out + chunk
+        }
+        return out!!
     }
 
 	override fun Program.Builder.vertex() = Shaders3D.run {
@@ -185,8 +194,18 @@ abstract class AbstractStandardShader3D() : BaseShader3D() {
 
 		SET(modelViewMat, u_ViewMat * Shaders3D.K3DPropsUB.u_ModMat)
 		SET(normalMat, Shaders3D.K3DPropsUB.u_NormMat)
-		SET(v_Pos, vec3(modelViewMat * (vec4(localPos["xyz"], 1f.lit))))
-		SET(v_Norm, vec3(normalMat * normalize(vec4(localNorm["xyz"], 1f.lit))))
+        SET(t_Pos, (vec4(localPos["xyz"], 1f.lit)))
+        SET(t_Nor, normalize(vec4(localNorm["xyz"], 0f.lit)))
+        //SET(t_boneTransform, constructBoneTransform(njoints))
+
+        if (njoints > 0) {
+            SET(t_boneTransform, constructBoneTransform(njoints))
+            SET(t_Pos, t_boneTransform * t_Pos)
+            SET(t_Nor, t_boneTransform * t_Nor)
+        }
+
+		SET(v_Pos, vec3(modelViewMat * t_Pos))
+		SET(v_Norm, vec3(normalMat * t_Nor))
 		if (hasTexture) SET(v_TexCoords, vec2(a_tex["x"], a_tex["y"]))
 		SET(out, u_ProjMat * vec4(v_Pos, 1f.lit))
 	}

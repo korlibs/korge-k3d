@@ -222,7 +222,7 @@ data class GLTF2(
         /** The index of the accessor containing the floating-point 4x4 inverse-bind matrices. */
         val inverseBindMatrices: Int = -1,
         /** Indices of skeleton nodes, used as joints in this skin. */
-        val joints: IntArray? = null,
+        val joints: IntArray = IntArray(0),
         /** he index of the node used as a skeleton root. */
         val skeleton: Int = -1,
     ) : Base() {
@@ -457,6 +457,7 @@ data class GLTF2(
         }
         fun bufferView(gltf: GLTF2): BufferView = gltf.bufferViews[bufferView]
         fun bufferSlice(gltf: GLTF2): korlibs.memory.Buffer = bufferView(gltf).slice(gltf).slice(byteOffset)
+        fun accessor(gltf: GLTF2): GLTF2AccessorVector = GLTF2AccessorVector(this, bufferSlice(gltf))
     }
     @Serializable
     data class Material(

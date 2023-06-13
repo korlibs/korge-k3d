@@ -30,7 +30,8 @@ open class ViewWithMesh3D(
                     ctx.lights.size.clamp(0, 4),
                     mesh.maxWeights,
                     meshMaterial,
-                    mesh.hasTexture
+                    mesh.hasTexture,
+                    0
                 )
                 putUniforms(ctx)
                 //println("mesh.vertexCount=${mesh.vertexCount}")

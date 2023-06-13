@@ -11,26 +11,50 @@ import korlibs.time.*
 
 fun Container3D.gltf2View(gltf: GLTF2) = GLTF2View(gltf).addTo(this)
 
+class GLTF2ViewSkin(
+    val gltf: GLTF2,
+    val skin: GLTF2.Skin,
+    val view: GLTF2View,
+) {
+    val inverseBindMatrices = GLTF2AccessorVectorMAT4(gltf.accessors[skin.inverseBindMatrices].accessor(gltf))
+
+    fun getJoints(): Array<Matrix4> {
+        return (0 until skin.joints.size).map { n ->
+            val jointId = skin.joints[n]
+            val viewNode = view.nodeToViews[gltf.nodes[jointId]]!!
+            viewNode.transform.matrix.immutable * inverseBindMatrices[jointId]
+        }.toTypedArray()
+    }
+
+    fun putUniforms(ctx: RenderContext3D) {
+        ctx.rctx[Shaders3D.Bones4UB].push {
+            it[u_BoneMats] = getJoints()
+        }
+    }
+}
 
 class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Container3D(), GLTF2Holder {
     val nodeToViews = LinkedHashMap<GLTF2.Node, GLTF2ViewNode>()
-    val skinsToView =  LinkedHashMap<GLTF2.Skin, GLTF2ViewNode>()
+    val skinsToView =  LinkedHashMap<GLTF2.Skin, GLTF2ViewSkin>()
 
-    fun addNode(node: GLTF2.Node, skin: GLTF2.Skin? = null): GLTF2ViewNode {
-        val view = GLTF2ViewNode(gltf, node, this, skin)
+    fun addNode(node: GLTF2.Node): GLTF2ViewNode {
+        val view = GLTF2ViewNode(gltf, node, this)
         addChild(view)
         return view
     }
 
     init {
+        for (skin in gltf.skins) {
+            val vskin = GLTF2ViewSkin(gltf, skin, this)
+            addNode(skin.skeletonNode(gltf))
+            //println("SKIN: $skin")
+            skinsToView[skin] = vskin
+        }
+
         for (scene in gltf.scenes) {
             for (node in scene.childrenNodes) {
                 addNode(node)
             }
-        }
-
-        for (skin in gltf.skins) {
-            skinsToView[skin] = addNode(skin.skeletonNode(gltf), skin = skin)
         }
 
         if (autoAnimate) {
@@ -83,26 +107,31 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
             }
         }
     }
+
+    fun skinForNode(node: GLTF2.Node): GLTF2ViewSkin? {
+        return if (node.skin >= 0) skinsToView[gltf.skins[node.skin]] else null
+    }
 }
 
-class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node, val view: GLTF2View, val skin: GLTF2.Skin? = null) : Container3D(), GLTF2Holder {
-    val meshView = if (node.mesh >= 0) GLTF2ViewMesh(gltf, gltf.meshes[node.mesh]).addTo(this) else null
+class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node, val view: GLTF2View) : Container3D(), GLTF2Holder {
+    val skin: GLTF2ViewSkin? = view.skinForNode(node)
+    val meshView = if (node.mesh >= 0) GLTF2ViewMesh(gltf, gltf.meshes[node.mesh], this).addTo(this) else null
     init {
         transform.setMatrix(node.mmatrix.mutable)
         for (child in node.childrenNodes) {
-            addChild(GLTF2ViewNode(gltf, child, view, skin = skin))
+            addChild(GLTF2ViewNode(gltf, child, view))
         }
         view.nodeToViews[node] = this
     }
 }
 
-class GLTF2ViewMesh(val gltf: GLTF2, val mesh: GLTF2.Mesh) : Container3D() {
+class GLTF2ViewMesh(val gltf: GLTF2, val mesh: GLTF2.Mesh, val viewNode: GLTF2ViewNode) : Container3D() {
     val primitiveViews = mesh.primitives.map {
-        GLTF2ViewPrimitive(gltf, it, mesh).addTo(this)
+        GLTF2ViewPrimitive(gltf, it, mesh, this).addTo(this)
     }
 }
 
-class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitive, val mesh: GLTF2.Mesh) : ViewWithMaterial3D(), GLTF2Holder {
+class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitive, val mesh: GLTF2.Mesh, val viewMesh: GLTF2ViewMesh) : ViewWithMaterial3D(), GLTF2Holder {
     val nweights get() = primitive.targets.size
     var weights = mesh.weightsVector
     val drawType: AGDrawType get() = primitive.drawType
@@ -153,6 +182,8 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
         )), buffer = AGBuffer().also { it.upload(buffer) })
     }
 
+    val njoins = primitive.attributes.count { it.key.isJoints0 } * 4
+
     val vertexData: AGVertexArrayObject = AGVertexArrayObject(
         *primitive.attributes.map { (prim, index) -> genAGVertexData(prim, index, -1) }.toTypedArray(),
         *primitive.targets.flatMapIndexed { targetIndex, map ->
@@ -177,6 +208,11 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
         ctx.rctx[Shaders3D.WeightsUB].push {
             it[u_Weights] = this@GLTF2ViewPrimitive.weights
         }
+        // @TODO: We could probably do this once per mesh/node?
+        //println("viewMesh.viewNode.skin=${viewMesh.viewNode.skin}")
+        viewMesh.viewNode.skin?.let { viewSkin ->
+            viewSkin.putUniforms(ctx)
+        }
     }
 
     override fun render(ctx: RenderContext3D) {
@@ -193,7 +229,8 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             ctx.lights.size.clamp(0, 4),
             nweights,
             material,
-            material.hasTexture
+            material.hasTexture,
+            njoins
             //mesh.hasTexture
         )
         putUniforms(ctx)
