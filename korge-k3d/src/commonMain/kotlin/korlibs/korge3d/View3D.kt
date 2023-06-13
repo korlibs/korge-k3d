@@ -23,7 +23,7 @@ abstract class View3D : BaseView() {
 	val transform = Transform3D()
     var speed: Float = 1f
 
-    val globalSpeed: Float get() = parent?.globalSpeed?.times(speed) ?: speed
+    open val globalSpeed: Float get() = parent?.globalSpeed?.times(speed) ?: speed
 
     var blendMode: BlendMode = BlendMode.NONE
 
@@ -258,6 +258,9 @@ fun <T : View3D> T.scale(x: Float = 1f, y: Float = x, z: Float = x, w: Float = 1
 
 
 inline fun <T : View3D> T.scale(x: Int = 1, y: Int = x, z: Int = x, w: Int = 1): T = scale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
+
+inline fun <T : View3D> T.scale(v: Vector3): T = scale(v.x, v.y, v.z)
+inline fun <T : View3D> T.scale(v: Vector4): T = scale(v.x, v.y, v.z, v.w)
 
 
 fun <T : View3D> T.lookAt(x: Float, y: Float, z: Float): T {

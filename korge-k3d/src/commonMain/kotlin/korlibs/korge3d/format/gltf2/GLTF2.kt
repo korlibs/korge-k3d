@@ -11,6 +11,7 @@ import korlibs.io.file.*
 import korlibs.io.file.std.*
 import korlibs.io.lang.*
 import korlibs.io.stream.*
+import korlibs.korge3d.*
 import korlibs.korge3d.material.*
 import korlibs.korge3d.util.*
 import korlibs.logger.*
@@ -249,10 +250,31 @@ data class GLTF2(
         ) : Base() {
             fun maxTime(gltf: GLTF2): Float {
                 val times = times(gltf)
-                return times[times.size - 1]
+                return if (times.size > 0) times[times.size - 1, 0] else 0f
             }
-            fun times(gltf: GLTF2): Float32Buffer = gltf.bufferViews[input].slice(gltf).f32
-            fun outputBuffer(gltf: GLTF2, dims: Int): GLTF2Vector = GLTF2Vector(dims, gltf.bufferViews[output].slice(gltf).f32)
+
+            @Transient
+            var inputAccessor: GLTF2AccessorVector? = null
+            @Transient
+            var outputAccessor: GLTF2AccessorVector? = null
+
+            fun inputAccessor(gltf: GLTF2): Accessor = gltf.accessors[input]
+            fun outputAccessor(gltf: GLTF2): Accessor = gltf.accessors[output]
+
+            fun times(gltf: GLTF2): GLTF2AccessorVector {
+                if (inputAccessor == null) {
+                    val accessor = inputAccessor(gltf)
+                    inputAccessor = GLTF2AccessorVector(accessor, accessor.bufferSlice(gltf))
+                }
+                return inputAccessor!!
+            }
+            fun outputBuffer(gltf: GLTF2): GLTF2AccessorVector {
+                if (outputAccessor == null) {
+                    val accessor = outputAccessor(gltf)
+                    outputAccessor = GLTF2AccessorVector(accessor, accessor.bufferSlice(gltf))
+                }
+                return outputAccessor!!
+            }
 
             data class Lookup(
                 var requestedTime: Float = 0f,
@@ -265,26 +287,35 @@ data class GLTF2(
             }
             fun lookup(gltf: GLTF2, time: Float, out: Lookup = Lookup()): Lookup {
                 val times = times(gltf)
-                val lowIndex = genericBinarySearchLeft(0, times.size) { times[it].compareTo(time) }
+                val lowIndex = genericBinarySearchLeft(0, times.size) { times[it, 0].compareTo(time) }
                 val highIndex = if (lowIndex >= times.size - 1) lowIndex else lowIndex + 1
                 out.requestedTime = time
                 out.lowIndex = lowIndex
                 out.highIndex = highIndex
-                out.lowTime = times[lowIndex]
-                out.highTime = times[highIndex]
+                out.lowTime = times[lowIndex, 0]
+                out.highTime = times[highIndex, 0]
                 out.interpolation = interpolation
                 return out
             }
-            fun doLookup(gltf: GLTF2, time: Float, dims: Int): GLTF2Vector {
-                val vec = GLTF2Vector(dims, 1)
-                doLookup(gltf, time, vec)
+            fun doLookup(gltf: GLTF2, time: Float, count: Int = 1): GLTF2AccessorVector {
+                val vec = GLTF2AccessorVector(outputAccessor(gltf), count)
+                doLookup(gltf, time, vec, count)
                 return vec
             }
-            fun doLookup(gltf: GLTF2, time: Float, out: GLTF2Vector, outIndex: Int = 0) {
+            fun doLookup(gltf: GLTF2, time: Float, out: GLTF2AccessorVector, count: Int = 1, outIndex: Int = 0) {
                 val lookup = lookup(gltf, time)
-                val output = outputBuffer(gltf, out.dims)
-                //println("lookup.ratioClamped=${lookup.ratioClamped}, lookup.lowIndex=${lookup.lowIndex}, lookup.highIndex=${lookup.highIndex}")
-                out.setInterpolated(outIndex, output, lookup.lowIndex, output, lookup.highIndex, lookup.ratioClamped)
+                val output = outputBuffer(gltf)
+                for (n in 0 until count) {
+                    out.setInterpolated(
+                        outIndex + n,
+                        output,
+                        lookup.lowIndex * count + n,
+                        output,
+                        lookup.highIndex * count + n,
+                        lookup.ratioClamped
+                    )
+                }
+                //println("lookup.ratioClamped=${lookup.ratioClamped}, lookup.lowIndex=${lookup.lowIndex}, lookup.highIndex=${lookup.highIndex}, out=$out : ${out.accessor}")
             }
         }
     }
@@ -340,6 +371,7 @@ data class GLTF2(
             else -> TODO("Unsupported componentType=$componentType")
         }
         val ncomponent get() = type.ncomponent
+        val bytesPerEntry get() = componentTType.bytesSize * ncomponent
         val requireNormalization: Boolean get() = when (componentTType) {
             VarKind.TBOOL -> false
             VarKind.TBYTE -> true
@@ -379,6 +411,7 @@ data class GLTF2(
             VarKind.TINT, VarKind.TFLOAT -> AGIndexType.UINT
         }
         fun bufferView(gltf: GLTF2): BufferView = gltf.bufferViews[bufferView]
+        fun bufferSlice(gltf: GLTF2): korlibs.memory.Buffer = bufferView(gltf).slice(gltf).slice(byteOffset)
     }
     @Serializable
     data class Material(
@@ -449,10 +482,17 @@ data class GLTF2(
             val yfov: Float = 0.660593f,
             val zfar: Float = 100f,
             val znear: Float = 0.01f,
-        ) : Base()
+        ) : Base() {
+            fun toCamera(): Camera3D {
+                return Camera3D.Perspective(yfov.radians, znear, zfar)
+            }
+        }
     }
 
     companion object {
+        @Transient
+        val EMPTY_BUFFER = korlibs.memory.Buffer(0)
+
         val logger = Logger("GLTF2")
 
         suspend fun readGLB(file: VfsFile, options: ReadOptions = ReadOptions.DEFAULT): GLTF2 = readGLB(file.readBytes(), file, options)
@@ -493,19 +533,79 @@ data class GLTF2(
     }
 }
 
+data class GLTF2AccessorVector(val accessor: GLTF2.Accessor, val buffer: Buffer) {
+    constructor(accessor: GLTF2.Accessor, size: Int = 1) : this(accessor, Buffer(accessor.bytesPerEntry * size))
+    val dims: Int get() = accessor.ncomponent
+    val bytesPerEntry = accessor.bytesPerEntry
+    val size: Int get() = buffer.sizeInBytes / bytesPerEntry
+    val sizeComponents: Int get() = buffer.sizeInBytes / accessor.componentTType.bytesSize
+    fun toVector3(): Vector3 = Vector3.func { if (it < sizeComponents) getLinear(it) else 0f }
+    fun toVector4(): Vector4 = Vector4.func { if (it < sizeComponents) getLinear(it) else 0f }
+
+    fun getLinear(index: Int): Float {
+        try {
+            return when (accessor.componentTType) {
+                VarKind.TBYTE -> kotlin.math.max(buffer.i8[index].toFloat() / 127f, -1f)
+                VarKind.TBOOL, VarKind.TUNSIGNED_BYTE -> buffer.i8[index].toFloat() / 255f
+                VarKind.TSHORT -> kotlin.math.max(buffer.i16[index].toFloat() / 32767f, -1f)
+                VarKind.TUNSIGNED_SHORT -> buffer.u16[index] / 65535f
+                VarKind.TINT -> buffer.i32[index].toFloat()
+                VarKind.TFLOAT -> buffer.f32[index]
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            println("!! ERROR accessing $index of buffer.sizeInBytes=${buffer.sizeInBytes}, dims=$dims, bytesPerEntry=$bytesPerEntry, size=$size, accessor=$accessor")
+            throw e
+        }
+    }
+
+    fun setLinear(index: Int, value: Float) {
+        when (accessor.componentTType) {
+            VarKind.TBYTE -> buffer.i8[index] = kotlin.math.round(value * 127.0).toInt().toByte()
+            VarKind.TBOOL, VarKind.TUNSIGNED_BYTE -> buffer.i8[index] = kotlin.math.round(value * 255.0).toInt().toByte()
+            VarKind.TSHORT -> buffer.i16[index] = kotlin.math.round(value * 32767f).toInt().toShort()
+            VarKind.TUNSIGNED_SHORT -> buffer.i16[index] = kotlin.math.round(value * 65535f).toInt().toShort()
+            VarKind.TINT -> buffer.i32[index] = value.toInt()
+            VarKind.TFLOAT -> buffer.f32[index] = value
+        }
+    }
+
+    operator fun get(index: Int, dim: Int): Float = getLinear(index * dims + dim)
+    operator fun set(index: Int, dim: Int, value: Float) {
+        setLinear(index * dims + dim, value)
+    }
+
+    fun setInterpolated(index: Int, a: GLTF2AccessorVector, aIndex: Int, b: GLTF2AccessorVector, bIndex: Int, ratio: Float) {
+        for (dim in 0 until dims) {
+            //println("a[aIndex, dim], b[bIndex, dim]=${a[aIndex, dim]} : ${b[bIndex, dim]}")
+            this[index, dim] = ratio.toRatio().interpolate(a[aIndex, dim], b[bIndex, dim])
+        }
+    }
+
+    override fun toString(): String {
+        return buildString {
+            append("[")
+            for (n in 0 until size) {
+                if (n != 0) append(", ")
+                append("[")
+                for (dim in 0 until dims) {
+                    if (dim != 0) append(", ")
+                    append(this@GLTF2AccessorVector[n, dim])
+                }
+                append("]")
+            }
+            append("]")
+        }
+    }
+}
+
+/*
 data class GLTF2Vector(val dims: Int, val floats: Float32Buffer) {
     constructor(dims: Int, size: Int = 1) : this(dims, Float32Buffer(size * dims))
     fun checkDims(dims: Int) {
         assert(this.dims == dims) { "Expected ${this.dims} dimensions, but found $dims" }
     }
-    fun toVector4(): Vector4 {
-        return Vector4(
-            if (dims >= 1) this[0, 0] else 0f,
-            if (dims >= 2) this[0, 1] else 0f,
-            if (dims >= 3) this[0, 2] else 0f,
-            if (dims >= 4) this[0, 3] else 0f,
-        )
-    }
+    fun toVector3(): Vector3 = Vector3.func { if (dims >= it) this[0, it] else 0f }
+    fun toVector4(): Vector4 = Vector4.func { if (dims >= it) this[0, it] else 0f }
 
     val size: Int get() = floats.size / dims
     operator fun get(n: Int, dim: Int): Float = floats[n * dims + dim]
@@ -536,6 +636,8 @@ data class GLTF2Vector(val dims: Int, val floats: Float32Buffer) {
         }
     }
 }
+
+ */
 
 interface GLTF2Holder {
     val gltf: GLTF2

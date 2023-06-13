@@ -6,17 +6,19 @@ import korlibs.korge.render.*
 import korlibs.korge.view.*
 
 
-inline fun Container.scene3D(views: Views3D = Views3D(stage!!.views), callback: Stage3D.() -> Unit = {}): Stage3DView {
-    val view = Stage3DView(views)
+inline fun Container.scene3D(views: Views3D = Views3D(stage!!.views, this), callback: Stage3D.() -> Unit = {}): Stage3DView {
+    val view = Stage3DView(views, this)
     view.addTo(this)
     view.stage3D.apply(callback)
     return view
 }
 
 
-class Views3D(val views: Views)
+class Views3D(val views: Views, val container: Container)
 
 class Stage3D(val views: Views3D, val viewParent: Stage3DView) : Container3D() {
+    override val globalSpeed: Float get() = views.container.globalSpeed
+
     init {
         changeEventListenerParent(viewParent)
     }
@@ -31,7 +33,7 @@ class Stage3D(val views: Views3D, val viewParent: Stage3DView) : Container3D() {
 }
 
 
-class Stage3DView(val views: Views3D) : View() {
+class Stage3DView(val views: Views3D, val container: Container) : View() {
     val stage3D: Stage3D = Stage3D(views, this)
 
 	private val ctx3D = RenderContext3D()

@@ -11,21 +11,23 @@ import korlibs.time.*
 
 fun Container3D.gltf2View(gltf: GLTF2) = GLTF2View(gltf).addTo(this)
 
-class GLTF2View(override var gltf: GLTF2) : Container3D(), GLTF2Holder {
+
+class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Container3D(), GLTF2Holder {
     val nodeToViews = LinkedHashMap<GLTF2.Node, GLTF2ViewNode>()
 
     init {
         for (scene in gltf.scenes) {
             for (node in scene.childrenNodes) {
-                val view = GLTF2ViewNode(gltf, node)
+                val view = GLTF2ViewNode(gltf, node, this)
                 addChild(view)
-                nodeToViews[node] = view
             }
         }
 
-        addUpdater(first = false) {
-            //println("updater!")
-            updateAnimationDelta(it)
+        if (autoAnimate) {
+            addUpdater(first = false) {
+                //println("updater!")
+                updateAnimationDelta(it)
+            }
         }
     }
 
@@ -46,11 +48,23 @@ class GLTF2View(override var gltf: GLTF2) : Container3D(), GLTF2Holder {
                 val currentTime = time.seconds.toFloat()
                 val rtime = currentTime % maxTime
 
+                //println("channel=$channel : ${sampler.times(gltf).toFloatArray().toList()}")
+
                 when (target.path) {
                     GLTF2.Animation.Channel.TargetPath.WEIGHTS -> {
                         view.meshView?.primitiveViews?.fastForEach {
                             it.weights = sampler.doLookup(gltf, rtime, it.nweights).toVector4()
                         }
+                    }
+                    GLTF2.Animation.Channel.TargetPath.ROTATION -> {
+                        //println("sampler.doLookup(gltf, rtime).toVector4()=${sampler.doLookup(gltf, rtime).toVector4()}")
+                        view.rotation(Quaternion(sampler.doLookup(gltf, rtime).toVector4()))
+                    }
+                    GLTF2.Animation.Channel.TargetPath.TRANSLATION -> {
+                        view.position(sampler.doLookup(gltf, rtime).toVector3())
+                    }
+                    GLTF2.Animation.Channel.TargetPath.SCALE -> {
+                        view.scale(sampler.doLookup(gltf, rtime).toVector3())
                     }
                     else -> {
                         println("Unsupported animation target.path=${target.path}")
@@ -61,13 +75,14 @@ class GLTF2View(override var gltf: GLTF2) : Container3D(), GLTF2Holder {
     }
 }
 
-class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node) : Container3D(), GLTF2Holder {
+class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node, val view: GLTF2View) : Container3D(), GLTF2Holder {
     val meshView = if (node.mesh >= 0) GLTF2ViewMesh(gltf, gltf.meshes[node.mesh]).addTo(this) else null
     init {
         transform.setMatrix(node.mmatrix.mutable)
         for (child in node.childrenNodes) {
-            addChild(GLTF2ViewNode(gltf, child))
+            addChild(GLTF2ViewNode(gltf, child, view))
         }
+        view.nodeToViews[node] = this
     }
 }
 
@@ -139,7 +154,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
     val indexAccessor: GLTF2.Accessor = gltf.accessors[primitive.indices]
     val indexType: AGIndexType = indexAccessor.asIndexType()
     val indexDataOffset = 0
-    val indexSlice = indexAccessor.bufferView(gltf).slice(gltf).slice(indexAccessor.byteOffset)
+    val indexSlice = indexAccessor.bufferSlice(gltf)
     val indexData = AGBuffer().also { it.upload(indexSlice) }
     val vertexCount = indexSlice.sizeInBytes / indexType.bytesSize
 

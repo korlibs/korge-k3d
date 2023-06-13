@@ -37,24 +37,21 @@ class CratesScene : Scene() {
             //val quat = Quaternion.fromAxisAngle(Vector3.RIGHT, 180.degrees)
             //val quat = Quaternion.fromVectors(Vector3.DOWN, Vector3.UP).scaled(0.5f) * Quaternion.fromVectors(Vector3.LEFT, Vector3.RIGHT).scaled(0.5f)
 
-
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
-            //val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f).rotation()
+            //val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
             //val view = gltf2View(resourcesVfs["gltf/SpecGlossVsMetalRough.glb"].readGLTF2()).scale(25f)
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
-
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
-            val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(.5f)
-
-            //this@sceneInit3.onEvent(UpdateEvent) { println("updateEvent: $it") }
-
             //val view = gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(.5f)
             //val view = gltf2View(resourcesVfs["gltf/cube/Cube.gltf"].readGLTF2())
-            //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(1f)
-            //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(1f)
+            //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(300f)
+            val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(3f)
+            //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(3f)
+
+            camera = view.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
 
             view.rotation(quat)
             fun rotateY(delta: Angle) {
