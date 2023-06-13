@@ -34,12 +34,15 @@ class CratesScene : Scene() {
         scene3D {
             camera = Camera3D.Perspective()
             axisLines(length = 4f)
+            val quat = Quaternion.IDENTITY
+            //val quat = Quaternion.fromAxisAngle(Vector3.RIGHT, 180.degrees)
+            //val quat = Quaternion.fromVectors(Vector3.DOWN, Vector3.UP).scaled(0.5f) * Quaternion.fromVectors(Vector3.LEFT, Vector3.RIGHT).scaled(0.5f)
+
+
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
-            val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
-                .rotation(Quaternion.fromAxisAngle(Vector3.RIGHT, 180.degrees))
-                //.rotation(x = -90.degrees, y = -90.degrees, z = 0.degrees)
+            val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f).rotation()
             //val view = gltf2View(resourcesVfs["gltf/SpecGlossVsMetalRough.glb"].readGLTF2()).scale(25f)
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
 
@@ -50,8 +53,9 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(1f)
             //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(1f)
 
+            view.rotation(quat)
             fun rotateY(delta: Angle) {
-                view.rotation(Quaternion.fromAxisAngle(Vector3.RIGHT, 180.degrees) * Quaternion.fromAxisAngle(Vector3.UP, rotation))
+                view.rotation(quat * Quaternion.fromAxisAngle(Vector3.UP, rotation))
                 rotation += delta
             }
 

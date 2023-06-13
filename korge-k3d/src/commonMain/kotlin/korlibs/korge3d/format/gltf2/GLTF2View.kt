@@ -9,27 +9,29 @@ import korlibs.memory.*
 
 fun Container3D.gltf2View(gltf: GLTF2) = GLTF2View(gltf).addTo(this)
 
-class GLTF2View(var gltf: GLTF2) : Container3D() {
+class GLTF2View(override var gltf: GLTF2) : Container3D(), GLTF2Holder {
     init {
         for (scene in gltf.scenes) {
-            for (node in scene.nodes) {
+            for (node in scene.childrenNodes) {
                 addChild(GLTF2ViewNode(gltf, node))
             }
         }
     }
 }
 
-class GLTF2ViewNode(val gltf: GLTF2, val node: GLTF2.GNode) : Container3D() {
+class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node) : Container3D(), GLTF2Holder {
     init {
-        node.mesh?.let { addChild(GLTF2ViewMesh(gltf, gltf.meshes[it])) }
-        transform.setMatrix(node.matrix.mutable)
-        for (child in node.children) {
-            addChild(GLTF2ViewNode(gltf, gltf.nodes[child]))
+        if (node.mesh >= 0) {
+            addChild(GLTF2ViewMesh(gltf, gltf.meshes[node.mesh]))
+        }
+        transform.setMatrix(node.mmatrix.mutable)
+        for (child in node.childrenNodes) {
+            addChild(GLTF2ViewNode(gltf, child))
         }
     }
 }
 
-class GLTF2ViewMesh(val gltf: GLTF2, val mesh: GLTF2.GMesh) : Container3D() {
+class GLTF2ViewMesh(val gltf: GLTF2, val mesh: GLTF2.Mesh) : Container3D() {
     init {
         for (primitive in mesh.primitives) {
             addChild(GLTF2ViewPrimitive(gltf, primitive))
@@ -38,22 +40,24 @@ class GLTF2ViewMesh(val gltf: GLTF2, val mesh: GLTF2.GMesh) : Container3D() {
     }
 }
 
-class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : ViewWithMaterial3D() {
+class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitive) : ViewWithMaterial3D(), GLTF2Holder {
     val drawType: AGDrawType get() = primitive.drawType
     val vertexData: AGVertexArrayObject = AGVertexArrayObject(*primitive.attributes.map { attr ->
-        val att = when (attr.key) {
-            GLTF2.GAttribute.POSITION -> Shaders3D.a_pos
-            GLTF2.GAttribute.NORMAL -> Shaders3D.a_norm
-            GLTF2.GAttribute.TANGENT -> a_Tangent
-            GLTF2.GAttribute.TEXCOORD_0 -> Shaders3D.a_tex
+        val attrKey = attr.key
+        val att = when {
+            attrKey.isPosition -> Shaders3D.a_pos
+            attrKey.isNormal -> Shaders3D.a_norm
+            attrKey.isTangent -> a_Tangent
+            attrKey.isTexcoord0 -> Shaders3D.a_tex
             else -> TODO("${attr.key}")
         }
         val accessor = gltf.accessors[attr.value]
         val bufferView = gltf.bufferViews[accessor.bufferView]
-        val buffer = bufferView.slice.slice(accessor.byteOffset)
+        val buffer = bufferView.slice(gltf).slice(accessor.byteOffset)
 
         when (att){
             Shaders3D.a_pos, Shaders3D.a_norm -> {
+                accessor.componentType
                 check(accessor.componentTType == VarKind.TFLOAT)
                 check(accessor.ncomponent == 3)
             }
@@ -72,10 +76,10 @@ class GLTF2ViewPrimitive(val gltf: GLTF2, val primitive: GLTF2.GPrimitive) : Vie
     }.toTypedArray())
 
     // @TODO:
-    val indexAccessor = gltf.accessors[primitive.indices]
+    val indexAccessor: GLTF2.Accessor = gltf.accessors[primitive.indices]
     val indexType: AGIndexType = indexAccessor.asIndexType()
     val indexDataOffset = 0
-    val indexSlice = indexAccessor.bufferView(gltf).slice.slice(indexAccessor.byteOffset)
+    val indexSlice = indexAccessor.bufferView(gltf).slice(gltf).slice(indexAccessor.byteOffset)
     val indexData = AGBuffer().also { it.upload(indexSlice) }
     val vertexCount = indexSlice.sizeInBytes / indexType.bytesSize
 

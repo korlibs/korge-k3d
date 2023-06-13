@@ -24,20 +24,23 @@ class GLTF2Test {
 
     @Test
     fun testParsingAll() = suspendTest {
-        for (fileName in listOf(
-            "AnimatedMorphCube.glb",
-            "AttenuationTest.glb",
-            "Box.glb",
-            "CesiumMan.glb",
-            "CesiumMilkTruck.glb",
-            "ClearCoatTest.glb",
-            "MiniAvocado.glb",
-            "MiniBoomBox.glb",
-            "MiniDamagedHelmet.glb",
-            "SpecGlossVsMetalRough.glb",
-        )) {
-            println("Parsing...$fileName")
-            resourcesVfs["gltf/$fileName"].readGLTF2()
+        //for (n in 0 until 10) {
+        run {
+            for (fileName in listOf(
+                "AnimatedMorphCube.glb",
+                "AttenuationTest.glb",
+                "Box.glb",
+                "CesiumMan.glb",
+                "CesiumMilkTruck.glb",
+                "ClearCoatTest.glb",
+                "MiniAvocado.glb",
+                "MiniBoomBox.glb",
+                "MiniDamagedHelmet.glb",
+                "SpecGlossVsMetalRough.glb",
+            )) {
+                println("Parsing...$fileName")
+                resourcesVfs["gltf/$fileName"].readGLTF2()
+            }
         }
     }
 }
