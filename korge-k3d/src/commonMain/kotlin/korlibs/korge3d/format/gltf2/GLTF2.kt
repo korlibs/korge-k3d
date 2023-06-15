@@ -31,6 +31,7 @@ suspend fun VfsFile.readGLTF2(options: GLTF2.ReadOptions = GLTF2.ReadOptions.DEF
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc
 // https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0
+// https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_019_SimpleSkin.md
 // https://github.com/syoyo/tinygltf
 @Serializable
 data class GLTF2(
@@ -377,14 +378,28 @@ data class GLTF2(
 
         override fun toString(): String = "Buffer($name, uri=${uri?.substr(0, 100)}, byteLength=$byteLength)"
     }
+
+    /**
+     * https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
+     */
     @Serializable
     data class BufferView(
         val name: String? = null,
+        /** The index of the buffer. */
         val buffer: Int = -1,
-        val byteLength: Int = 0,
+        /** The offset into the buffer in bytes. */
         val byteOffset: Int = 0,
-        val target: Int = -1,
+        /** The length of the bufferView in bytes. */
+        val byteLength: Int = 0,
+        /** The stride, in bytes, between vertex attributes.  When this is not defined, data is tightly packed. When two or more accessors use the same buffer view, this field **MUST** be defined. */
         val byteStride: Int = 0,
+        /**
+         * The hint representing the intended GPU buffer type to use with this buffer view.
+         *
+         * ARRAY_BUFFER: 34962
+         * ELEMENT_ARRAY_BUFFER: 34963
+         **/
+        val target: Int = -1,
     ) : Base() {
         fun slice(gltf: GLTF2): korlibs.memory.Buffer =
             gltf.buffers[buffer].buffer.sliceWithSize(byteOffset, byteLength)
@@ -420,6 +435,8 @@ data class GLTF2(
         /** Sparse storage of elements that deviate from their initialization value. */
         //val sparse: Any?,
     ) : Base() {
+        var attachDebugName: String? = null
+
         val componentTType: VarKind get() = when (componentType) {
             /* 5120 */ 0x1400 -> VarKind.TBYTE // signed byte --- f = max(c / 127.0, -1.0)   --- c = round(f * 127.0)
             /* 5121 */ 0x1401 -> VarKind.TUNSIGNED_BYTE // unsigned byte --- f = c / 255.0  --- c = round(f * 255.0)
@@ -432,6 +449,7 @@ data class GLTF2(
         }
         val ncomponent get() = type.ncomponent
         val bytesPerEntry get() = componentTType.bytesSize * ncomponent
+        /*
         val requireNormalization: Boolean get() = when (componentTType) {
             VarKind.TBOOL -> false
             VarKind.TBYTE -> true
@@ -441,6 +459,8 @@ data class GLTF2(
             VarKind.TINT -> false
             VarKind.TFLOAT -> false
         }
+
+         */
 
         fun VarType.Companion.BOOL(count: Int) =
             when (count) { 0 -> VarType.TVOID; 1 -> VarType.Bool1; 2 -> VarType.Bool2; 3 -> VarType.Bool3; 4 -> VarType.Bool4; else -> invalidOp; }
@@ -636,13 +656,25 @@ data class GLTF2AccessorVector(val accessor: GLTF2.Accessor, val buffer: Buffer)
 
     fun getLinear(index: Int): Float {
         try {
-            return when (accessor.componentTType) {
-                VarKind.TBYTE -> kotlin.math.max(buffer.i8[index].toFloat() / 127f, -1f)
-                VarKind.TBOOL, VarKind.TUNSIGNED_BYTE -> buffer.i8[index].toFloat() / 255f
-                VarKind.TSHORT -> kotlin.math.max(buffer.i16[index].toFloat() / 32767f, -1f)
-                VarKind.TUNSIGNED_SHORT -> buffer.u16[index] / 65535f
+            val value = when (accessor.componentTType) {
+                VarKind.TBYTE -> buffer.i8[index].toFloat()
+                VarKind.TBOOL, VarKind.TUNSIGNED_BYTE -> buffer.i8[index].toFloat()
+                VarKind.TSHORT -> buffer.i16[index].toFloat()
+                VarKind.TUNSIGNED_SHORT -> buffer.u16[index].toFloat()
                 VarKind.TINT -> buffer.i32[index].toFloat()
                 VarKind.TFLOAT -> buffer.f32[index]
+            }
+            return if (accessor.normalized) {
+                when (accessor.componentTType) {
+                    VarKind.TBYTE -> kotlin.math.max(value / 127f, -1f)
+                    VarKind.TBOOL, VarKind.TUNSIGNED_BYTE -> value / 255f
+                    VarKind.TSHORT -> kotlin.math.max(value / 32767f, -1f)
+                    VarKind.TUNSIGNED_SHORT -> value / 65535f
+                    VarKind.TINT -> value
+                    VarKind.TFLOAT -> value
+                }
+            } else {
+                value
             }
         } catch (e: IndexOutOfBoundsException) {
             println("!! ERROR accessing $index of buffer.sizeInBytes=${buffer.sizeInBytes}, dims=$dims, bytesPerEntry=$bytesPerEntry, size=$size, accessor=$accessor")

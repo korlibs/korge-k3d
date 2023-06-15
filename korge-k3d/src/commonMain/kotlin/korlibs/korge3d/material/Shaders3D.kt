@@ -152,8 +152,7 @@ data class StandardShader3D(
     fun Program.Builder.constructBoneTransform(njoints: Int): Operand {
         var out: Operand? = null
         val swizzles = listOf("x", "y", "z", "w")
-        //for (n in 0 until njoints) {
-        for (n in 0 until 2) {
+        for (n in 0 until njoints) {
             val weightIndex = n / 4
             val weightComponent = n % 4
             val component = swizzles[weightComponent]
@@ -173,7 +172,7 @@ data class StandardShader3D(
             out = if (out == null) chunk else out + chunk
         }
         return out!!
-        return Shaders3D.Bones4UB.u_BoneMats[1]
+        //return Shaders3D.Bones4UB.u_BoneMats[1]
     }
 
 	override fun Program.Builder.vertex() = Shaders3D.run {
@@ -219,7 +218,7 @@ data class StandardShader3D(
 		SET(v_Pos, vec3(modelViewMat * t_Pos))
 		SET(v_Norm, vec3(normalMat * t_Nor))
 		if (hasTexture) SET(v_TexCoords, vec2(a_tex["x"], a_tex["y"]))
-        //SET(v_Col, vec4(1f.lit, Shaders3D.a_joints[0].x, Shaders3D.a_joints[0].y, 1f.lit))
+        //SET(v_Col, vec4(Shaders3D.a_weights[1].x, Shaders3D.a_joints[0].x, Shaders3D.a_joints[0].y, 1f.lit))
 		SET(out, u_ProjMat * vec4(v_Pos, 1f.lit))
 	}
 

@@ -196,6 +196,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             else -> att
         }
 
+        /*
         val tryeNormalization = when (att) {
             Shaders3D.a_pos, Shaders3D.a_tan, Shaders3D.a_nor -> true
             else -> false
@@ -203,11 +204,17 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
 
         val normalized = tryeNormalization && accessor.requireNormalization
 
-        println("genAGVertexData: $prim, componentTType=${accessor.componentTType}, normalized=$normalized, accessor.requireNormalization=${accessor.requireNormalization}")
+         */
+        val normalized = accessor.normalized
+        val stride = accessor.bufferView(gltf).byteStride
+
+        accessor.attachDebugName = prim.str
+
+        println("genAGVertexData: $prim, componentTType=${accessor.componentTType}, normalized=$normalized")
         return AGVertexData(VertexLayout(ratt.copy(
             type = accessor.varType,
             normalized = normalized
-        )), buffer = AGBuffer().also { it.upload(buffer) })
+        ), layoutSize = if (stride > 0) stride else null), buffer = AGBuffer().also { it.upload(buffer) })
     }
 
     val njoins = primitive.attributes.count { it.key.isJoints0 } * 4
@@ -217,7 +224,12 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
         *primitive.targets.flatMapIndexed { targetIndex, map ->
             map.map { (prim, index) -> genAGVertexData(prim, index, targetIndex) }
         }.toTypedArray(),
-    )
+    ).also {
+        //gltf.accessors
+        for ((index, accessor) in gltf.accessors.withIndex()) {
+            //println("ACCESSOR[$index][${accessor.attachDebugName}]: $accessor : ${accessor.accessor(gltf)}")
+        }
+    }
 
     // @TODO:
     val indexAccessor: GLTF2.Accessor = gltf.accessors[primitive.indices]
