@@ -20,6 +20,7 @@ class GLTF2ViewSkin(
     val inverseBindMatrices = GLTF2AccessorVectorMAT4(gltf.accessors[skin.inverseBindMatrices].accessor(gltf))
 
     fun getJoints(): Array<Matrix4> {
+        val rootJoint = view.nodeToViews[gltf.nodes[skin.joints[0]]]!!
         return (0 until skin.joints.size)
             .map { n ->
                 val jointId = skin.joints[n]
@@ -29,7 +30,8 @@ class GLTF2ViewSkin(
 
                 //viewNode.transform.globalMatrix
 
-                (viewNode.transform.globalMatrix.immutable * inverseBindMatrices[n])
+                //(viewNode.transform.viewMatrixUncached.immutable * inverseBindMatrices[n])
+                (viewNode.transform.concatMatrixUpTo(rootJoint, including = true) * inverseBindMatrices[n])
                     .also {
                         if (it != Matrix4.IDENTITY) {
                             //println("n=$n, MAT=$it")

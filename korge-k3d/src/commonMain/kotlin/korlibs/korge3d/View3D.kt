@@ -20,7 +20,10 @@ abstract class View3D : BaseView() {
     var active = true
 	var id: String? = null
 	var name: String? = null
-	val transform = Transform3D()
+    var isModelRoot = false
+	val transform = Transform3D().also {
+        it.view = this
+    }
     var speed: Float = 1f
 
     open val globalSpeed: Float get() = parent?.globalSpeed?.times(speed) ?: speed
