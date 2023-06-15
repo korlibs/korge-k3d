@@ -60,9 +60,10 @@ open class Shaders3D {
         val a_tanTarget = Array(4) { Attribute("a_Tan$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 2) }
 
         val a_joints = Array(4) { Attribute("a_Joint$it", VarType.Float4, normalized = false, fixedLocation = 4 + it) }
+        //val a_joints = Array(4) { Attribute("a_Joint$it", VarType.SInt4, normalized = false, fixedLocation = 4 + it) }
 		val a_weights = Array(4) { Attribute("a_Weight$it", VarType.Float4, normalized = false, fixedLocation = 8 + it) }
 
-		val v_col = Varying("v_Col", VarType.Float3)
+		val v_Col = Varying("v_Col", VarType.Float4, precision = Precision.LOW)
 
 		val v_Pos = Varying("v_Pos", VarType.Float3, precision = Precision.HIGH)
 		val v_Norm = Varying("v_Norm", VarType.Float3, precision = Precision.HIGH)
@@ -151,17 +152,28 @@ data class StandardShader3D(
     fun Program.Builder.constructBoneTransform(njoints: Int): Operand {
         var out: Operand? = null
         val swizzles = listOf("x", "y", "z", "w")
-        for (n in 0 until njoints) {
+        //for (n in 0 until njoints) {
+        for (n in 0 until 2) {
             val weightIndex = n / 4
             val weightComponent = n % 4
-            val weight = Shaders3D.a_weights[weightIndex][swizzles[weightComponent]]
-            val joint = int(Shaders3D.a_joints[weightIndex][swizzles[weightComponent]])
-            val boneMatrix = Shaders3D.Bones4UB.u_BoneMats[joint]
+            val component = swizzles[weightComponent]
+            val weight = Shaders3D.a_weights[weightIndex][component]
+            //val weight = float(n.lit)
+            //val joint = Shaders3D.a_joints[weightIndex][component]
+            val joint = Shaders3D.a_joints[weightIndex][component]
+            //val joint = (n * 5f).lit
+            //val joint = if (n == 0) 1f.lit else 0f.lit
+            //val joint = n.lit
+            //val joint = (2f).lit
+            //val joint = 1f.lit / 0f.lit
+            val boneMatrix = Shaders3D.Bones4UB.u_BoneMats[int(joint)]
+            //val boneMatrix = Shaders3D.Bones4UB.u_BoneMats[n.lit]
 
             val chunk = (weight * boneMatrix)
             out = if (out == null) chunk else out + chunk
         }
         return out!!
+        return Shaders3D.Bones4UB.u_BoneMats[1]
     }
 
 	override fun Program.Builder.vertex() = Shaders3D.run {
@@ -207,6 +219,7 @@ data class StandardShader3D(
 		SET(v_Pos, vec3(modelViewMat * t_Pos))
 		SET(v_Norm, vec3(normalMat * t_Nor))
 		if (hasTexture) SET(v_TexCoords, vec2(a_tex["x"], a_tex["y"]))
+        //SET(v_Col, vec4(1f.lit, Shaders3D.a_joints[0].x, Shaders3D.a_joints[0].y, 1f.lit))
 		SET(out, u_ProjMat * vec4(v_Pos, 1f.lit))
 	}
 
@@ -217,6 +230,7 @@ data class StandardShader3D(
 		} else {
 			SET(out, vec4(.5f.lit, .5f.lit, .5f.lit, 1f.lit))
 		}
+        //SET(out, Shaders3D.v_Col)
 
         //println("nlights=$nlights")
 		for (n in 0 until nlights) {

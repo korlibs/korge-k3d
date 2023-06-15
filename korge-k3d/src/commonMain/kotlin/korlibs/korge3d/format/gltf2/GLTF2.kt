@@ -216,6 +216,9 @@ data class GLTF2(
             else -> TODO("Unsupported draw mode=$mode")
         }
     }
+    /**
+     * @see https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_019_SimpleSkin.md
+     */
     @Serializable
     data class Skin(
         val name: String? = null,

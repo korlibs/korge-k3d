@@ -11,6 +11,7 @@ import korlibs.time.*
 
 fun Container3D.gltf2View(gltf: GLTF2) = GLTF2View(gltf).addTo(this)
 
+// https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_019_SimpleSkin.md
 class GLTF2ViewSkin(
     val gltf: GLTF2,
     val skin: GLTF2.Skin,
@@ -24,9 +25,13 @@ class GLTF2ViewSkin(
                 val jointId = skin.joints[n]
                 val viewNode = view.nodeToViews[gltf.nodes[jointId]]!!
                 //viewNode.transform.matrix.immutable * inverseBindMatrices[n]
-                viewNode.transform.matrix.immutable * inverseBindMatrices[n]
+                (viewNode.transform.matrix.immutable * inverseBindMatrices[n])
+                    .also {
+                        if (it != Matrix4.IDENTITY) {
+                            //println("n=$n, MAT=$it")
+                        }
+                    }
             }
-            //.map { println("it=$it"); it }
             .toTypedArray()
     }
 
@@ -191,9 +196,17 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             else -> att
         }
 
+        val tryeNormalization = when (att) {
+            Shaders3D.a_pos, Shaders3D.a_tan, Shaders3D.a_nor -> true
+            else -> false
+        }
+
+        val normalized = tryeNormalization && accessor.requireNormalization
+
+        println("genAGVertexData: $prim, componentTType=${accessor.componentTType}, normalized=$normalized, accessor.requireNormalization=${accessor.requireNormalization}")
         return AGVertexData(VertexLayout(ratt.copy(
             type = accessor.varType,
-            normalized = accessor.requireNormalization
+            normalized = normalized
         )), buffer = AGBuffer().also { it.upload(buffer) })
     }
 

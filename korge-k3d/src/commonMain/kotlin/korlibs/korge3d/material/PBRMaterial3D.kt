@@ -16,7 +16,7 @@ data class PBRMaterial3D(
     val doubleSided: Boolean = false,
 ) {
     companion object {
-        val DEFAULT = PBRMaterial3D()
+        val DEFAULT = PBRMaterial3D(diffuse = LightColor(Colors.WHITE))
     }
 
     val hasTexture: Boolean = emission.hasTexture || ambient.hasTexture || diffuse.hasTexture || specular.hasTexture
