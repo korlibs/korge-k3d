@@ -25,12 +25,17 @@ class GLTF2ViewSkin(
                 val jointId = skin.joints[n]
                 val viewNode = view.nodeToViews[gltf.nodes[jointId]]!!
                 //viewNode.transform.matrix.immutable * inverseBindMatrices[n]
-                (viewNode.transform.matrix.immutable * inverseBindMatrices[n])
+                //val transform = viewNode.transform
+
+                //viewNode.transform.globalMatrix
+
+                (viewNode.transform.globalMatrix.immutable * inverseBindMatrices[n])
                     .also {
                         if (it != Matrix4.IDENTITY) {
                             //println("n=$n, MAT=$it")
                         }
                     }
+                //Matrix4.IDENTITY
             }
             .toTypedArray()
     }
