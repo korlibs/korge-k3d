@@ -15,6 +15,10 @@ data class PBRMaterial3D(
     val occlusionTexture: Bitmap? = null,
     val doubleSided: Boolean = false,
 ) {
+    companion object {
+        val DEFAULT = PBRMaterial3D()
+    }
+
     val hasTexture: Boolean = emission.hasTexture || ambient.hasTexture || diffuse.hasTexture || specular.hasTexture
 
     open class Light(val kind: String, val hasTexture: Boolean)

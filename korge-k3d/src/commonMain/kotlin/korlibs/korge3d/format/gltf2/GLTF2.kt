@@ -227,7 +227,7 @@ data class GLTF2(
         val skeleton: Int = -1,
     ) : Base() {
         fun inverseBindMatricesAccessor(gltf: GLTF2): Accessor = gltf.accessors[inverseBindMatrices]
-        fun skeletonNode(gltf: GLTF2): Node = gltf.nodes[skeleton]
+        fun skeletonNode(gltf: GLTF2): Node? = gltf.nodes.getOrNull(skeleton)
     }
     @Serializable
     data class Animation(
@@ -274,11 +274,23 @@ data class GLTF2(
         }
         @Serializable
         data class Sampler(
-            /** bufferView index with timestamps */
+            /** The index of an accessor containing keyframe timestamps. The accessor **MUST** be of scalar type with floating-point components. The values represent time in seconds with `time[0] >= 0.0`, and strictly increasing values, i.e., `time[n + 1] > time[n]`. */
             val input: Int = -1,
-            val interpolation: String = "LINEAR",
+            /**
+             * Interpolation algorithm.
+             *
+             * LINEAR: The animated values are linearly interpolated between keyframes. When targeting a rotation, spherical linear interpolation (slerp) **SHOULD** be used to interpolate quaternions. The number of output elements **MUST** equal the number of input elements.
+             * STEP: The animated values remain constant to the output of the first keyframe, until the next keyframe. The number of output elements **MUST** equal the number of input elements.
+             * CUBICSPLINE: The animation's interpolation is computed using a cubic spline with specified tangents. The number of output elements **MUST** equal three times the number of input elements. For each input element, the output stores three elements, an in-tangent, a spline vertex, and an out-tangent. There **MUST** be at least two keyframes when using this interpolation.
+             * */
+            val interpolation: String = "LINEAR", // LINEAR, STEP, CUBICSPLINE, other
+            /** The index of an accessor, containing keyframe output values. */
             val output: Int = -1,
         ) : Base() {
+            init {
+                if (interpolation != "LINEAR") error("Only implemented LINEAR interpolation for now, but requested '$interpolation'")
+            }
+
             fun maxTime(gltf: GLTF2): Float {
                 val times = times(gltf)
                 return if (times.size > 0) times[times.size - 1, 0] else 0f
@@ -456,7 +468,13 @@ data class GLTF2(
             VarKind.TINT, VarKind.TFLOAT -> AGIndexType.UINT
         }
         fun bufferView(gltf: GLTF2): BufferView = gltf.bufferViews[bufferView]
-        fun bufferSlice(gltf: GLTF2): korlibs.memory.Buffer = bufferView(gltf).slice(gltf).slice(byteOffset)
+        fun bufferSlice(gltf: GLTF2): korlibs.memory.Buffer {
+            val allBuffer = bufferView(gltf).slice(gltf)
+            return when {
+                count < 0 -> allBuffer.slice(byteOffset)
+                else -> allBuffer.sliceWithSize(byteOffset, count * bytesPerEntry)
+            }
+        }
         fun accessor(gltf: GLTF2): GLTF2AccessorVector = GLTF2AccessorVector(this, bufferSlice(gltf))
     }
     @Serializable

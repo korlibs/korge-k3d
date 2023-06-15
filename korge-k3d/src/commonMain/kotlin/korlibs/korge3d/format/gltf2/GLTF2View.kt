@@ -19,11 +19,15 @@ class GLTF2ViewSkin(
     val inverseBindMatrices = GLTF2AccessorVectorMAT4(gltf.accessors[skin.inverseBindMatrices].accessor(gltf))
 
     fun getJoints(): Array<Matrix4> {
-        return (0 until skin.joints.size).map { n ->
-            val jointId = skin.joints[n]
-            val viewNode = view.nodeToViews[gltf.nodes[jointId]]!!
-            viewNode.transform.matrix.immutable * inverseBindMatrices[jointId]
-        }.toTypedArray()
+        return (0 until skin.joints.size)
+            .map { n ->
+                val jointId = skin.joints[n]
+                val viewNode = view.nodeToViews[gltf.nodes[jointId]]!!
+                //viewNode.transform.matrix.immutable * inverseBindMatrices[n]
+                viewNode.transform.matrix.immutable * inverseBindMatrices[n]
+            }
+            //.map { println("it=$it"); it }
+            .toTypedArray()
     }
 
     fun putUniforms(ctx: RenderContext3D) {
@@ -34,8 +38,15 @@ class GLTF2ViewSkin(
 }
 
 class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Container3D(), GLTF2Holder {
+//class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = false) : Container3D(), GLTF2Holder {
     val nodeToViews = LinkedHashMap<GLTF2.Node, GLTF2ViewNode>()
-    val skinsToView =  LinkedHashMap<GLTF2.Skin, GLTF2ViewSkin>()
+    private val skinsToView =  LinkedHashMap<GLTF2.Skin, GLTF2ViewSkin>()
+
+    fun getViewSkin(skin: GLTF2.Skin): GLTF2ViewSkin {
+        return skinsToView.getOrPut(skin) {
+            GLTF2ViewSkin(gltf, skin, this)
+        }
+    }
 
     fun addNode(node: GLTF2.Node): GLTF2ViewNode {
         val view = GLTF2ViewNode(gltf, node, this)
@@ -45,10 +56,7 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
 
     init {
         for (skin in gltf.skins) {
-            val vskin = GLTF2ViewSkin(gltf, skin, this)
-            addNode(skin.skeletonNode(gltf))
-            //println("SKIN: $skin")
-            skinsToView[skin] = vskin
+            getViewSkin(skin)
         }
 
         for (scene in gltf.scenes) {
@@ -92,13 +100,20 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
                     }
                     GLTF2.Animation.Channel.TargetPath.ROTATION -> {
                         //println("sampler.doLookup(gltf, rtime).toVector4()=${sampler.doLookup(gltf, rtime).toVector4()}")
-                        view.rotation(Quaternion(sampler.doLookup(gltf, rtime).toVector4()))
+                        val vec4 = sampler.doLookup(gltf, rtime).toVector4()
+                        //val quat = Quaternion(Vector4(vec4.w, vec4.x, vec4.y, vec4.z))
+                        val quat = Quaternion(vec4)
+                        //println("quat=$quat")
+                        view.rotation(quat)
                     }
                     GLTF2.Animation.Channel.TargetPath.TRANSLATION -> {
                         view.position(sampler.doLookup(gltf, rtime).toVector3())
                     }
                     GLTF2.Animation.Channel.TargetPath.SCALE -> {
-                        view.scale(sampler.doLookup(gltf, rtime).toVector3())
+                        val vec3 = sampler.doLookup(gltf, rtime).toVector3()
+                        //println(sampler.outputAccessor)
+                        //println(vec3)
+                        view.scale(vec3)
                     }
                     else -> {
                         println("Unsupported animation target.path=${target.path}")
@@ -201,7 +216,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
 
     //val meshMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
     //override val material = Material3D(diffuse = Material3D.LightColor(Colors.RED.withAd(0.5)))
-    override val material = gltf.materials3D[primitive.material]
+    override val material = gltf.materials3D.getOrElse(primitive.material) { PBRMaterial3D.DEFAULT }
 
     override fun putUniforms(ctx: RenderContext3D) {
         super.putUniforms(ctx)
