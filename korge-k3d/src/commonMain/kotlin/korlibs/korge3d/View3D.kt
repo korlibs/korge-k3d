@@ -20,9 +20,9 @@ abstract class View3D : BaseView() {
     var active = true
 	var id: String? = null
 	var name: String? = null
-    var isModelRoot = false
+    //var isModelRoot = false
 	val transform = Transform3D().also {
-        it.view = this
+        //it.view = this
     }
     var speed: Float = 1f
 

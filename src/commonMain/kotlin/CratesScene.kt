@@ -48,9 +48,9 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/AnimatedMorphCube.glb"].readGLTF2()).scale(.5f)
             //val view = gltf2View(resourcesVfs["gltf/cube/Cube.gltf"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(300f)
-            //val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(3f)
+            //val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(2f)
             //val view = gltf2View(resourcesVfs["gltf/SimpleSkin/SimpleSkin.gltf"].readGLTF2()).scale(1f)
-            val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(1.5f)
+            val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(2f)
 
             camera = view.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
 

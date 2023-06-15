@@ -4,7 +4,7 @@ import korlibs.datastructure.*
 import korlibs.math.geom.*
 
 class Transform3D {
-    var view: View3D? = null
+    //var view: View3D? = null
 
     @PublishedApi
     internal var matrixDirty = false
@@ -22,11 +22,15 @@ class Transform3D {
             return field
         }
 
-    fun concatMatrixUpTo(root: View3D? = null, including: Boolean = true): Matrix4 {
-        if (this.view == root || parent == null) {
+    fun concatMatrixUpTo(root: Transform3D? = null, including: Boolean = true): Matrix4 {
+        if (this == root || parent == null) {
             return if (including) this.matrix.immutable else Matrix4.IDENTITY
         }
         return this.parent!!.concatMatrixUpTo(root, including) * this.matrix.immutable
+    }
+
+    fun concatMatrixUpTo(root: View3D? = null, including: Boolean = true): Matrix4 {
+        return concatMatrixUpTo(root?.transform, including)
     }
 
     val globalMatrixUncached: MMatrix3D = MMatrix3D()
