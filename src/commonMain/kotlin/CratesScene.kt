@@ -16,6 +16,7 @@ import korlibs.korge3d.material.*
 import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
 import korlibs.time.*
+import korlibs.korge.input.onSwipe
 
 class CratesScene : Scene() {
     @KeepOnReload
@@ -55,7 +56,20 @@ class CratesScene : Scene() {
             camera = view.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
             onMagnify {
                 //camera.position.setTo(0f, 1f, camera.position.z + it.amount)
-                camera.setPosition(0f, 1f, camera.position.z - it.amount * 2)
+                camera.position += Vector4.ZERO.copy(z = -it.amount * 2)
+            }
+            onScroll {
+                //println("onscroll: ${it.scrollDeltaXPixels}, ${it.scrollDeltaYPixels}")
+                //zoom -= (it.scrollDeltaYPixels / 240)
+                //updateZoom()
+                camera.position += Vector4(
+                    it.scrollDeltaXPixels * 0.25f,
+                    -it.scrollDeltaYPixels * 0.25f,
+                    0f, 0f,
+                )
+            }
+            onSwipe { it: GestureEvents ->
+
             }
 
             view.rotation(quat)
