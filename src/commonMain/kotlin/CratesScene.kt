@@ -36,12 +36,15 @@ class CratesScene : Scene() {
             camera = Camera3D.Perspective()
             axisLines(length = 4f)
             val quat = Quaternion.IDENTITY
+            //val quat = Quaternion(x=0.0f, y=0.45737463f, z=0.0f, w=0.047847807f)
+            //val quat = Quaternion(x=0.0, y=0.48204702, z=0.0, w=0.8758331)
+
             //val quat = Quaternion.fromAxisAngle(Vector3.RIGHT, 180.degrees)
             //val quat = Quaternion.fromVectors(Vector3.DOWN, Vector3.UP).scaled(0.5f) * Quaternion.fromVectors(Vector3.LEFT, Vector3.RIGHT).scaled(0.5f)
 
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
-            //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
+            val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
             //val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
             //val view = gltf2View(resourcesVfs["gltf/SpecGlossVsMetalRough.glb"].readGLTF2()).scale(25f)
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
@@ -51,7 +54,7 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(300f)
             //val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(2f)
             //val view = gltf2View(resourcesVfs["gltf/SimpleSkin/SimpleSkin.gltf"].readGLTF2()).scale(1f)
-            val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(2f)
+            //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(2f)
 
             camera = view.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
             onMagnify {
@@ -67,9 +70,6 @@ class CratesScene : Scene() {
                     -it.scrollDeltaYPixels * 0.25f,
                     0f, 0f,
                 )
-            }
-            onSwipe { it: GestureEvents ->
-
             }
 
             view.rotation(quat)

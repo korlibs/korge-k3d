@@ -109,25 +109,28 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
                 when (target.path) {
                     GLTF2.Animation.Channel.TargetPath.WEIGHTS -> {
                         view.meshView?.primitiveViews?.fastForEach {
-                            it.weights = sampler.doLookup(gltf, rtime, it.nweights).toVector4()
+                            it.weights = sampler.doLookup(gltf, rtime, GLTF2.Animation.Sampler.LookupKind.NORMAL, it.nweights).toVector4()
                         }
                     }
                     GLTF2.Animation.Channel.TargetPath.ROTATION -> {
                         //println("sampler.doLookup(gltf, rtime).toVector4()=${sampler.doLookup(gltf, rtime).toVector4()}")
-                        val vec4 = sampler.doLookup(gltf, rtime).toVector4()
+                        val vec4 = sampler.doLookup(gltf, rtime, GLTF2.Animation.Sampler.LookupKind.QUATERNION).toVector4()
                         //val quat = Quaternion(Vector4(vec4.w, vec4.x, vec4.y, vec4.z))
                         val quat = Quaternion(vec4)
-                        //println("quat=$quat")
-                        view.rotation(quat)
+                        view.rotation(quat.normalized())
+                        //println("rot=$quat")
                     }
                     GLTF2.Animation.Channel.TargetPath.TRANSLATION -> {
-                        view.position(sampler.doLookup(gltf, rtime).toVector3())
+                        val pos = sampler.doLookup(gltf, rtime, GLTF2.Animation.Sampler.LookupKind.NORMAL).toVector3()
+                        view.position(pos)
+                        println("pos=$pos")
                     }
                     GLTF2.Animation.Channel.TargetPath.SCALE -> {
-                        val vec3 = sampler.doLookup(gltf, rtime).toVector3()
+                        val scale = sampler.doLookup(gltf, rtime, GLTF2.Animation.Sampler.LookupKind.NORMAL).toVector3()
                         //println(sampler.outputAccessor)
                         //println(vec3)
-                        view.scale(vec3)
+                        view.scale(scale)
+                        println("scale=$scale")
                     }
                     else -> {
                         println("Unsupported animation target.path=${target.path}")

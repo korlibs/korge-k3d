@@ -58,7 +58,7 @@ class GLTF2Test {
         val view = GLTF2View(gltf, autoAnimate = false)
         val primitive = view.sceneViews.first().rootNodes.first().meshView!!.primitiveViews.first()
         //val view = GLTF2ViewPrimitive(gltf, mesh.primitives.first(), mesh)
-        primitive.weights = sampler.doLookup(gltf, time).toVector4()
+        primitive.weights = sampler.doLookup(gltf, time, GLTF2.Animation.Sampler.LookupKind.NORMAL).toVector4()
         assertEquals(Vector4(0.042968746f, 0f, 0f, 0f), primitive.weights)
     }
 

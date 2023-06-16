@@ -332,7 +332,10 @@ data class GLTF2(
                 val ratio: Float get() = requestedTime.convertRange(lowTime, highTime, 0f, 1f)
                 val ratioClamped: Float get() = ratio.clamp01()
             }
-            fun lookup(gltf: GLTF2, time: Float, out: Lookup = Lookup()): Lookup {
+
+            enum class LookupKind { NORMAL, QUATERNION }
+
+            fun lookup(gltf: GLTF2, time: Float, kind: LookupKind, out: Lookup = Lookup()): Lookup {
                 val times = times(gltf)
                 val lowIndex = genericBinarySearchLeft(0, times.size) { times[it, 0].compareTo(time) }
                 val highIndex = if (lowIndex >= times.size - 1) lowIndex else lowIndex + 1
@@ -344,13 +347,13 @@ data class GLTF2(
                 out.interpolation = interpolation
                 return out
             }
-            fun doLookup(gltf: GLTF2, time: Float, count: Int = 1): GLTF2AccessorVector {
+            fun doLookup(gltf: GLTF2, time: Float, kind: LookupKind, count: Int = 1): GLTF2AccessorVector {
                 val vec = GLTF2AccessorVector(outputAccessor(gltf), count)
-                doLookup(gltf, time, vec, count)
+                doLookup(gltf, time, kind, vec, count)
                 return vec
             }
-            fun doLookup(gltf: GLTF2, time: Float, out: GLTF2AccessorVector, count: Int = 1, outIndex: Int = 0) {
-                val lookup = lookup(gltf, time)
+            fun doLookup(gltf: GLTF2, time: Float, kind: LookupKind, out: GLTF2AccessorVector, count: Int = 1, outIndex: Int = 0) {
+                val lookup = lookup(gltf, time, kind)
                 val output = outputBuffer(gltf)
                 for (n in 0 until count) {
                     out.setInterpolated(
@@ -359,7 +362,8 @@ data class GLTF2(
                         lookup.lowIndex * count + n,
                         output,
                         lookup.highIndex * count + n,
-                        lookup.ratioClamped
+                        lookup.ratioClamped,
+                        kind
                     )
                 }
                 //println("lookup.ratioClamped=${lookup.ratioClamped}, lookup.lowIndex=${lookup.lowIndex}, lookup.highIndex=${lookup.highIndex}, out=$out : ${out.accessor}")
@@ -693,15 +697,37 @@ data class GLTF2AccessorVector(val accessor: GLTF2.Accessor, val buffer: Buffer)
         }
     }
 
+    fun getFloat4(index: Int): Vector4 {
+        return Vector4(
+            if (dims >= 1) this[index, 0] else 0f,
+            if (dims >= 2) this[index, 1] else 0f,
+            if (dims >= 3) this[index, 2] else 0f,
+            if (dims >= 4) this[index, 3] else 0f,
+        )
+    }
     operator fun get(index: Int, dim: Int): Float = getLinear(index * dims + dim)
     operator fun set(index: Int, dim: Int, value: Float) {
         setLinear(index * dims + dim, value)
     }
 
-    fun setInterpolated(index: Int, a: GLTF2AccessorVector, aIndex: Int, b: GLTF2AccessorVector, bIndex: Int, ratio: Float) {
-        for (dim in 0 until dims) {
-            //println("a[aIndex, dim], b[bIndex, dim]=${a[aIndex, dim]} : ${b[bIndex, dim]}")
-            this[index, dim] = ratio.toRatio().interpolate(a[aIndex, dim], b[bIndex, dim])
+    fun setInterpolated(index: Int, a: GLTF2AccessorVector, aIndex: Int, b: GLTF2AccessorVector, bIndex: Int, ratio: Float, kind: GLTF2.Animation.Sampler.LookupKind) {
+        when (kind) {
+            GLTF2.Animation.Sampler.LookupKind.NORMAL -> {
+                for (dim in 0 until dims) {
+                    //println("a[aIndex, dim], b[bIndex, dim]=${a[aIndex, dim]} : ${b[bIndex, dim]}")
+                    this[index, dim] = ratio.toRatio().interpolate(a[aIndex, dim], b[bIndex, dim])
+                }
+            }
+            GLTF2.Animation.Sampler.LookupKind.QUATERNION -> {
+                if (dims != 4) error("Invalid dimensions $dims for quaternion")
+                val q1 = Quaternion(a.getFloat4(aIndex))
+                val q2 = Quaternion(b.getFloat4(bIndex))
+                val qr = Quaternion.interpolated(q1, q2, ratio)
+                this[index, 0] = qr.x
+                this[index, 1] = qr.y
+                this[index, 2] = qr.z
+                this[index, 3] = qr.w
+            }
         }
     }
 
