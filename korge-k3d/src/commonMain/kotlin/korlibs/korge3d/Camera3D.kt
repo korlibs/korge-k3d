@@ -67,7 +67,12 @@ abstract class Camera3D : View3D() {
     }
 
     //TODO: position, target and up are also stored in transform....do we need repetition here?
-    val position = MVector4(0f, 1f, 10f)
+    //val position = MVector4(0f, 1f, 10f)
+    var position: Vector4 = Vector4(0f, 1f, 10f, 1f)
+        set(value) {
+            field = value
+            update()
+        }
     var yaw = (-90).degrees
     var pitch = 0.0.degrees
     var roll = 0.0.degrees
@@ -98,8 +103,9 @@ abstract class Camera3D : View3D() {
         invalidateRender()
     }
 
+    @Deprecated("Use position= directly")
     fun setPosition(x: Float = 0f, y: Float = 0f, z: Float = 0f) {
-        this.position.setTo(x, y, z)
+        this.position = Vector4(x, y, z, 1f)
         update()
     }
 
@@ -113,25 +119,25 @@ abstract class Camera3D : View3D() {
 
     fun forward(speed: Float, deltaTime: Float) {
         val velocity = speed * deltaTime
-        position.setTo(position.x + (front.x * velocity), position.y + (front.y * velocity), position.z + (front.z * velocity))
+        position = Vector4(position.x + (front.x * velocity), position.y + (front.y * velocity), position.z + (front.z * velocity), 1f)
         transform.setTranslation(position.x, position.y, position.z)
     }
 
     fun backwards(speed: Float, deltaTime: Float) {
         val velocity = speed * deltaTime
-        position.setTo(position.x - (front.x * velocity), position.y - (front.y * velocity), position.z - (front.z * velocity))
+        position = Vector4(position.x - (front.x * velocity), position.y - (front.y * velocity), position.z - (front.z * velocity), 1f)
         transform.setTranslation(position.x, position.y, position.z)
     }
 
     fun strafeRight(speed: Float, deltaTime: Float) {
         val velocity = speed * deltaTime
-        position.setTo(position.x - (right.x * velocity), position.y - (right.y * velocity), position.z - (right.z * velocity))
+        position = Vector4(position.x - (right.x * velocity), position.y - (right.y * velocity), position.z - (right.z * velocity), 1f)
         transform.setTranslation(position.x, position.y, position.z)
     }
 
     fun strafeLeft(speed: Float, deltaTime: Float) {
         val velocity = speed * deltaTime
-        position.setTo(position.x + (right.x * velocity), position.y + (right.y * velocity), position.z + (right.z * velocity))
+        position = Vector4(position.x + (right.x * velocity), position.y + (right.y * velocity), position.z + (right.z * velocity), 1f)
         transform.setTranslation(position.x, position.y, position.z)
     }
 
