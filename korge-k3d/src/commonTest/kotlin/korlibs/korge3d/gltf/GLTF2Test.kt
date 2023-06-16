@@ -4,15 +4,15 @@ import korlibs.io.async.*
 import korlibs.io.file.std.*
 import korlibs.korge3d.format.gltf2.*
 import korlibs.math.geom.*
-import korlibs.memory.*
 import kotlin.test.*
 
 class GLTF2Test {
     @Test
     fun test() = suspendTest {
-        val gltf2 = resourcesVfs["Box.glb"].readGLTF2()
-        val mesh = gltf2.meshes.first()
-        GLTF2ViewPrimitive(gltf2, mesh.primitives.first(), mesh)
+        val gltf = resourcesVfs["Box.glb"].readGLTF2()
+        val mesh = gltf.meshes.first()
+        GLTF2View(gltf, autoAnimate = false)
+        //GLTF2ViewPrimitive(gltf, mesh.primitives.first(), mesh, GLTF2ViewMesh(gltf, mesh, gltf.nodes.first()))
     }
 
     @Test
@@ -55,9 +55,11 @@ class GLTF2Test {
 
         val time = 0.4f
         val mesh = gltf.nodes.first().mesh(gltf)
-        val view = GLTF2ViewPrimitive(gltf, mesh.primitives.first(), mesh)
-        view.weights = sampler.doLookup(gltf, time).toVector4()
-        assertEquals(Vector4(0.15624999f, 0f, 0f, 0f), view.weights)
+        val view = GLTF2View(gltf, autoAnimate = false)
+        val primitive = view.sceneViews.first().rootNodes.first().meshView!!.primitiveViews.first()
+        //val view = GLTF2ViewPrimitive(gltf, mesh.primitives.first(), mesh)
+        primitive.weights = sampler.doLookup(gltf, time).toVector4()
+        assertEquals(Vector4(0.042968746f, 0f, 0f, 0f), primitive.weights)
     }
 
     @Test

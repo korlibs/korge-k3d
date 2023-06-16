@@ -49,6 +49,17 @@ class GLTF2ViewSkin(
     }
 }
 
+class GLTF2SceneView(override var gltf: GLTF2, val scene: GLTF2.Scene, val rootView: GLTF2View, autoAnimate: Boolean = true) : Container3D(), GLTF2Holder {
+    fun addNode(node: GLTF2.Node): GLTF2ViewNode {
+        val view = GLTF2ViewNode(gltf, node, rootView)
+        addChild(view)
+        return view
+    }
+
+    val rootNodes = scene.childrenNodes.map { addNode(it) }
+}
+
+
 class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Container3D(), GLTF2Holder {
 //class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = false) : Container3D(), GLTF2Holder {
     val nodeToViews = LinkedHashMap<GLTF2.Node, GLTF2ViewNode>()
@@ -60,23 +71,14 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
         }
     }
 
-    fun addNode(node: GLTF2.Node): GLTF2ViewNode {
-        val view = GLTF2ViewNode(gltf, node, this)
-        addChild(view)
-        return view
-    }
 
     init {
         for (skin in gltf.skins) {
             getViewSkin(skin)
         }
-
-        for (scene in gltf.scenes) {
-            for (node in scene.childrenNodes) {
-                addNode(node)
-            }
-        }
-
+    }
+    val sceneViews = gltf.scenes.map { GLTF2SceneView(gltf, it, this, autoAnimate).addTo(this) }
+    init {
         if (autoAnimate) {
             addUpdater(first = false) {
                 //println("updater!")
@@ -135,19 +137,16 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
         }
     }
 
-    fun skinForNode(node: GLTF2.Node): GLTF2ViewSkin? {
-        return if (node.skin >= 0) skinsToView[gltf.skins[node.skin]] else null
-    }
+    fun skinForNode(node: GLTF2.Node): GLTF2ViewSkin? =
+        if (node.skin >= 0) skinsToView[gltf.skins[node.skin]] else null
 }
 
 class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node, val view: GLTF2View) : Container3D(), GLTF2Holder {
     val skin: GLTF2ViewSkin? = view.skinForNode(node)
     val meshView = if (node.mesh >= 0) GLTF2ViewMesh(gltf, gltf.meshes[node.mesh], this).addTo(this) else null
+    val childrenNodes = node.childrenNodes.map { GLTF2ViewNode(gltf, it, view).addTo(this) }
     init {
         transform.setMatrix(node.mmatrix.mutable)
-        for (child in node.childrenNodes) {
-            addChild(GLTF2ViewNode(gltf, child, view))
-        }
         view.nodeToViews[node] = this
     }
 }
@@ -217,7 +216,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
 
         accessor.attachDebugName = prim.str
 
-        println("genAGVertexData: $prim, componentTType=${accessor.componentTType}, normalized=$normalized")
+        //println("genAGVertexData: $prim, componentTType=${accessor.componentTType}, normalized=$normalized")
         return AGVertexData(VertexLayout(ratt.copy(
             type = accessor.varType,
             normalized = normalized
