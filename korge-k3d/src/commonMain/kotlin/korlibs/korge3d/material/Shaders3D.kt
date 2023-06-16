@@ -12,9 +12,9 @@ open class Shaders3D {
     var printShaders = true
 
 	@Suppress("RemoveCurlyBracesFromTemplate")
-	fun getProgram3D(nlights: Int, nmorphWeights: Int, meshMaterial: PBRMaterial3D?, hasTexture: Boolean, njoints: Int): Program {
-		return programCache.getOrPut("program_L${nlights}_W${nmorphWeights}_J${njoints}_M${meshMaterial?.kind}_T${hasTexture}") {
-			StandardShader3D(nlights, nmorphWeights, meshMaterial, hasTexture, njoints).program.apply {
+	fun getProgram3D(nlights: Int, nmorphWeights: Int, meshMaterial: PBRMaterial3D?, hasTexture: Boolean, njoints: Int, hasVertexColor: Boolean): Program {
+		return programCache.getOrPut("program_L${nlights}_W${nmorphWeights}_J${njoints}_M${meshMaterial?.kind}_T${hasTexture}_VC_${hasVertexColor}") {
+			StandardShader3D(nlights, nmorphWeights, meshMaterial, hasTexture, njoints, hasVertexColor).program.apply {
 				if (printShaders) {
 					println(GlslGenerator(ShaderType.VERTEX, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable(isUniformBuffersSupported = true))).generate(this.vertex))
 					println(GlslGenerator(ShaderType.FRAGMENT, GlslConfig(GLVariant.DESKTOP_GENERIC, AGFeatures.Mutable(isUniformBuffersSupported = true))).generate(this.fragment))
@@ -53,7 +53,9 @@ open class Shaders3D {
         val a_tan = Attribute("a_Tan", VarType.Float4, normalized = false, precision = Precision.LOW, fixedLocation = 2)
         val a_tan3 = Attribute("a_Tan", VarType.Float3, normalized = false, precision = Precision.LOW, fixedLocation = 2)
 		val a_tex = Attribute("a_TexCoords", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 3)
-        val a_col = Attribute("a_Col", VarType.Float3, normalized = true, Precision.LOW, fixedLocation = 4)
+        val a_tex1 = Attribute("a_TexCoords1", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 3)
+        val a_tex2 = Attribute("a_TexCoords2", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 3)
+        val a_col = Attribute("a_Col", VarType.Float4, normalized = true, Precision.LOW, fixedLocation = 4)
 
         val a_posTarget = Array(4) { Attribute("a_Pos$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 0) }
         val a_norTarget = Array(4) { Attribute("a_Nor$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 1) }
@@ -139,6 +141,7 @@ data class StandardShader3D(
     val meshMaterial: PBRMaterial3D?,
     val hasTexture: Boolean,
     val njoints: Int,
+    val hasVertexColor: Boolean
 ) : BaseShader3D() {
 
     fun Program.Builder.weighted(attr: Attribute, targets: Array<Attribute>, nweights: Int): Operand {
@@ -217,6 +220,9 @@ data class StandardShader3D(
 
 		SET(v_Pos, vec3(modelViewMat * t_Pos))
 		SET(v_Norm, vec3(normalMat * t_Nor))
+        if (hasVertexColor) {
+            SET(v_Col, a_col)
+        }
 		if (hasTexture) SET(v_TexCoords, vec2(a_tex["x"], a_tex["y"]))
         //SET(v_Col, vec4(Shaders3D.a_weights[1].x, Shaders3D.a_joints[0].x, Shaders3D.a_joints[0].y, 1f.lit))
 		SET(out, u_ProjMat * vec4(v_Pos, 1f.lit))
@@ -245,7 +251,12 @@ data class StandardShader3D(
                 //SET(out["rgb"], vec3(1f.lit, 1f.lit, 1f.lit) * texture2D(Shaders3D.u_OcclussionTexUnit, Shaders3D.v_TexCoords["xy"])["r"])
             }
         }
-		//SET(out, vec4(v_Temp1.x, v_Temp1.y, v_Temp1.z, 1f.lit))
+        if (hasVertexColor) {
+            SET(out["rgb"], out["rgb"] * Shaders3D.v_Col["rgb"])
+
+        }
+
+        //SET(out, vec4(v_Temp1.x, v_Temp1.y, v_Temp1.z, 1f.lit))
 	}
 
 	open fun Program.Builder.computeMaterialLightColor(out: Operand, uniform: Shaders3D.MaterialUB, light: PBRMaterial3D.Light) {

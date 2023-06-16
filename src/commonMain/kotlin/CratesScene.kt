@@ -2,6 +2,7 @@ import korlibs.event.*
 import korlibs.image.bitmap.*
 import korlibs.image.color.*
 import korlibs.io.async.launchImmediately
+import korlibs.io.file.*
 import korlibs.io.file.std.resourcesVfs
 import korlibs.io.lang.*
 import korlibs.korge.KeepOnReload
@@ -17,6 +18,8 @@ import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
 import korlibs.time.*
 import korlibs.korge.input.onSwipe
+import korlibs.korge3d.util.*
+import korlibs.render.*
 
 class CratesScene : Scene() {
     @KeepOnReload
@@ -29,7 +32,9 @@ class CratesScene : Scene() {
         sceneInit3()
     }
 
+    lateinit var dropFileRect: SolidRect
     suspend fun SContainer.sceneInit3() {
+        dropFileRect = solidRect(1024, 1024, Colors.RED).also { it.visible = false }
         var rotationY = 0.degrees
         var rotationX = 0.degrees
         scene3D {
@@ -44,7 +49,7 @@ class CratesScene : Scene() {
 
             //val view = gltf2View(resourcesVfs["gltf/Box.glb"].readGLTF2())
             //val view = gltf2View(resourcesVfs["gltf/MiniAvocado.glb"].readGLTF2()).scale(50f)
-            val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
+            //val view = gltf2View(resourcesVfs["gltf/CesiumMilkTruck.glb"].readGLTF2()).scale(1f)
             //val view = gltf2View(resourcesVfs["gltf/MiniDamagedHelmet.glb"].readGLTF2()).scale(3f)
             //val view = gltf2View(resourcesVfs["gltf/SpecGlossVsMetalRough.glb"].readGLTF2()).scale(25f)
             //val view = gltf2View(resourcesVfs["gltf/ClearCoatTest.glb"].readGLTF2()).scale(1f)
@@ -54,7 +59,41 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(300f)
             //val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(2f)
             //val view = gltf2View(resourcesVfs["gltf/SimpleSkin/SimpleSkin.gltf"].readGLTF2()).scale(1f)
-            //val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(2f)
+            var view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2())
+
+            fun updateEstimatedViewScale() {
+                view.scale(3f / view.gltf.meshes.map { it.getBounds(view.gltf) }.combineBounds().size.maxComponent())
+            }
+
+            updateEstimatedViewScale()
+
+            suspend fun loadFile(file: VfsFile) {
+                val it = file.readGLTF2()
+                view.removeFromParent()
+                view = GLTF2View(it).addTo(this)
+                updateEstimatedViewScale()
+            }
+
+            uiButton("Load...") { onClick {
+                gameWindow.openFileDialog(FileFilter("GLTF2" to listOf("*.glb", "*.gltf", "*.gltf2")))?.firstOrNull()?.let {
+                    loadFile(it)
+                }
+            } }
+
+            onDropFile {
+                println("onDropFile: ${it.type} : $it")
+                when (it.type) {
+                    DropFileEvent.Type.START -> {
+                        dropFileRect.visible = true
+                    }
+                    DropFileEvent.Type.END -> dropFileRect.visible = false
+                    DropFileEvent.Type.DROP -> {
+                        launchImmediately {
+                            it.files?.firstOrNull()?.let { loadFile(it) }
+                        }
+                    }
+                }
+            }
 
             camera = view.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
             onMagnify {

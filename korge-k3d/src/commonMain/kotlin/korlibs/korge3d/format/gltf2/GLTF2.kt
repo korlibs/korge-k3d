@@ -10,6 +10,7 @@ import korlibs.image.format.*
 import korlibs.io.file.*
 import korlibs.io.file.std.*
 import korlibs.io.lang.*
+import korlibs.io.net.*
 import korlibs.io.stream.*
 import korlibs.korge3d.*
 import korlibs.korge3d.material.*
@@ -35,6 +36,7 @@ suspend fun VfsFile.readGLTF2(options: GLTF2.ReadOptions = GLTF2.ReadOptions.DEF
 // https://github.com/syoyo/tinygltf
 @Serializable
 data class GLTF2(
+    override var name: String? = null,
     val asset: Asset = Asset(),
     val extensionsUsed: List<String> = emptyList(),
     val extensionsRequired: List<String> = emptyList(),
@@ -52,7 +54,9 @@ data class GLTF2(
     val materials: List<Material> = emptyList(),
     val samplers: List<Sampler> = emptyList(),
     val cameras: List<Camera> = emptyList(),
-) : Extra by Extra.Mixin(), GLTF2Holder {
+    override val extensions: JsonElement? = null,
+    override val extras: JsonElement? = null,
+) : GLTFProperty(), GLTF2Holder {
     override val gltf: GLTF2 get() = this
 
     val materials3D: List<PBRMaterial3D> by lazy {
@@ -113,19 +117,18 @@ data class GLTF2(
     }
 
 
-    open class Base : Extra by Extra.Mixin()
-
     fun resolveUri(file: VfsFile?, uri: String): VfsFile? {
         if (uri.startsWith("data:")) {
             val dataPart = uri.substringBefore(',', "")
             val content = uri.substringAfter(',')
             return content.fromBase64().asMemoryVfsFile("buffer.bin")
         }
-        return file?.parent?.get(uri)
+        return file?.parent?.get(URL.decodeComponent(uri))
     }
 
     @Serializable
     data class Asset(
+        override var name: String? = null,
         /** The glTF version in the form of `<major>.<minor>` that this asset targets. */
         val version: String = "2.0",
         /** Tool that generated this glTF model.  Useful for debugging. */
@@ -134,16 +137,20 @@ data class GLTF2(
         val copyright: String? = null,
         /** The minimum glTF version in the form of `<major>.<minor>` that this asset targets. This property **MUST NOT** be greater than the asset version. */
         val minVersion: String? = null,
-    ) : Base()
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty()
     @Serializable
     data class Scene(
-        val name: String? = null,
+        override var name: String? = null,
         /** The indices of each root node */
         val nodes: IntArray = intArrayOf(),
-    ) : Base()
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty()
     @Serializable
     data class Node(
-        val name: String? = null,
+        override var name: String? = null,
         /** The index of the camera referenced by this node. */
         val camera: Int = -1,
         /** The index of the skin referenced by this node. When a skin is referenced by a node within a scene, all joints used by the skin **MUST** belong to the same scene. When defined, `mesh` **MUST** also be defined. */
@@ -162,7 +169,9 @@ data class GLTF2(
         val matrix: FloatArray? = null,
         /** The weights of the instantiated morph target. The number of array elements **MUST** match the number of morph targets of the referenced mesh. When defined, `mesh` **MUST** also be defined. */
         val weights: IntArray? = null,
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
         val mmatrix by lazy {
             var out: Matrix4 = Matrix4.IDENTITY
             // column-major order
@@ -175,26 +184,55 @@ data class GLTF2(
     }
     @Serializable
     data class Mesh(
-        val name: String? = null,
+        override var name: String? = null,
         /** An array of primitives, each defining geometry to be rendered. */
         val primitives: List<Primitive> = emptyList(),
         /** Array of weights to be applied to the morph targets. The number of array elements **MUST** match the number of morph targets. */
         val weights: FloatArray? = null,
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
+        fun getBounds(gltf: GLTF2): AABB3D = primitives.map { it.getBounds(gltf) }.combineBounds()
+
         @Transient
         val weightsVector: Vector4 = if (weights != null) Vector4.func { weights.getOrElse(it) { 0f } } else Vector4.ZERO
     }
     @Serializable
     inline class PrimitiveAttribute(val str: String) {
+        companion object {
+            val POSITION = PrimitiveAttribute("POSITION")
+            val NORMAL = PrimitiveAttribute("NORMAL")
+            val TANGENT = PrimitiveAttribute("TANGENT")
+            val TEXCOORD_0 = PrimitiveAttribute("TEXCOORD_0")
+            val TEXCOORD_1 = PrimitiveAttribute("TEXCOORD_1")
+            val JOINTS_0 = PrimitiveAttribute("JOINTS_0")
+            val WEIGHTS_0 = PrimitiveAttribute("WEIGHTS_0")
+
+            fun TEXCOORD(n: Int): PrimitiveAttribute = PrimitiveAttribute("TEXCOORD_$n")
+            fun COLOR(n: Int): PrimitiveAttribute = PrimitiveAttribute("COLOR_$n")
+        }
+
+        val index: Int get() {
+            val lc = str.last()
+            return if (lc in '0'..'9') lc - '0' else 0
+        }
+
         val isPosition: Boolean get() = str == "POSITION"
         val isNormal: Boolean get() = str == "NORMAL"
         val isTangent: Boolean get() = str == "TANGENT"
-        val isTexcoord0: Boolean get() = str == "TEXCOORD_0"
-        val isJoints0: Boolean get() = str == "JOINTS_0"
-        val isWeights0: Boolean get() = str == "WEIGHTS_0"
+        val isColor0: Boolean get() = str == "COLOR_0"
+        val isTexcoord: Boolean get() = str.startsWith("TEXCOORD", ignoreCase = true)
+        fun isTexcoord(n: Int): Boolean = isTexcoord && index == n
+
+        val isJoints: Boolean get() = str.startsWith("JOINTS", ignoreCase = true)
+        fun isJoints(n: Int): Boolean = isJoints && index == n
+
+        val isWeights: Boolean get() = str.startsWith("WEIGHTS", ignoreCase = true)
+        fun isWeights(n: Int): Boolean = isWeights && index == n
     }
     @Serializable
     data class Primitive(
+        override var name: String? = null,
         /** A plain JSON object, where each key corresponds to a mesh attribute semantic and each value is the index of the accessor containing attribute's data. */
         val attributes: Map<PrimitiveAttribute, Int> = emptyMap(),
         /** The index of the accessor that contains the vertex indices.  When this is undefined, the primitive defines non-indexed geometry.  When defined, the accessor **MUST** have `SCALAR` type and an unsigned integer component type. */
@@ -205,7 +243,9 @@ data class GLTF2(
         val mode: Int = 4,
         /** An array of morph targets. Morph targets: one per morphing weight. Typically, 4 as max for standard. A plain JSON object specifying attributes displacements in a morph target, where each key corresponds to one of the three supported attribute semantic (`POSITION`, `NORMAL`, or `TANGENT`) and each value is the index of the accessor containing the attribute displacements' data. */
         val targets: List<Map<PrimitiveAttribute, Int>> = emptyList(),
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
         val drawType: AGDrawType get() = when (mode) {
             0 -> AGDrawType.POINTS
             1 -> AGDrawType.LINES
@@ -216,41 +256,57 @@ data class GLTF2(
             6 -> AGDrawType.TRIANGLE_FAN
             else -> TODO("Unsupported draw mode=$mode")
         }
+
+        fun getBounds(gltf: GLTF2): AABB3D {
+            val accessorIndex = attributes[PrimitiveAttribute.POSITION] ?: return AABB3D(Vector3.ZERO, Vector3.ZERO)
+            val accessor = gltf.accessors[accessorIndex]
+            return AABB3D(Vector3.func { accessor.min[it] }, Vector3.func { accessor.max[it] })
+        }
     }
     /**
-     * @see https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_019_SimpleSkin.md
+     * <https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_019_SimpleSkin.md>
      */
     @Serializable
     data class Skin(
-        val name: String? = null,
+        override var name: String? = null,
         /** The index of the accessor containing the floating-point 4x4 inverse-bind matrices. */
         val inverseBindMatrices: Int = -1,
         /** Indices of skeleton nodes, used as joints in this skin. */
         val joints: IntArray = IntArray(0),
         /** he index of the node used as a skeleton root. */
         val skeleton: Int = -1,
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null
+    ) : GLTFProperty() {
         fun inverseBindMatricesAccessor(gltf: GLTF2): Accessor = gltf.accessors[inverseBindMatrices]
         fun skeletonNode(gltf: GLTF2): Node? = gltf.nodes.getOrNull(skeleton)
     }
     @Serializable
     data class Animation(
-        val name: String? = null,
+        override var name: String? = null,
         /** An array of animation channels. An animation channel combines an animation sampler with a target property being animated. Different channels of the same animation **MUST NOT** have the same targets. */
         val channels: List<Channel> = emptyList(),
         /** An array of animation samplers. An animation sampler combines timestamps with a sequence of output values and defines an interpolation algorithm. */
         val samplers: List<Sampler> = emptyList(),
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null
+    ) : GLTFProperty() {
         @Serializable
         data class Channel(
+            override var name: String? = null,
             val sampler: Int = -1,
             val target: Target? = null,
-        ) : Base() {
+            override val extensions: JsonElement? = null,
+            override val extras: JsonElement? = null
+        ) : GLTFProperty() {
             @Serializable
             data class Target(
+                override var name: String? = null,
                 val node: Int = -1,
                 val path: TargetPath? = null,
-            ) : Base()
+                override val extensions: JsonElement? = null,
+                override val extras: JsonElement? = null,
+            ) : GLTFProperty()
 
             @Serializable(with = TargetPathSerializer::class)
             enum class TargetPath(val key: String) {
@@ -278,6 +334,7 @@ data class GLTF2(
         }
         @Serializable
         data class Sampler(
+            override var name: String? = null,
             /** The index of an accessor containing keyframe timestamps. The accessor **MUST** be of scalar type with floating-point components. The values represent time in seconds with `time[0] >= 0.0`, and strictly increasing values, i.e., `time[n + 1] > time[n]`. */
             val input: Int = -1,
             /**
@@ -290,9 +347,13 @@ data class GLTF2(
             val interpolation: String = "LINEAR", // LINEAR, STEP, CUBICSPLINE, other
             /** The index of an accessor, containing keyframe output values. */
             val output: Int = -1,
-        ) : Base() {
+            override val extensions: JsonElement? = null,
+            override val extras: JsonElement? = null,
+        ) : GLTFProperty() {
             init {
-                if (interpolation != "LINEAR") error("Only implemented LINEAR interpolation for now, but requested '$interpolation'")
+                if (interpolation != "LINEAR" && interpolation != "STEP") {
+                    error("Only implemented LINEAR & STEP interpolations for now, but requested '$interpolation'")
+                }
             }
 
             fun maxTime(gltf: GLTF2): Float {
@@ -329,7 +390,13 @@ data class GLTF2(
                 var lowTime: Float = 0f, var highTime: Float = 0f,
                 var interpolation: String = "LINEAR",
             ) {
-                val ratio: Float get() = requestedTime.convertRange(lowTime, highTime, 0f, 1f)
+                val ratio: Float get() {
+                    return when (interpolation) {
+                        "LINEAR" -> requestedTime.convertRange(lowTime, highTime, 0f, 1f)
+                        "STEP" -> 0f
+                        else -> TODO("Unimplemented interpolation $interpolation")
+                    }
+                }
                 val ratioClamped: Float get() = ratio.clamp01()
             }
 
@@ -370,12 +437,21 @@ data class GLTF2(
             }
         }
     }
+    /**
+     * A buffer points to binary geometry, animation, or skins.
+     *
+     * https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
+     */
     @Serializable
     data class Buffer(
-        val name: String? = null,
+        override var name: String? = null,
+        /** The URI (or IRI) of the buffer.  Relative paths are relative to the current glTF asset.  Instead of referencing an external file, this field **MAY** contain a `data:`-URI. */
         val uri: String? = null,
+        /** The length of the buffer in bytes. */
         val byteLength: Int = 0,
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
         @Transient
         var optBuffer: korlibs.memory.Buffer? = null
         val buffer: korlibs.memory.Buffer get() = optBuffer ?: error("Buffer not loaded!")
@@ -384,11 +460,13 @@ data class GLTF2(
     }
 
     /**
-     * https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
+     * A view into a buffer generally representing a subset of the buffer.
+     *
+     * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json>
      */
     @Serializable
     data class BufferView(
-        val name: String? = null,
+        override var name: String? = null,
         /** The index of the buffer. */
         val buffer: Int = -1,
         /** The offset into the buffer in bytes. */
@@ -404,7 +482,9 @@ data class GLTF2(
          * ELEMENT_ARRAY_BUFFER: 34963
          **/
         val target: Int = -1,
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
         fun slice(gltf: GLTF2): korlibs.memory.Buffer =
             gltf.buffers[buffer].buffer.sliceWithSize(byteOffset, byteLength)
     }
@@ -414,9 +494,12 @@ data class GLTF2(
     ) {
         SCALAR(1), VEC2(2), VEC3(3), VEC4(4), MAT2(4), MAT3(9), MAT4(16);
     }
+    /**
+     * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.schema.json>
+     */
     @Serializable
     data class Accessor(
-        val name: String? = null,
+        override var name: String? = null,
         /** The index of the buffer view. When undefined, the accessor **MUST** be initialized with zeros; `sparse` property or extensions **MAY** override zeros with actual values. */
         val bufferView: Int = 0,
         /** The offset relative to the start of the buffer view in bytes. */
@@ -436,9 +519,28 @@ data class GLTF2(
         val max: FloatArray = FloatArray(0),
         /** Specifies if the accessor's elements are scalars, vectors, or matrices. */
         val type: AccessorType = AccessorType.SCALAR,
-        /** Sparse storage of elements that deviate from their initialization value. */
-        //val sparse: Any?,
-    ) : Base() {
+        ///** Sparse storage of elements that deviate from their initialization value. */
+        //val sparse: Sparse,
+        val sparse: JsonElement? = null,
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
+        init {
+            if (sparse != null) TODO("Unimplemented SPARSE: $sparse")
+        }
+        ///**
+        // * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.schema.json>
+        // */
+        //@Serializable
+        //data class Sparse(
+        //    override var name: String? = null,
+        //    /** Number of deviating accessor values stored in the sparse array. */
+        //    val count: Int = -1,
+        //    override val extensions: JsonElement? = null,
+        //    override val extras: JsonElement? = null,
+        //) : GLTFProperty() {
+        //}
+
         var attachDebugName: String? = null
 
         val componentTType: VarKind get() = when (componentType) {
@@ -504,41 +606,145 @@ data class GLTF2(
         }
         fun accessor(gltf: GLTF2): GLTF2AccessorVector = GLTF2AccessorVector(this, bufferSlice(gltf))
     }
+    /**
+     * The material appearance of a primitive.
+     *
+     * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json>
+     */
     @Serializable
     data class Material(
-        val name: String? = null,
+        override var name: String? = null,
+        /**
+         * OPAQUE: The alpha value is ignored, and the rendered output is fully opaque.
+         * MASK: The rendered output is either fully opaque or fully transparent depending on the alpha value and the specified `alphaCutoff` value; the exact appearance of the edges **MAY** be subject to implementation-specific techniques such as \"`Alpha-to-Coverage`\".
+         * BLEND: The alpha value is used to composite the source and destination areas. The rendered output is combined with the background using the normal painting operation (i.e. the Porter and Duff over operator).
+         */
         val alphaMode: String? = null, // OPAQUE
+        /** Specifies the cutoff threshold when in `MASK` alpha mode. If the alpha value is greater than or equal to this value then it is rendered as fully opaque, otherwise, it is rendered as fully transparent. A value greater than `1.0` will render the entire material as fully transparent. This value **MUST** be ignored for other alpha modes. When `alphaMode` is not defined, this value **MUST NOT** be defined. */
+        val alphaCutoff: Float = 0.5f,
+        /** Specifies whether the material is double sided. When this value is false, back-face culling is enabled. When this value is true, back-face culling is disabled and double-sided lighting is enabled. The back-face **MUST** have its normals reversed before the lighting equation is evaluated. */
         val doubleSided: Boolean = true,
-        val extensions: Map<String, JsonObject> = emptyMap(),
+        //val extensions: Map<String, JsonObject> = emptyMap(),
+        /** The factors for the emissive color of the material. This value defines linear multipliers for the sampled texels of the emissive texture. */
         val emissiveFactor: FloatArray? = null,
-        val emissiveTexture: TextureRef? = null,
+        /** The emissive texture. It controls the color and intensity of the light being emitted by the material. This texture contains RGB components encoded with the sRGB transfer function. If a fourth component (A) is present, it **MUST** be ignored. When undefined, the texture **MUST** be sampled as having `1.0` in RGB components. */
+        val emissiveTexture: TextureInfo? = null,
+        /** A set of parameter values that are used to define the metallic-roughness material model from Physically Based Rendering (PBR) methodology. When undefined, all the default values of `pbrMetallicRoughness` **MUST** apply. */
         val pbrMetallicRoughness: PBRMetallicRoughness = PBRMetallicRoughness(),
-        val normalTexture: TextureRef? = null,
-        val occlusionTexture: TextureRef? = null,
-    ) : Base() {
+        /** The tangent space normal texture. The texture encodes RGB components with linear transfer function. Each texel represents the XYZ components of a normal vector in tangent space. The normal vectors use the convention +X is right and +Y is up. +Z points toward the viewer. If a fourth component (A) is present, it **MUST** be ignored. When undefined, the material does not have a tangent space normal texture. */
+        val normalTexture: NormalTextureInfo? = null,
+        /** The occlusion texture. The occlusion values are linearly sampled from the R channel. Higher values indicate areas that receive full indirect lighting and lower values indicate no indirect lighting. If other channels are present (GBA), they **MUST** be ignored for occlusion calculations. When undefined, the material does not have an occlusion texture. */
+        val occlusionTexture: OcclusionTextureInfo? = null,
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
+        /**
+         * A set of parameter values that are used to define the metallic-roughness material model from Physically-Based Rendering (PBR) methodology.
+         *
+         * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.pbrMetallicRoughness.schema.json>
+         */
         @Serializable
         data class PBRMetallicRoughness(
-            val baseColorTexture: TextureRef? = null,
+            override var name: String? = null,
+            /**
+             * The factors for the base color of the material. This value defines linear multipliers
+             *  for the sampled texels of the base color texture. */
             val baseColorFactor: FloatArray? = null,
+            /** The base color texture. The first three components (RGB) **MUST** be encoded with
+             * the sRGB transfer function. They specify the base color of the material.
+             * If the fourth component (A) is present, it represents the linear alpha coverage of the material.
+             * Otherwise, the alpha coverage is equal to `1.0`.
+             * The `material.alphaMode` property specifies how alpha is interpreted.
+             * The stored texels **MUST NOT** be premultiplied. When undefined,
+             * the texture **MUST** be sampled as having `1.0` in all components.
+             **/
+            val baseColorTexture: TextureInfo? = null, // textureInfo
+            /**
+             * The factor for the metalness of the material. This value defines a linear multiplier for
+             * the sampled metalness values of the metallic-roughness texture.
+             **/
             val metallicFactor: Float = 0f,
+            /**
+             * The factor for the roughness of the material.
+             * This value defines a linear multiplier for the sampled roughness
+             * values of the metallic-roughness texture.
+             **/
             val roughnessFactor: Float = 0f,
-            val metallicRoughnessTexture: TextureRef? = null,
-        ) : Base()
+            /**
+             * The metallic-roughness texture. The metalness values are sampled from the B channel.
+             * The roughness values are sampled from the G channel.
+             * These values **MUST** be encoded with a linear transfer function.
+             * If other channels are present (R or A), they **MUST** be ignored for metallic-roughness calculations.
+             * When undefined, the texture **MUST** be sampled as having `1.0` in G and B components.
+             **/
+            val metallicRoughnessTexture: TextureInfo? = null,
+            override val extensions: JsonElement? = null,
+            override val extras: JsonElement? = null,
+        ) : GLTFProperty()
+
+        /**
+         * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/textureInfo.schema.json>
+         */
         @Serializable
-        data class TextureRef(
-            val scale: Int = -1,
-            val index: Int = -1,
-            val texCoord: Int = -1,
-        ) : Base() {
-            fun getTexture(gltf: GLTF2): Bitmap? =
-                gltf.textures[index].getImage(gltf).bitmap
+        abstract class BaseTextureInfo() : GLTFProperty() {
+            abstract val index: Int
+            abstract val texCoord: Int
+            fun getTexture(gltf: GLTF2): Bitmap? = gltf.textures[index].getImage(gltf).bitmap
+        }
+
+        @Serializable
+        data class TextureInfo(
+            override var name: String? = null,
+            override val index: Int = -1,
+            override val texCoord: Int = -1,
+            override val extensions: JsonElement? = null,
+            override val extras: JsonElement? = null,
+        ) : BaseTextureInfo() {
+        }
+
+        /**
+         * https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.occlusionTextureInfo.schema.json
+         */
+        @Serializable
+        data class OcclusionTextureInfo(
+            override var name: String? = null,
+            override val index: Int = -1,
+            override val texCoord: Int = -1,
+            /**
+             * The scalar parameter applied to each normal vector of the texture. This value scales the normal vector in X and Y directions using the formula: `scaledNormal =  normalize((<sampled normal texture value> * 2.0 - 1.0) * vec3(<normal scale>, <normal scale>, 1.0))`.
+             */
+            val strength: Float = 1f,
+            override val extensions: JsonElement? = null,
+            override val extras: JsonElement? = null,
+        ) : BaseTextureInfo() {
+
+        }
+
+        /**
+         * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.normalTextureInfo.schema.json>
+         */
+        @Serializable
+        data class NormalTextureInfo(
+            override var name: String? = null,
+            override val index: Int = -1,
+            override val texCoord: Int = -1,
+            /**
+             * The scalar parameter applied to each normal vector of the texture. This value scales the normal vector in X and Y directions using the formula: `scaledNormal =  normalize((<sampled normal texture value> * 2.0 - 1.0) * vec3(<normal scale>, <normal scale>, 1.0))`.
+             */
+            val scale: Float = 1f,
+            override val extensions: JsonElement? = null,
+            override val extras: JsonElement? = null,
+        ) : BaseTextureInfo() {
         }
     }
     @Serializable
     data class Texture(
+        override var name: String? = null,
         val sampler: Int = -1,
         val source: Int = -1,
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
         fun getImage(gltf: GLTF2): Image {
             return gltf.images[source]
         }
@@ -546,35 +752,45 @@ data class GLTF2(
 
     @Serializable
     data class Image(
-        val name: String? = null,
+        override var name: String? = null,
         val uri: String? = null,
         val bufferView: Int = -1,
         val mimeType: String? = null,
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
         @Transient
         var bitmap: Bitmap? = null
     }
     @Serializable
     data class Sampler(
+        override var name: String? = null,
         val magFilter: Int = -1,
         val minFilter: Int = -1,
         val wrapS: Int = -1,
         val wrapT: Int = -1,
-    ) : Base()
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty()
     @Serializable
     data class Camera(
-        val name: String? = null,
+        override var name: String? = null,
         val type: String,
         val perspective: Perspective? = null,
         val orthographic: Orthographic? = null,
-    ) : Base() {
+        override val extensions: JsonElement? = null,
+        override val extras: JsonElement? = null,
+    ) : GLTFProperty() {
         @Serializable
         data class Orthographic(
+            override var name: String? = null,
             val xmag: Float,
             val ymag: Float,
             val zfar: Float,
             val znear: Float,
-        ) : Base() {
+            override val extensions: JsonElement? = null,
+            override val extras: JsonElement? = null,
+        ) : GLTFProperty() {
             //fun toCamera(): Camera3D {
             //    return Camera3D.Orthographic(yfov.radians, znear, zfar)
             //}
@@ -582,11 +798,14 @@ data class GLTF2(
 
         @Serializable
         data class Perspective(
+            override var name: String? = null,
             val aspectRatio: Float = 1.5f,
             val yfov: Float = 0.660593f,
             val zfar: Float = 100f,
             val znear: Float = 0.01f,
-        ) : Base() {
+            override val extensions: JsonElement? = null,
+            override val extras: JsonElement? = null,
+        ) : GLTFProperty() {
             fun toCamera(): Camera3D {
                 return Camera3D.Perspective(yfov.radians, znear, zfar)
             }
@@ -635,6 +854,21 @@ data class GLTF2(
             }
         }
     }
+}
+
+
+/**
+ * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFProperty.schema.json>
+ * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/extension.schema.json>
+ * <https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/extras.schema.json>
+ */
+@Serializable
+abstract class GLTFProperty() : Extra by Extra.Mixin() {
+    abstract var name: String?
+    /** JSON object with extension-specific objects. */
+    abstract val extensions: JsonElement?
+    /** Although `extras` **MAY** have any type, it is common for applications to store and access custom data as key/value pairs. Therefore, `extras` **SHOULD** be a JSON object rather than a primitive value for best portability. */
+    abstract val extras: JsonElement?
 }
 
 inline class GLTF2AccessorVectorMAT4(val vec: GLTF2AccessorVector) {

@@ -123,14 +123,14 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
                     GLTF2.Animation.Channel.TargetPath.TRANSLATION -> {
                         val pos = sampler.doLookup(gltf, rtime, GLTF2.Animation.Sampler.LookupKind.NORMAL).toVector3()
                         view.position(pos)
-                        println("pos=$pos")
+                        //println("pos=$pos")
                     }
                     GLTF2.Animation.Channel.TargetPath.SCALE -> {
                         val scale = sampler.doLookup(gltf, rtime, GLTF2.Animation.Sampler.LookupKind.NORMAL).toVector3()
                         //println(sampler.outputAccessor)
                         //println(vec3)
                         view.scale(scale)
-                        println("scale=$scale")
+                        //println("scale=$scale")
                     }
                     else -> {
                         println("Unsupported animation target.path=${target.path}")
@@ -173,16 +173,22 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             prim.isPosition -> Shaders3D.a_pos
             prim.isNormal -> Shaders3D.a_nor
             prim.isTangent -> if (accessor.ncomponent == 3) Shaders3D.a_tan3 else Shaders3D.a_tan
-            prim.isTexcoord0 -> Shaders3D.a_tex
-            prim.isJoints0 -> Shaders3D.a_joints[0]
-            prim.isWeights0 -> Shaders3D.a_weights[0]
+            prim.isColor0 -> Shaders3D.a_col
+            prim.isTexcoord(0) -> Shaders3D.a_tex
+            prim.isTexcoord(1) -> Shaders3D.a_tex1
+            prim.isTexcoord(2) -> Shaders3D.a_tex2
+            prim.isJoints(0) -> Shaders3D.a_joints[0]
+            prim.isWeights(0) -> Shaders3D.a_weights[0]
             else -> TODO("${prim}")
         }
         val expectedComponents = when (att) {
             Shaders3D.a_pos, Shaders3D.a_nor -> 3
             Shaders3D.a_tan3 -> 3
             Shaders3D.a_tan -> 4
+            Shaders3D.a_col -> 4
             Shaders3D.a_tex -> 2
+            Shaders3D.a_tex1 -> 2
+            Shaders3D.a_tex2 -> 2
             Shaders3D.a_joints[0] -> 4
             Shaders3D.a_weights[0] -> 4
             else -> TODO("Unsupported $att")
@@ -226,7 +232,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
         ), layoutSize = if (stride > 0) stride else null), buffer = AGBuffer().also { it.upload(buffer) })
     }
 
-    val njoins = primitive.attributes.count { it.key.isJoints0 } * 4
+    val njoins = primitive.attributes.count { it.key.isJoints(0) } * 4
 
     val vertexData: AGVertexArrayObject = AGVertexArrayObject(
         *primitive.attributes.map { (prim, index) -> genAGVertexData(prim, index, -1) }.toTypedArray(),
@@ -239,14 +245,18 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             //println("ACCESSOR[$index][${accessor.attachDebugName}]: $accessor : ${accessor.accessor(gltf)}")
         }
     }
+    val hasVertexColor = GLTF2.PrimitiveAttribute.COLOR(0) in primitive.attributes
 
     // @TODO:
-    val indexAccessor: GLTF2.Accessor = gltf.accessors[primitive.indices]
-    val indexType: AGIndexType = indexAccessor.asIndexType()
+    val indexAccessor: GLTF2.Accessor? = primitive.indices.takeIf { it >= 0 }?.let { gltf.accessors[it] }
+    val indexType: AGIndexType? = indexAccessor?.asIndexType()
     val indexDataOffset = 0
-    val indexSlice = indexAccessor.bufferSlice(gltf)
-    val indexData = AGBuffer().also { it.upload(indexSlice) }
-    val vertexCount = indexSlice.sizeInBytes / indexType.bytesSize
+    val indexSlice = indexAccessor?.bufferSlice(gltf)
+    val indexData = indexSlice?.let { slice -> AGBuffer().also { it.upload(slice) } }
+    val vertexCount = when {
+        indexSlice != null -> indexSlice.sizeInBytes / indexType!!.bytesSize
+        else -> gltf.accessors[primitive.attributes[GLTF2.PrimitiveAttribute.POSITION]!!].count
+    }
 
     //val meshMaterial = Material3D(diffuse = Material3D.LightTexture(crateTex))
     //override val material = Material3D(diffuse = Material3D.LightColor(Colors.RED.withAd(0.5)))
@@ -279,7 +289,8 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             nweights,
             material,
             material.hasTexture,
-            njoins
+            njoins,
+            hasVertexColor = hasVertexColor
             //mesh.hasTexture
         )
         putUniforms(ctx)
@@ -294,7 +305,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
                 frameBuffer = ctx.rctx.currentFrameBuffer.base,
                 frameBufferInfo = ctx.rctx.currentFrameBuffer.info,
                 drawType = drawType,
-                indexType = indexType,
+                indexType = indexType ?: AGIndexType.NONE,
                 indices = indexData,
                 vertexData = vertexData,
                 cullFace = if (material.doubleSided) AGCullFace.NONE else AGCullFace.BACK,

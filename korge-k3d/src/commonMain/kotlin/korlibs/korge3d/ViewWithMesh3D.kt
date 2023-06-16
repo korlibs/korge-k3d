@@ -31,7 +31,8 @@ open class ViewWithMesh3D(
                     mesh.maxWeights,
                     meshMaterial,
                     mesh.hasTexture,
-                    0
+                    0,
+                    hasVertexColor = false
                 )
                 putUniforms(ctx)
                 //println("mesh.vertexCount=${mesh.vertexCount}")
