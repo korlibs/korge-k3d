@@ -53,6 +53,10 @@ class CratesScene : Scene() {
             val view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2()).scale(2f)
 
             camera = view.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
+            onMagnify {
+                //camera.position.setTo(0f, 1f, camera.position.z + it.amount)
+                camera.setPosition(0f, 1f, camera.position.z - it.amount * 2)
+            }
 
             view.rotation(quat)
             fun rotate(deltaY: Angle, deltaX: Angle) {
