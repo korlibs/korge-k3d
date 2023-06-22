@@ -8,8 +8,8 @@ open class Shaders3D {
 	//@ThreadLocal
 	private val programCache = LinkedHashMap<String, Program>()
 
-	//var printShaders = false
-    var printShaders = true
+	var printShaders = false
+    //var printShaders = true
 
 	@Suppress("RemoveCurlyBracesFromTemplate")
 	fun getProgram3D(nlights: Int, nmorphWeights: Int, meshMaterial: PBRMaterial3D?, hasTexture: Boolean, njoints: Int, hasVertexColor: Boolean): Program {
@@ -55,6 +55,7 @@ open class Shaders3D {
 		val a_tex = Attribute("a_TexCoords", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 3)
         val a_tex1 = Attribute("a_TexCoords1", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 3)
         val a_tex2 = Attribute("a_TexCoords2", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 3)
+        val a_tex3 = Attribute("a_TexCoords3", VarType.Float2, normalized = false, precision = Precision.MEDIUM, fixedLocation = 3)
         val a_col = Attribute("a_Col", VarType.Float4, normalized = true, Precision.LOW, fixedLocation = 4)
 
         val a_posTarget = Array(4) { Attribute("a_Pos$it", VarType.Float3, normalized = false, fixedLocation = 5 + (it * 3) + 0) }

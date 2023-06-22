@@ -43,8 +43,8 @@ abstract class Camera3D : View3D() {
 
     class Perspective(
         fov: Angle = 60.degrees,
-        near: Float = 0.1f,
-        far: Float = 1000.0f
+        near: Float = .5f,
+        far: Float = 100.0f
     ) : Camera3D() {
         var fov: Angle = fov; set(value) = dirty({ field != value }) { field = value }
         var near: Float = near; set(value) = dirty({ field != value }) { field = value }

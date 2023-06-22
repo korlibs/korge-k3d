@@ -49,7 +49,7 @@ open class ViewWithMesh3D(
                         blending = blendMode.factors,
                         uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
                         textureUnits = textureUnits,
-                        depthAndFrontFace = DEFAULT_DEPTH_FUNC,
+                        depthAndFrontFace = ctx.depthAndFrontFace,
                         /*
                         uniforms = uniformValues.apply {
                             //this[u_NormMat] = tempMat3.multiply(tempMat2, localTransform.matrix).invert().transpose()

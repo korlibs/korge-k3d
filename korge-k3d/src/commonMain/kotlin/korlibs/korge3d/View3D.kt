@@ -11,9 +11,6 @@ import korlibs.math.geom.*
 abstract class View3D : BaseView() {
     val stage3D: Stage3D? get() = if (this is Stage3D) this else this.parent?.stage3D
 
-    companion object {
-        val DEFAULT_DEPTH_FUNC = AGDepthAndFrontFace.DEFAULT.withDepthFunc(depthFunc = AGCompareMode.LESS_EQUAL)
-    }
     //TODO: I don't think that a Camera, Container, Light, ViewWithMesh, Text3D should all have this as supertype
     // they are not all 'types' of View ?
 
@@ -189,6 +186,11 @@ inline fun <reified T : View3D> View3D?.findByType() = sequence<T> {
 	}
 }
 
+inline fun View3D?.findByName(name: String) = sequence<View3D> {
+    for (it in descendants()) {
+        if (it.name == name) yield(it)
+    }
+}
 
 inline fun <reified T : View3D> View3D?.findByTypeWithName(name: String) = sequence<T> {
 	for (it in descendants()) {

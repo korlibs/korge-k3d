@@ -9,7 +9,7 @@ import korlibs.math.geom.*
 import korlibs.memory.*
 import korlibs.time.*
 
-fun Container3D.gltf2View(gltf: GLTF2) = GLTF2View(gltf).addTo(this)
+fun Container3D.gltf2View(gltf: GLTF2, autoAnimate: Boolean = true) = GLTF2View(gltf, autoAnimate).addTo(this)
 
 // https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_019_SimpleSkin.md
 class GLTF2ViewSkin(
@@ -47,6 +47,23 @@ class GLTF2ViewSkin(
             it[u_BoneMats] = getJoints()
         }
     }
+
+    fun writeFrom(skin0: GLTF2ViewSkin, skin1: GLTF2ViewSkin? = null, ratio: Float = 0f) {
+        val targetSkin = this
+        val ratio = ratio.clamp01()
+        for (jointId in targetSkin.skin.joints) {
+            val targetNode = targetSkin.view.nodeToViews[targetSkin.gltf.nodes[jointId]]!!
+            val targetNodeName = targetNode.name ?: continue
+            val skin0Node = skin0.view.findByName(targetNodeName).firstOrNull()
+            val skin1Node = skin1?.view?.findByName(targetNodeName)?.firstOrNull()
+            if (skin0Node != null || skin1Node != null) {
+                if (skin0Node != null && skin1Node != null) {
+                    targetNode.transform.setToInterpolated(skin0Node.transform, skin1Node.transform, ratio)
+                }
+            }
+            //println("viewNode=$viewNodeName, otherViewNode=${otherViewNode.name}")
+        }
+    }
 }
 
 class GLTF2SceneView(override var gltf: GLTF2, val scene: GLTF2.Scene, val rootView: GLTF2View, autoAnimate: Boolean = true) : Container3D(), GLTF2Holder {
@@ -65,12 +82,13 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
     val nodeToViews = LinkedHashMap<GLTF2.Node, GLTF2ViewNode>()
     private val skinsToView =  LinkedHashMap<GLTF2.Skin, GLTF2ViewSkin>()
 
+    val viewSkins by lazy { gltf.skins.map { getViewSkin(it) } }
+
     fun getViewSkin(skin: GLTF2.Skin): GLTF2ViewSkin {
         return skinsToView.getOrPut(skin) {
             GLTF2ViewSkin(gltf, skin, this)
         }
     }
-
 
     init {
         for (skin in gltf.skins) {
@@ -145,6 +163,9 @@ class GLTF2View(override var gltf: GLTF2, autoAnimate: Boolean = true) : Contain
 }
 
 class GLTF2ViewNode(override val gltf: GLTF2, val node: GLTF2.Node, val view: GLTF2View) : Container3D(), GLTF2Holder {
+    init {
+        name = node.name
+    }
     val skin: GLTF2ViewSkin? = view.skinForNode(node)
     val meshView = if (node.mesh >= 0) GLTF2ViewMesh(gltf, gltf.meshes[node.mesh], this).addTo(this) else null
     val childrenNodes = node.childrenNodes.map { GLTF2ViewNode(gltf, it, view).addTo(this) }
@@ -177,6 +198,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             prim.isTexcoord(0) -> Shaders3D.a_tex
             prim.isTexcoord(1) -> Shaders3D.a_tex1
             prim.isTexcoord(2) -> Shaders3D.a_tex2
+            prim.isTexcoord(3) -> Shaders3D.a_tex3
             prim.isJoints(0) -> Shaders3D.a_joints[0]
             prim.isWeights(0) -> Shaders3D.a_weights[0]
             else -> TODO("${prim}")
@@ -189,6 +211,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
             Shaders3D.a_tex -> 2
             Shaders3D.a_tex1 -> 2
             Shaders3D.a_tex2 -> 2
+            Shaders3D.a_tex3 -> 2
             Shaders3D.a_joints[0] -> 4
             Shaders3D.a_weights[0] -> 4
             else -> TODO("Unsupported $att")
@@ -314,7 +337,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
                 textureUnits = textureUnits,
                 vertexCount = vertexCount,
                 drawOffset = 0,
-                depthAndFrontFace = DEFAULT_DEPTH_FUNC,
+                depthAndFrontFace = ctx.depthAndFrontFace,
             )
         )
     }

@@ -19,6 +19,7 @@ import korlibs.logger.*
 import korlibs.math.geom.*
 import korlibs.math.interpolation.*
 import korlibs.memory.*
+import korlibs.time.*
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
@@ -85,24 +86,40 @@ data class GLTF2(
         ensureLoadImages(file)
     }
 
+    private suspend fun ensureLoadBuffers(file: VfsFile?, bin: ByteArray?) {
+        for (buffer in buffers) {
+            if (buffer.optBuffer == null) {
+                val vfile = buffer.uri?.let { resolveUri(file, it) }?.readBytes()
+                val (bytes, time) = measureTimeWithResult {
+                    vfile
+                        ?: bin
+                        ?: error("Couldn't load buffer : $buffer")
+                }
+                println("Loaded $vfile in ... $time")
+                buffer.optBuffer = Buffer(bytes)
+            }
+        }
+    }
+
     private suspend fun ensureLoadImages(file: VfsFile?) {
         //println("$file")
         for (image in images) {
             if (image.bitmap == null) {
                 //println("ensureLoadImages: $image")
-                val buffer = image.uri?.let { resolveUri(file, it) }
-                    ?: (if (image.bufferView >= 0) bufferViews[image.bufferView].slice(this).i8.getArray().asMemoryVfsFile() else null)
-                image.bitmap = buffer?.readBitmap() ?: Bitmaps.transparent.bmp
-            }
-        }
-    }
-    private suspend fun ensureLoadBuffers(file: VfsFile?, bin: ByteArray?) {
-        for (buffer in buffers) {
-            if (buffer.optBuffer == null) {
-                val bytes = buffer.uri?.let { resolveUri(file, it) }?.readBytes()
-                    ?: bin
-                    ?: error("Couldn't load buffer : $buffer")
-                buffer.optBuffer = Buffer(bytes)
+
+                val vfile = image.uri?.let { resolveUri(file, it) }
+
+                val (buffer, time) = measureTimeWithResult {
+                    (vfile
+                        ?: (if (image.bufferView >= 0) bufferViews[image.bufferView].slice(this).i8.getArray().asMemoryVfsFile() else null))
+                        //?.readBytes()
+                }
+                val (bitmap, timeBitmap) = measureTimeWithResult {
+                    buffer?.let { nativeImageFormatProvider.decode(it) } ?: Bitmaps.transparent.bmp
+                    //buffer?.readBitmap() ?: Bitmaps.transparent.bmp
+                }
+                println("$vfile read in $time, decoded in $timeBitmap...")
+                image.bitmap = bitmap
             }
         }
     }

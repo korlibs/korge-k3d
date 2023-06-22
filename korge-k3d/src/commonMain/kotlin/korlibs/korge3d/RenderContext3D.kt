@@ -29,6 +29,9 @@ class RenderContext3D() {
     var occlusionStrength: Float = 1f
     val textureManager by lazy { AgBitmapTextureManager(ag) }
     val bufferManager by lazy { AgBufferManager(ag) }
+    var depthAndFrontFace = AGDepthAndFrontFace.DEFAULT
+        .withDepthFunc(depthFunc = AGCompareMode.LESS)
+        .withDepth(0f, 1f)
 
     val tempAgVertexData = FastArrayList<AGVertexData>()
 
