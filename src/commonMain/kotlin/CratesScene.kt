@@ -73,19 +73,19 @@ class CratesScene : Scene() {
 
             val koral = resourcesVfs["Koral.glb"].readGLTF2()
             val walking0Skin = GLTF2View(resourcesVfs["Walking0.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
-            //val walking1Skin = GLTF2View(resourcesVfs["Walking1.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
-            //val slowRunSkin = GLTF2View(resourcesVfs["SlowRun.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
+            val walking1Skin = GLTF2View(resourcesVfs["Walking1.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
+            val slowRunSkin = GLTF2View(resourcesVfs["SlowRun.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
             val fastRunSkin = GLTF2View(resourcesVfs["FastRun.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
-            //val hipHopDancingSkin = GLTF2View(resourcesVfs["HipHopDancing.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
+            val hipHopDancingSkin = GLTF2View(resourcesVfs["HipHopDancing.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
             var koralView = gltf2View(koral, autoAnimate = false)
 
             addUpdater {
                 walking0Skin.view.updateAnimationDelta(it)
-                //walking1Skin.view.updateAnimationDelta(it)
-                //slowRunSkin.view.updateAnimationDelta(it)
+                walking1Skin.view.updateAnimationDelta(it)
+                slowRunSkin.view.updateAnimationDelta(it)
                 fastRunSkin.view.updateAnimationDelta(it)
-                //hipHopDancingSkin.view.updateAnimationDelta(it)
-                koralView.viewSkins.first().writeFrom(walking0Skin, fastRunSkin, slider2.value.toFloat())
+                hipHopDancingSkin.view.updateAnimationDelta(it)
+                koralView.viewSkins.first().writeFrom(walking0Skin, slowRunSkin, slider2.value.toFloat())
             }
 
             gltf2View(resourcesVfs["Gest.glb"].readGLTF2()).position(2, 0, 0)

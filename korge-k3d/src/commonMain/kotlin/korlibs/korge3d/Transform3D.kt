@@ -199,10 +199,15 @@ class Transform3D {
         this.setMatrix(localTransform.matrix)
     }
 
-    fun setToInterpolated(a: Transform3D, b: Transform3D, t: Float): Transform3D {
-        _translation.setToInterpolated(a.translation, b.translation, t.toDouble())
-        _rotation = Quaternion.interpolated(a.rotation, b.rotation, t.toFloat())
-        _scale.setToInterpolated(a.scale, b.scale, t.toDouble())
+    fun setToInterpolated(
+        a: Transform3D, b: Transform3D, t: Float,
+        doTranslation: Boolean = true,
+        doRotation: Boolean = true,
+        doScale: Boolean = true,
+    ): Transform3D {
+        if (doTranslation) _translation.setToInterpolated(a.translation, b.translation, t.toDouble())
+        if (doRotation) _rotation = Quaternion.interpolated(a.rotation, b.rotation, t.toFloat())
+        if (doScale) _scale.setToInterpolated(a.scale, b.scale, t.toDouble())
         matrixDirty = true
         return this
     }

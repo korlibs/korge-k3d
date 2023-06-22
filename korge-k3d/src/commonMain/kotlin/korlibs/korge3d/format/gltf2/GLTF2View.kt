@@ -58,7 +58,12 @@ class GLTF2ViewSkin(
             val skin1Node = skin1?.view?.findByName(targetNodeName)?.firstOrNull()
             if (skin0Node != null || skin1Node != null) {
                 if (skin0Node != null && skin1Node != null) {
-                    targetNode.transform.setToInterpolated(skin0Node.transform, skin1Node.transform, ratio)
+                    targetNode.transform.setToInterpolated(
+                        skin0Node.transform, skin1Node.transform, ratio,
+                        doTranslation = false,
+                        doRotation = true,
+                        doScale = false
+                    )
                 }
             }
             //println("viewNode=$viewNodeName, otherViewNode=${otherViewNode.name}")
