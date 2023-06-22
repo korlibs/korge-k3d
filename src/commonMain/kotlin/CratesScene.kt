@@ -4,7 +4,6 @@ import korlibs.image.color.*
 import korlibs.io.async.launchImmediately
 import korlibs.io.file.*
 import korlibs.io.file.std.resourcesVfs
-import korlibs.io.lang.*
 import korlibs.korge.KeepOnReload
 import korlibs.korge.input.*
 import korlibs.korge.scene.Scene
@@ -17,8 +16,6 @@ import korlibs.korge3d.material.*
 import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
 import korlibs.time.*
-import korlibs.korge.input.onSwipe
-import korlibs.korge3d.util.*
 import korlibs.render.*
 
 class CratesScene : Scene() {
@@ -37,6 +34,10 @@ class CratesScene : Scene() {
         dropFileRect = solidRect(1024, 1024, Colors.RED).also { it.visible = false }
         var rotationY = 0.degrees
         var rotationX = 0.degrees
+        renderableView {
+            //println((ag as AGOpengl).gl.getInteger(KmlGl.DEPTH_BITS))
+            //(ag as AGOpengl).gl.depthRangef(0f, 100f)
+        }
         scene3D {
             camera = Camera3D.Perspective()
             axisLines(length = 4f)
@@ -59,18 +60,49 @@ class CratesScene : Scene() {
             //val view = gltf2View(resourcesVfs["gltf/MiniBoomBox.glb"].readGLTF2()).scale(300f)
             //val view = gltf2View(resourcesVfs["gltf/RiggedFigure.glb"].readGLTF2()).scale(2f)
             //val view = gltf2View(resourcesVfs["gltf/SimpleSkin/SimpleSkin.gltf"].readGLTF2()).scale(1f)
-            var view = gltf2View(resourcesVfs["gltf/CesiumMan.glb"].readGLTF2())
+
+            val slider = uiSlider(1f, min = -1f, max = 2f, step = .0125f)
+                .also { slider -> slider.onChange { stage3D!!.occlusionStrength = slider.value.toFloat() } }
+                .xy(30, 30)
+                .scale(1)
+
+            val slider2 = uiSlider(0f, min = 0f, max = 1f, step = .0125f)
+                .also { slider -> slider.onChange { stage3D!!.occlusionStrength = slider.value.toFloat() } }
+                .xy(200, 30)
+                .scale(1)
+
+            val koral = resourcesVfs["Koral.glb"].readGLTF2()
+            val walking0Skin = GLTF2View(resourcesVfs["Walking0.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
+            //val walking1Skin = GLTF2View(resourcesVfs["Walking1.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
+            //val slowRunSkin = GLTF2View(resourcesVfs["SlowRun.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
+            val fastRunSkin = GLTF2View(resourcesVfs["FastRun.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
+            //val hipHopDancingSkin = GLTF2View(resourcesVfs["HipHopDancing.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
+            var koralView = gltf2View(koral, autoAnimate = false)
+
+            addUpdater {
+                walking0Skin.view.updateAnimationDelta(it)
+                //walking1Skin.view.updateAnimationDelta(it)
+                //slowRunSkin.view.updateAnimationDelta(it)
+                fastRunSkin.view.updateAnimationDelta(it)
+                //hipHopDancingSkin.view.updateAnimationDelta(it)
+                koralView.viewSkins.first().writeFrom(walking0Skin, fastRunSkin, slider2.value.toFloat())
+            }
+
+            gltf2View(resourcesVfs["Gest.glb"].readGLTF2()).position(2, 0, 0)
 
             fun updateEstimatedViewScale() {
-                view.scale(3f / view.gltf.meshes.map { it.getBounds(view.gltf) }.combineBounds().size.maxComponent())
+                //view.scale(3f / view.gltf.meshes.map { it.getBounds(view.gltf) }.combineBounds().size.maxComponent())
             }
 
             updateEstimatedViewScale()
 
             suspend fun loadFile(file: VfsFile) {
-                val it = file.readGLTF2()
-                view.removeFromParent()
-                view = GLTF2View(it).addTo(this)
+                val (it, time) = measureTimeWithResult {
+                    file.readGLTF2()
+                }
+                println("Loaded GLTF2 in $time...")
+                koralView.removeFromParent()
+                koralView = GLTF2View(it).addTo(this)
                 updateEstimatedViewScale()
             }
 
@@ -80,8 +112,7 @@ class CratesScene : Scene() {
                 }
             } }
 
-            onDropFile {
-                println("onDropFile: ${it.type} : $it")
+            onEvents(*DropFileEvent.Type.ALL) {
                 when (it.type) {
                     DropFileEvent.Type.START -> {
                         dropFileRect.visible = true
@@ -92,10 +123,9 @@ class CratesScene : Scene() {
                             it.files?.firstOrNull()?.let { loadFile(it) }
                         }
                     }
-                }
-            }
+                }            }
 
-            camera = view.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
+            camera = koralView.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
             onMagnify {
                 //camera.position.setTo(0f, 1f, camera.position.z + it.amount)
                 camera.position += Vector4.ZERO.copy(z = -it.amount * 2)
@@ -111,17 +141,12 @@ class CratesScene : Scene() {
                 )
             }
 
-            view.rotation(quat)
+            koralView.rotation(quat)
             fun rotate(deltaY: Angle, deltaX: Angle) {
-                view.rotation(quat * Quaternion.fromAxisAngle(Vector3.UP, rotationY) * Quaternion.fromAxisAngle(Vector3.RIGHT, rotationX))
+                koralView.rotation(quat * Quaternion.fromAxisAngle(Vector3.UP, rotationY) * Quaternion.fromAxisAngle(Vector3.RIGHT, rotationX))
                 rotationY += deltaY
                 rotationX += deltaX
             }
-
-            val slider = uiSlider(1f, min = -1f, max = 2f, step = .0125f)
-                .also { slider -> slider.onChange { stage3D!!.occlusionStrength = slider.value.toFloat() } }
-                .xy(30, 30)
-                .scale(1)
 
             keys {
                 downFrame(Key.LEFT, 4.milliseconds) { rotate(+1.degrees, 0.degrees) }
@@ -138,6 +163,7 @@ class CratesScene : Scene() {
             }
             //gltf2View(resourcesVfs["gltf/AttenuationTest.glb"].readGLTF2()).scale(50f)
         }
+            //.filters(BlurFilter())
     }
 
     suspend fun SContainer.sceneInit2() {
