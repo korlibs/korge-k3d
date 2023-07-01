@@ -15,6 +15,7 @@ import korlibs.korge3d.format.gltf2.*
 import korlibs.korge3d.material.*
 import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
+import korlibs.memory.*
 import korlibs.time.*
 import korlibs.render.*
 
@@ -32,8 +33,12 @@ class CratesScene : Scene() {
     lateinit var dropFileRect: SolidRect
     suspend fun SContainer.sceneInit3() {
         dropFileRect = solidRect(1024, 1024, Colors.RED).also { it.visible = false }
+
         var rotationY = 0.degrees
-        var rotationX = 0.degrees
+        var rotationX = Angle.QUARTER
+        var cameraDistance = 10f
+        var centerPoint = Vector3.ZERO
+
         renderableView {
             //println((ag as AGOpengl).gl.getInteger(KmlGl.DEPTH_BITS))
             //(ag as AGOpengl).gl.depthRangef(0f, 100f)
@@ -41,6 +46,9 @@ class CratesScene : Scene() {
         scene3D {
             camera = Camera3D.Perspective()
             axisLines(length = 4f)
+
+            val centerPointAxisLines = axisLines(length = .2f)
+
             val quat = Quaternion.IDENTITY
             //val quat = Quaternion(x=0.0f, y=0.45737463f, z=0.0f, w=0.047847807f)
             //val quat = Quaternion(x=0.0, y=0.48204702, z=0.0, w=0.8758331)
@@ -77,7 +85,7 @@ class CratesScene : Scene() {
             val slowRunSkin = GLTF2View(resourcesVfs["SlowRun.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
             val fastRunSkin = GLTF2View(resourcesVfs["FastRun.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
             val hipHopDancingSkin = GLTF2View(resourcesVfs["HipHopDancing.glb"].readGLTF2(), autoAnimate = false).viewSkins.first()
-            var koralView = gltf2View(koral, autoAnimate = false)
+            var koralView = gltf2View(koral, autoAnimate = false).position(-1, 0, 0)
 
             addUpdater {
                 walking0Skin.view.updateAnimationDelta(it)
@@ -85,10 +93,10 @@ class CratesScene : Scene() {
                 slowRunSkin.view.updateAnimationDelta(it)
                 fastRunSkin.view.updateAnimationDelta(it)
                 hipHopDancingSkin.view.updateAnimationDelta(it)
-                koralView.viewSkins.first().writeFrom(walking0Skin, slowRunSkin, slider2.value.toFloat())
+                koralView.viewSkins.first().writeFrom(walking0Skin, hipHopDancingSkin, slider2.value.toFloat())
             }
 
-            gltf2View(resourcesVfs["Gest.glb"].readGLTF2()).position(2, 0, 0)
+            gltf2View(resourcesVfs["Gest.glb"].readGLTF2()).position(+1, 0, 0)
 
             fun updateEstimatedViewScale() {
                 //view.scale(3f / view.gltf.meshes.map { it.getBounds(view.gltf) }.combineBounds().size.maxComponent())
@@ -126,31 +134,43 @@ class CratesScene : Scene() {
                 }            }
 
             camera = koralView.gltf.cameras.firstOrNull()?.perspective?.toCamera() ?: Camera3D.Perspective()
+
+            fun updateOrbitCamera() {
+                centerPointAxisLines.position = centerPoint
+                camera.orbitAround(centerPoint, cameraDistance, rotationY, rotationX)
+            }
+
             onMagnify {
                 //camera.position.setTo(0f, 1f, camera.position.z + it.amount)
-                camera.position += Vector4.ZERO.copy(z = -it.amount * 2)
+                //camera.position += Vector4.ZERO.copy(z = -it.amount * 2)
+                cameraDistance *= 1f - ((it.amount / 2)).clamp(-.75f, .75f)
+                updateOrbitCamera()
             }
             onScroll {
                 //println("onscroll: ${it.scrollDeltaXPixels}, ${it.scrollDeltaYPixels}")
                 //zoom -= (it.scrollDeltaYPixels / 240)
                 //updateZoom()
-                camera.position += Vector4(
+                centerPoint += Vector3(
                     it.scrollDeltaXPixels * 0.25f,
                     -it.scrollDeltaYPixels * 0.25f,
-                    0f, 0f,
+                    0f,
                 )
+                updateOrbitCamera()
             }
 
             koralView.rotation(quat)
             fun rotate(deltaY: Angle, deltaX: Angle) {
-                koralView.rotation(quat * Quaternion.fromAxisAngle(Vector3.UP, rotationY) * Quaternion.fromAxisAngle(Vector3.RIGHT, rotationX))
+                //koralView.rotation(quat * Quaternion.fromAxisAngle(Vector3.UP, rotationY) * Quaternion.fromAxisAngle(Vector3.RIGHT, rotationX))
                 rotationY += deltaY
-                rotationX += deltaX
+                rotationX = Orbit3D.adjustOrbitElevation(rotationX + deltaX)
+                updateOrbitCamera()
             }
 
             keys {
-                downFrame(Key.LEFT, 4.milliseconds) { rotate(+1.degrees, 0.degrees) }
-                downFrame(Key.RIGHT, 4.milliseconds) { rotate(-1.degrees, 0.degrees) }
+                downFrame(Key.LEFT, 4.milliseconds) { rotate(-1.degrees, 0.degrees) }
+                downFrame(Key.RIGHT, 4.milliseconds) { rotate(+1.degrees, 0.degrees) }
+                downFrame(Key.UP, 4.milliseconds) { rotate(0.degrees, +1.degrees) }
+                downFrame(Key.DOWN, 4.milliseconds) { rotate(0.degrees, -1.degrees) }
                 downFrame(Key.UP, 4.milliseconds) { slider.value += .01 }
                 downFrame(Key.DOWN, 4.milliseconds) { slider.value -= .01 }
             }

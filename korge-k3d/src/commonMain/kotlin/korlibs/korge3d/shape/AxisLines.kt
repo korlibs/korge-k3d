@@ -4,10 +4,10 @@ import korlibs.image.color.*
 import korlibs.korge3d.*
 import korlibs.math.geom.*
 
-fun Container3D.axisLines(basePosition: Vector3 = Vector3.ZERO, length: Float = 10f, lengthWhiteScale: Float = .25f) {
+fun Container3D.axisLines(basePosition: Vector3 = Vector3.ZERO, length: Float = 10f, lengthWhiteScale: Float = .25f): Container3D {
     val ll = length
     val l2 = length * lengthWhiteScale
-    container3D {
+    return container3D {
         position(basePosition)
         polyline3D(Colors["#e20050"]) {
             moveTo(Vector3(-ll, 0f, 0f))

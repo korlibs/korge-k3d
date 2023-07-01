@@ -39,7 +39,7 @@ class MainStage3d : Scene() {
             val angle = 360.degrees * ratio
             camera.positionLookingAt(
                 cos(angle) * distance, 0f, sin(angle) * distance, // Orbiting camera
-                v.transform.translation.x, v.transform.translation.y, v.transform.translation.z
+                v.transform.mtranslation.x, v.transform.mtranslation.y, v.transform.mtranslation.z
             )
         }
     }

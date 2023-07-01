@@ -40,40 +40,40 @@ abstract class View3D : BaseView() {
             transform.setTranslation(localX, y, z, localW)
             invalidateRender()
         }
-		get() = transform.translation.x
+		get() = transform.mtranslation.x
 
 	var y: Float
 		set(localY) {
             transform.setTranslation(x, localY, z, localW)
             invalidateRender()
         }
-		get() = transform.translation.y
+		get() = transform.mtranslation.y
 
 	var z: Float
 		set(localZ) { transform.setTranslation(x, y, localZ, localW); invalidateRender() }
-		get() = transform.translation.z
+		get() = transform.mtranslation.z
 
 	var localW: Float
 		set(localW) { transform.setTranslation(x, y, z, localW); invalidateRender() }
-		get() = transform.translation.w
+		get() = transform.mtranslation.w
 
 	///////
 
 	var scaleX: Float
 		set(scaleX) { transform.setScale(scaleX, scaleY, scaleZ, localScaleW); invalidateRender() }
-		get() = transform.scale.x
+		get() = transform.mscale.x
 
 	var scaleY: Float
 		set(scaleY) { transform.setScale(scaleX, scaleY, scaleZ, localScaleW); invalidateRender() }
-		get() = transform.scale.y
+		get() = transform.mscale.y
 
 	var scaleZ: Float
 		set(scaleZ) { transform.setScale(scaleX, scaleY, scaleZ, localScaleW); invalidateRender() }
-		get() = transform.scale.z
+		get() = transform.mscale.z
 
 	var localScaleW: Float
 		set(scaleW) { transform.setScale(scaleX, scaleY, scaleZ, scaleW); invalidateRender() }
-		get() = transform.scale.w
+		get() = transform.mscale.w
 
 	///////
 
@@ -146,7 +146,7 @@ abstract class View3D : BaseView() {
 
         ctx.lights.fastForEachWithIndex { index, light: Light3D ->
             ctx.rctx[Shaders3D.lights[index]].push {
-                it[u_SourcePos] = light.transform.translation.immutable
+                it[u_SourcePos] = light.transform.mtranslation.immutable
                 it[u_Color] = light.color
                 it[u_Attenuation] = light.attenuationVec.setTo(
                     light.constantAttenuation,
@@ -239,7 +239,7 @@ fun <T : View3D> T.position(x: Int, y: Int, z: Int, w: Int = 1): T = position(x.
 
 fun <T : View3D> T.position(pos: Vector3): T = position(pos.x, pos.y, pos.z)
 var View3D.position: Vector3
-    get() = transform.translation.immutable.toVector3()
+    get() = transform.mtranslation.immutable.toVector3()
     set(value) {
         position(value)
     }
@@ -276,7 +276,11 @@ fun <T : View3D> T.lookAt(x: Float, y: Float, z: Float): T {
 
 inline fun <T : View3D> T.lookAt(x: Int, y: Int, z: Int): T = lookAt(x.toFloat(), y.toFloat(), z.toFloat())
 
-
+fun <T : View3D> T.positionLookingAt(p: Vector3, t: Vector3): T {
+    transform.setTranslationAndLookAt(p.x, p.y, p.z, t.x, t.y, t.z)
+    invalidateRender()
+    return this
+}
 
 fun <T : View3D> T.positionLookingAt(px: Float, py: Float, pz: Float, tx: Float, ty: Float, tz: Float): T {
     transform.setTranslationAndLookAt(px, py, pz, tx, ty, tz)

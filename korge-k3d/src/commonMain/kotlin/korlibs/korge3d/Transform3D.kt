@@ -1,6 +1,7 @@
 package korlibs.korge3d
 
 import korlibs.datastructure.*
+import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 
 class Transform3D {
@@ -47,7 +48,7 @@ class Transform3D {
         get() {
             if (matrixDirty) {
                 matrixDirty = false
-                field.setTRS(translation, rotation, scale)
+                field.setTRS(mtranslation, rotation, mscale)
             }
             return field
         }
@@ -80,13 +81,24 @@ class Transform3D {
         return this
     }
 
-    val translation: MPosition3D get() = updateTRSIfRequired()._translation
+    var translation: Vector3
+        get() = updateTRSIfRequired()._translation.immutable.toVector3()
+        set(value) { setTranslation(value) }
+
+    @Deprecated("")
+    val mtranslation: MPosition3D get() = updateTRSIfRequired()._translation
+
     var rotation: Quaternion
         get() = updateTRSIfRequired()._rotation
         set(value) {
             updateTRSIfRequired()._rotation = value
         }
-    val scale: MScale3D get() = updateTRSIfRequired()._scale
+    @Deprecated("")
+    val mscale: MScale3D get() = updateTRSIfRequired()._scale
+
+    var scale: Vector3
+        get() = updateTRSIfRequired()._scale.immutable.toVector3()
+        set(value) { setScale(value) }
 
     var rotationEuler: EulerRotation
         get() = rotation.toEuler()
@@ -103,10 +115,16 @@ class Transform3D {
         return this
     }
 
+    fun setTranslation(p: Vector3) = updatingTRS {
+        setTranslation(p.x, p.y, p.z, 1f)
+    }
+    fun setTranslation(p: Vector4) = updatingTRS {
+        setTranslation(p.x, p.y, p.z, p.w)
+    }
     fun setTranslation(x: Float, y: Float, z: Float, w: Float = 1f) = updatingTRS {
         updateTRSIfRequired()
         matrixDirty = true
-        translation.setTo(x, y, z, w)
+        mtranslation.setTo(x, y, z, w)
     }
     fun setTranslation(x: Int, y: Int, z: Int, w: Int = 1) = setTranslation(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
@@ -134,8 +152,10 @@ class Transform3D {
         rotationEuler = EulerRotation(x, y, z)
     }
 
+    fun setScale(v: Vector3) = setScale(v.x, v.y, v.z, 1f)
+    fun setScale(v: Vector4) = setScale(v.x, v.y, v.z, v.w)
     fun setScale(x: Float = 1f, y: Float = 1f, z: Float = 1f, w: Float = 1f) = updatingTRS {
-        scale.setTo(x, y, z, w)
+        mscale.setTo(x, y, z, w)
     }
     fun setScale(x: Int, y: Int, z: Int, w: Int) = setScale(x.toFloat(), y.toFloat(), z.toFloat(), w.toFloat())
 
@@ -163,7 +183,7 @@ class Transform3D {
     internal val tempVec2 = MVector4()
 
     fun lookAt(tx: Float, ty: Float, tz: Float, up: MVector4 = UP): Transform3D {
-        tempMat1.setToLookAt(translation, tempVec1.setTo(tx, ty, tz, 1f), up)
+        tempMat1.setToLookAt(mtranslation, tempVec1.setTo(tx, ty, tz, 1f), up)
         rotation = Quaternion.fromRotationMatrix(tempMat1.immutable)
         return this
     }
@@ -182,6 +202,17 @@ class Transform3D {
         )
     )
 
+    fun setTranslationAndLookAt(
+        p: Vector3,
+        t: Vector3,
+        up: Vector3 = Vector3.UP
+    ): Transform3D = setMatrix(
+        matrix.multiply(
+            tempMat1.setToTranslation(p.x, p.y, p.z),
+            tempMat2.setToLookAt(tempVec1.setTo(p.x, p.y, p.z), tempVec2.setTo(t.x, t.y, t.z), MVector4(up.x, up.y, up.z, 1f))
+        )
+    )
+
     private var tempEuler = EulerRotation()
     fun rotate(x: Angle, y: Angle, z: Angle): Transform3D {
         val re = this.rotationEuler
@@ -190,8 +221,8 @@ class Transform3D {
         return this
     }
 
-    fun translate(vec:MVector4) : Transform3D {
-        this.setTranslation( this.translation.x + vec.x, this.translation.y + vec.y, this.translation.z+vec.z )
+    fun translate(vec: MVector4) : Transform3D {
+        this.setTranslation( this.mtranslation.x + vec.x, this.mtranslation.y + vec.y, this.mtranslation.z+vec.z )
         return this
     }
 
@@ -205,13 +236,13 @@ class Transform3D {
         doRotation: Boolean = true,
         doScale: Boolean = true,
     ): Transform3D {
-        if (doTranslation) _translation.setToInterpolated(a.translation, b.translation, t.toDouble())
+        if (doTranslation) _translation.setToInterpolated(a.mtranslation, b.mtranslation, t.toDouble())
         if (doRotation) _rotation = Quaternion.interpolated(a.rotation, b.rotation, t.toFloat())
-        if (doScale) _scale.setToInterpolated(a.scale, b.scale, t.toDouble())
+        if (doScale) _scale.setToInterpolated(a.mscale, b.mscale, t.toDouble())
         matrixDirty = true
         return this
     }
 
-    override fun toString(): String = "Transform3D(translation=$translation,rotation=$rotation,scale=$scale)"
+    override fun toString(): String = "Transform3D(translation=$mtranslation,rotation=$rotation,scale=$mscale)"
     fun clone(): Transform3D = Transform3D().setMatrix(this.matrix)
 }

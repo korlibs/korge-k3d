@@ -149,4 +149,4 @@ fun Quaternion.toRotation3x3Matrix(): Matrix3 = Matrix3.fromColumns(
     2 * x * z - 2 * y * w, 2 * y * z + 2 * x * w, 1 - 2 * x.sq - 2 * y.sq
 )
 
-val Float.sq: Float get() = this * this
+private val Float.sq: Float get() = this * this
