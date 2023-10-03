@@ -2,6 +2,7 @@ package korlibs.korge3d
 
 import korlibs.graphics.*
 import korlibs.korge3d.material.*
+import korlibs.math.*
 import korlibs.memory.*
 
 inline fun Container3D.mesh(mesh: Mesh3D, callback: ViewWithMesh3D.() -> Unit = {}): ViewWithMesh3D {

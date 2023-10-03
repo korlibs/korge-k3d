@@ -68,7 +68,7 @@ class Animator3D(val animation: Animation3D, val rootView: View3D, var playbackP
 						aview.transform.setToInterpolated(
 							ftransforms[n],
 							ftransforms.getCyclic(n + 1),
-                            ratio
+                            ratio.toFloat()
 						)
                         aview.invalidateRender()
 					}

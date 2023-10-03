@@ -134,8 +134,8 @@ data class Matrix3 private constructor(
     }
 }
 
-fun Vector3.Companion.fromArray(array: FloatArray, offset: Int): Vector3 =
-    Vector3(array[offset + 0], array[offset + 1], array[offset + 2])
+fun Vector3F.Companion.fromArray(array: FloatArray, offset: Int): Vector3 =
+    Vector3F(array[offset + 0], array[offset + 1], array[offset + 2])
 
 fun Matrix4.extract3x3(): Matrix3 = Matrix3.fromRows(
     v00, v01, v02,

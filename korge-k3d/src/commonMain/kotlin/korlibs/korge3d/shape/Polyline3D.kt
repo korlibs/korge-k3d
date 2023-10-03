@@ -39,12 +39,12 @@ class Polyline3D(
 }
 
 class RenderContext3D {
-    val polylines = arrayListOf<VectorArrayList>().also { it.add(VectorArrayList(3)) }
+    val polylines = arrayListOf<DoubleVectorArrayList>().also { it.add(DoubleVectorArrayList(3)) }
     private var currentPos = Vector3.ZERO
 
     fun moveTo(x: Float, y: Float, z: Float) = moveTo(Vector3(x, y, z))
     fun moveTo(p: Vector3) {
-        polylines += VectorArrayList(3).also { it.add(p.x, p.y, p.z) }
+        polylines += DoubleVectorArrayList(3).also { it.add(p.x, p.y, p.z) }
         currentPos = p
     }
     fun lineTo(x: Float, y: Float, z: Float) = lineTo(Vector3(x, y, z))

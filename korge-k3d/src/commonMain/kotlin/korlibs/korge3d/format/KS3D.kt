@@ -11,6 +11,7 @@ import korlibs.io.stream.writeBytes
 import korlibs.io.stream.writeString
 import korlibs.io.stream.writeStringVL
 import korlibs.io.stream.writeU_VL
+import korlibs.math.*
 
 // KorGE Scene 3D file format
 

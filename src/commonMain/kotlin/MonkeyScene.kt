@@ -8,9 +8,7 @@ import korlibs.korge.view.SContainer
 import korlibs.korge.view.addUpdater
 import korlibs.korge3d.*
 import korlibs.korge3d.format.readColladaLibrary
-import korlibs.math.geom.cos
-import korlibs.math.geom.degrees
-import korlibs.math.geom.sin
+import korlibs.math.geom.*
 import korlibs.math.interpolation.Easing
 import korlibs.time.seconds
 
@@ -38,7 +36,7 @@ class MonkeyScene : Scene() {
             addUpdater {
                 val angle = (tick / 1.0).degrees
                 camera.positionLookingAt(
-                    cos(angle * 1) * 4, 0f, -sin(angle * 1) * 4, // Orbiting camera
+                    cosf(angle * 1) * 4, 0f, -sinf(angle * 1) * 4, // Orbiting camera
                     0f, 0f, 0f
                 )
                 tick++

@@ -17,7 +17,7 @@ inline fun Container.scene3D(views: Views3D = Views3D(stage!!.views, this), call
 class Views3D(val views: Views, val container: Container)
 
 class Stage3D(val views: Views3D, val viewParent: Stage3DView) : Container3D() {
-    override val globalSpeed: Float get() = views.container.globalSpeed
+    override val globalSpeed: Float get() = views.container.globalSpeed.toFloat()
 
     init {
         changeEventListenerParent(viewParent)

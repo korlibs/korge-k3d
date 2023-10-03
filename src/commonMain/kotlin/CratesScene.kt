@@ -14,6 +14,7 @@ import korlibs.korge3d.*
 import korlibs.korge3d.format.gltf2.*
 import korlibs.korge3d.material.*
 import korlibs.korge3d.shape.*
+import korlibs.math.*
 import korlibs.math.geom.*
 import korlibs.memory.*
 import korlibs.time.*
@@ -238,7 +239,7 @@ class CratesScene : Scene() {
             addUpdater {
                 val angle = (tick / 4.0).degrees
                 trans.setTranslationAndLookAt(
-                    cos(angle * 2) * 4, cos(angle * 3) * 4, -sin(angle) * 4, // Orbiting camera
+                    cos(angle * 2).toFloat() * 4, cos(angle * 3).toFloat() * 4, -sin(angle).toFloat() * 4, // Orbiting camera
                     0f, 1f, 0f
                 )
                 camera.transform.copyFrom(trans)

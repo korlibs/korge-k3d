@@ -38,7 +38,7 @@ class MainStage3d : Scene() {
         viewParent.tween(time = time) { ratio ->
             val angle = 360.degrees * ratio
             camera.positionLookingAt(
-                cos(angle) * distance, 0f, sin(angle) * distance, // Orbiting camera
+                cosf(angle) * distance, 0f, sinf(angle) * distance, // Orbiting camera
                 v.transform.mtranslation.x, v.transform.mtranslation.y, v.transform.mtranslation.z
             )
         }
