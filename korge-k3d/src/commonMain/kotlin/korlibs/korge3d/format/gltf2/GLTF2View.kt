@@ -5,6 +5,7 @@ import korlibs.graphics.*
 import korlibs.graphics.shader.*
 import korlibs.korge3d.*
 import korlibs.korge3d.material.*
+import korlibs.math.*
 import korlibs.math.geom.*
 import korlibs.memory.*
 import korlibs.time.*
@@ -194,7 +195,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
     fun genAGVertexData(prim: GLTF2.PrimitiveAttribute, index: Int, targetIndex: Int): AGVertexData {
         val accessor = gltf.accessors[index]
         val bufferView = gltf.bufferViews[accessor.bufferView]
-        val buffer = bufferView.slice(gltf).slice(accessor.byteOffset)
+        val buffer = bufferView.slice(gltf).sliceBuffer(accessor.byteOffset)
         val att = when {
             prim.isPosition -> Shaders3D.a_pos
             prim.isNormal -> Shaders3D.a_nor

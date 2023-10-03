@@ -24,7 +24,7 @@ interface Collider {
     fun sdf(p: Vector3): Float = TODO()
     fun getClosestPoint(p: Vector3): Vector3 = TODO()
     //fun getNormalVector(p: Vector3): Vector3 = TODO()
-    fun raycast(ray: Ray3D, maxDistance: Float = Float.POSITIVE_INFINITY): Vector3? = TODO()
+    fun raycast(ray: Ray3F, maxDistance: Float = Float.POSITIVE_INFINITY): Vector3? = TODO()
     //fun getBoundingAABB(): AABB3D
 }
 
@@ -55,7 +55,7 @@ data class SphereCollider(val center: Vector3, val radius: Float, override val m
     override fun getClosestPoint(p: Vector3): Vector3 = (p - center).normalized() * radius
     //override fun getNormalVector(p: Vector3): Vector3 = (p - center).normalized()
 
-    override fun raycast(ray: Ray3D, maxDistance: Float): Vector3? {
+    override fun raycast(ray: Ray3F, maxDistance: Float): Vector3? {
         val sphere = this
         val oc = ray.pos - sphere.center
 

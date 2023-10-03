@@ -1,7 +1,7 @@
 package korlibs.korge3d.format.gltf2
 
-import korlibs.crypto.encoding.*
 import korlibs.datastructure.*
+import korlibs.encoding.*
 import korlibs.graphics.*
 import korlibs.graphics.shader.*
 import korlibs.image.bitmap.*
@@ -16,6 +16,7 @@ import korlibs.korge3d.*
 import korlibs.korge3d.material.*
 import korlibs.korge3d.util.*
 import korlibs.logger.*
+import korlibs.math.*
 import korlibs.math.geom.*
 import korlibs.math.interpolation.*
 import korlibs.memory.*
@@ -617,7 +618,7 @@ data class GLTF2(
         fun bufferSlice(gltf: GLTF2): korlibs.memory.Buffer {
             val allBuffer = bufferView(gltf).slice(gltf)
             return when {
-                count < 0 -> allBuffer.slice(byteOffset)
+                count < 0 -> allBuffer.sliceBuffer(byteOffset)
                 else -> allBuffer.sliceWithSize(byteOffset, count * bytesPerEntry)
             }
         }
