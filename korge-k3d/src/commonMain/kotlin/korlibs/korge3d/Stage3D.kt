@@ -43,6 +43,7 @@ class Stage3DView(val views: Views3D, val container: Container) : View() {
 		//ctx.ag.clear(color = Colors.RED)
 		ctx3D.ag = ctx.ag
 		ctx3D.rctx = ctx
+        ctx3D.scissor = ctx.batch.scissor
 		ctx3D.projMat.copyFrom(stage3D.camera.getProjMatrix(ctx.backWidth.toFloat(), ctx.backHeight.toFloat()))
 		ctx3D.cameraMat.copyFrom(stage3D.camera.transform.matrix)
 		ctx3D.ambientColor.setToColorPremultiplied(stage3D.ambientColor).scale(stage3D.ambientPower)

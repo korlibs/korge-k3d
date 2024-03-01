@@ -8,7 +8,7 @@ import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 
 
-abstract class View3D : BaseView() {
+open class View3D : BaseView() {
     val stage3D: Stage3D? get() = if (this is Stage3D) this else this.parent?.stage3D
 
     //TODO: I don't think that a Camera, Container, Light, ViewWithMesh, Text3D should all have this as supertype
@@ -164,7 +164,8 @@ abstract class View3D : BaseView() {
 	//val position = Vector3D()
 
 
-	abstract fun render(ctx: RenderContext3D)
+	open fun render(ctx: RenderContext3D) {
+    }
 }
 
 

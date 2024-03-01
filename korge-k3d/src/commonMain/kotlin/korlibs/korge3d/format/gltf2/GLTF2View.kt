@@ -344,6 +344,7 @@ class GLTF2ViewPrimitive(override val gltf: GLTF2, val primitive: GLTF2.Primitiv
                 vertexCount = vertexCount,
                 drawOffset = 0,
                 depthAndFrontFace = ctx.depthAndFrontFace,
+                scissor = ctx.scissor,
             )
         )
     }

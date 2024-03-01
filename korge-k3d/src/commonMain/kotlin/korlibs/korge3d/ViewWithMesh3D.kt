@@ -51,6 +51,7 @@ open class ViewWithMesh3D(
                         uniformBlocks = ctx.rctx.createCurrentUniformsRef(program),
                         textureUnits = textureUnits,
                         depthAndFrontFace = ctx.depthAndFrontFace,
+                        scissor = ctx.scissor,
                         /*
                         uniforms = uniformValues.apply {
                             //this[u_NormMat] = tempMat3.multiply(tempMat2, localTransform.matrix).invert().transpose()

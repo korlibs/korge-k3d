@@ -35,10 +35,6 @@ abstract class Camera3D : View3D() {
 
     protected abstract fun updateMatrix(mat: MMatrix3D, width: Float, height: Float)
 
-    override fun render(ctx: RenderContext3D) {
-        // Do nothing except when debugging
-    }
-
     abstract fun clone(): Camera3D
 
     class Perspective(
