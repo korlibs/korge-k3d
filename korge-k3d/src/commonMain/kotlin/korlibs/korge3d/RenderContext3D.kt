@@ -11,6 +11,7 @@ import korlibs.math.geom.*
 
 
 class RenderContext3D() {
+    var scissor: AGScissor = AGScissor.NIL
     lateinit var ag: AG
     lateinit var rctx: RenderContext
     val shaders = Shaders3D()

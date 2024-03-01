@@ -35,7 +35,4 @@ open class Light3D(
 		this.quadraticAttenuation = quadraticAttenuation
         return this
 	}
-
-	override fun render(ctx: RenderContext3D) {
-	}
 }

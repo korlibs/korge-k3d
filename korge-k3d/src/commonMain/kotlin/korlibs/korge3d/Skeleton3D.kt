@@ -30,9 +30,6 @@ open class Joint3D constructor(
 
 	//val jointTransform = Transform3D()
 
-	override fun render(ctx: RenderContext3D) {
-	}
-
 	override fun toString(): String = "Joint3D(id=$jid, name=$name, sid=$jsid)"
 }
 
@@ -54,8 +51,5 @@ class Skeleton3D(val skin: Skin3D, val headJoint: Joint3D) : View3D() {
 	val allJoints = headJoint.descendantsAndThis
 	val jointsByName = allJoints.associateBy { it.jname }.toFast()
 	val jointsBySid = allJoints.associateBy { it.jsid }.toFast()
-
-	override fun render(ctx: RenderContext3D) {
-	}
 }
 
