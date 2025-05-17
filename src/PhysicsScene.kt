@@ -17,6 +17,7 @@ import korlibs.korge3d.shape.*
 import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 import korlibs.time.*
+import kotlinx.coroutines.*
 
 data class RigidBody3D(
     val mass: Float,
@@ -71,7 +72,9 @@ class PhysicsScene : Scene() {
         uiVerticalStack {
             uiButton("RESTART") {
                 onClick {
-                    sceneContainer.changeTo({ PhysicsScene() })
+                    launch {
+                        sceneContainer.changeTo { PhysicsScene() }
+                    }
                 }
             }
             uiSlider(initialQuadScale, -1f, 1f, .0001f, decimalPlaces = 4) {

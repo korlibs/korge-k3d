@@ -6,6 +6,7 @@ import korlibs.korge.ui.*
 import korlibs.korge.view.*
 import korlibs.korge3d.*
 import korlibs.math.geom.*
+import kotlinx.coroutines.*
 
 class MainStage3d : Scene() {
     lateinit var contentSceneContainer: SceneContainer
@@ -26,7 +27,7 @@ class MainStage3d : Scene() {
 
     inline fun <reified T : Scene> Container.sceneButton(title: String) {
         uiButton(title)
-            .onClick { contentSceneContainer.changeToDisablingButtons<T>(this) }
+            .onClick { launch { contentSceneContainer.changeToDisablingButtons<T>(this@sceneButton) } }
 
         //this += Button(title) { contentSceneContainer.changeToDisablingButtons<T>(this) }
         //    .position(8 + x * 200, views.virtualHeight - 120)

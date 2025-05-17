@@ -18,9 +18,13 @@ korge {
 
     targetJvm()
     targetJs()
-    targetIos()
-    targetAndroidDirect()
+    //targetIos()
+    targetAndroid()
     serializationJson()
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 dependencies {

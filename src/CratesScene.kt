@@ -19,6 +19,7 @@ import korlibs.math.geom.*
 import korlibs.memory.*
 import korlibs.time.*
 import korlibs.render.*
+import kotlinx.coroutines.*
 
 class CratesScene : Scene() {
     @KeepOnReload
@@ -120,8 +121,10 @@ class CratesScene : Scene() {
                 }
 
                 uiButton("Load...") { onClick {
-                    gameWindow.openFileDialog(FileFilter("GLTF2" to listOf("*.glb", "*.gltf", "*.gltf2")))?.firstOrNull()?.let {
-                        loadFile(it)
+                    launch {
+                        gameWindow.openFileDialog(FileFilter("GLTF2" to listOf("*.glb", "*.gltf", "*.gltf2")))?.firstOrNull()?.let {
+                            loadFile(it)
+                        }
                     }
                 } }
 
